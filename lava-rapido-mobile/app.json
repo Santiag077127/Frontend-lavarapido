@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Lava Rápido Vehicular",
+    "slug": "lava-rapido-vehicular",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": [
+      "android"
+    ],
+    "android": {
+      "package": "com.lavarapido.vehicular"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
