@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    fontSize: 12,
+    fontSize: 15,
     lineHeight: 18,
   },
 

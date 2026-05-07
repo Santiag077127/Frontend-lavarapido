@@ -1,4 +1,5 @@
 import React, { useEffect, useContext } from 'react'
+
 import {
   View,
   Text,
@@ -14,6 +15,8 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated'
 
+import { useNavigation } from '@react-navigation/native'
+
 import { ThemeContext } from '../../../theme/ThemeContext'
 
 const { height } = Dimensions.get('window')
@@ -22,12 +25,18 @@ export default function ServiceDetailScreen({ route }: any) {
 
   const { service } = route.params
 
+  const navigation = useNavigation<any>()
+
   const { theme, darkMode } = useContext(ThemeContext)
 
   const translateY = useSharedValue(300)
 
   useEffect(() => {
-    translateY.value = withTiming(0, { duration: 500 })
+
+    translateY.value = withTiming(0, {
+      duration: 500
+    })
+
   }, [])
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -39,7 +48,9 @@ export default function ServiceDetailScreen({ route }: any) {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.background }
+        {
+          backgroundColor: theme.background
+        }
       ]}
     >
 
@@ -61,7 +72,9 @@ export default function ServiceDetailScreen({ route }: any) {
         <Text
           style={[
             styles.title,
-            { color: theme.text }
+            {
+              color: theme.text
+            }
           ]}
         >
           {service.title}
@@ -80,7 +93,14 @@ export default function ServiceDetailScreen({ route }: any) {
           {service.description}
         </Text>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            navigation.navigate('Reservation', {
+              service: service
+            })
+          }
+        >
           <Text style={styles.buttonText}>
             Reservar servicio
           </Text>
@@ -117,10 +137,12 @@ const styles = StyleSheet.create({
     elevation: 10,
 
     shadowColor: '#000',
+
     shadowOffset: {
       width: 0,
       height: -2
     },
+
     shadowOpacity: 0.15,
     shadowRadius: 6,
   },
