@@ -76,6 +76,7 @@ body {
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 6px 18px rgba(0, 198, 255, 0.3));
+  mix-blend-mode: multiply; /* elimina el fondo blanco */
 }
 
 .lp-tagline {
@@ -226,6 +227,13 @@ body {
   padding: 24px 16px;
   gap: 8px;
   flex-shrink: 0;
+}
+.sidebar-logo img {
+  width: 120px;
+  margin: 0 auto 24px;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0,198,255,0.25));
+  mix-blend-mode: multiply;
 }
 
 .sidebar-logo img {
