@@ -10,7 +10,7 @@ interface User {
 }
 
 // Estado global de autenticación
-interface AuthState {
+export interface AuthState {
   token: string | null; // JWT
   user: User | null; // Usuario autenticado
 

@@ -1,0 +1,19 @@
+/* ============================================================
+   variables.css  –  Lava Rápido Vehicular
+   Variables globales del sistema (colores, radios, transiciones)
+   ============================================================ */
+
+:root {
+  --azul-oscuro:  #0d1b3e;
+  --azul-medio:   #1a3a6e;
+  --azul-claro:   #1e90ff;
+  --gris-fondo:   #f4f7fb;
+  --gris-borde:   #dde4ef;
+  --texto-oscuro: #0d1b3e;
+  --texto-gris:   #4a5568;
+  --error-bg:     #fff0f0;
+  --error-texto:  #c0392b;
+  --error-borde:  #f5c6cb;
+  --radio:        12px;
+  --transicion:   0.25s ease;
+}

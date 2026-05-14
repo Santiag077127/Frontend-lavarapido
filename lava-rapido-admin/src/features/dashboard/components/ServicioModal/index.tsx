@@ -1,5 +1,8 @@
+import "./ServicioModal.css";
+
 import { useState, useEffect } from "react";
-import { Servicio, ServicioForm } from "../types";
+import { Servicio, ServicioForm } from "../../types";
+
 
 interface Props {
   servicio:  Servicio | null; // null = crear, Servicio = editar
@@ -16,7 +19,12 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
   // Precarga los campos al editar
   useEffect(() => {
     if (servicio) {
-      setForm({ nombre: servicio.nombre, precio: servicio.precio, duracion: servicio.duracion, descripcion: servicio.descripcion });
+      setForm({
+        nombre:      servicio.nombre,
+        precio:      servicio.precio,
+        duracion:    servicio.duracion,
+        descripcion: servicio.descripcion,
+      });
     } else {
       setForm({ nombre: "", precio: 0, duracion: "", descripcion: "" });
     }
@@ -24,7 +32,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: name === "precio" ? Number(value) : value }));
+    setForm((prev: ServicioForm) => ({ ...prev, [name]: name === "precio" ? Number(value) : value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,7 +68,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
           </div>
           <div className="modal-actions">
             <button type="button" className="modal-btn-cancelar" onClick={onCerrar}>Cancelar</button>
-            <button type="submit" className="modal-btn-guardar">Guardar</button>
+            <button type="submit"  className="modal-btn-guardar">Guardar</button>
           </div>
         </form>
 

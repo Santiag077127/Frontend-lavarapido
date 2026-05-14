@@ -1,0 +1,68 @@
+/* ============================================================
+   ServiciosTable.css  –  Lava Rápido Vehicular
+   Estilos exclusivos de la tabla de servicios
+   ============================================================ */
+
+.tabla-wrapper {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.07);
+}
+
+/* ── Tabla ───────────────────────────────────────────────────── */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla thead {
+  background: var(--azul-oscuro);
+  color: #fff;
+}
+
+.tabla th {
+  padding: 14px 20px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tabla td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gris-borde);
+  color: var(--texto-oscuro);
+  vertical-align: middle;
+}
+
+.tabla tbody tr:last-child td { border-bottom: none; }
+
+.tabla tbody tr:hover { background: var(--gris-fondo); }
+
+/* ── Estado vacío ────────────────────────────────────────────── */
+.tabla-vacia {
+  text-align: center;
+  color: var(--texto-gris);
+  padding: 40px !important;
+}
+
+/* ── Botones de acción ───────────────────────────────────────── */
+.tabla-acciones { display: flex; gap: 8px; }
+
+.btn-editar,
+.btn-eliminar {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transicion);
+}
+.btn-editar   { background: var(--azul-claro); color: #fff; }
+.btn-eliminar { background: var(--error-texto); color: #fff; }
+.btn-editar:hover,
+.btn-eliminar:hover { opacity: 0.85; }

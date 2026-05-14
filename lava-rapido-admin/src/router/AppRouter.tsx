@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LoginPage }     from "../features/auth/pages/LoginPage";
-import { DashboardPage } from "../components/DashboardPage";
-import { ServiciosPage } from "../features/servicios/pages/ServiciosPage";
+import { LoginPage } from "../features/auth/pages/LoginPage/LoginPage";
+import { DashboardPage } from "../features/dashboard/pages/DashboardPage";
+import { ServiciosPage } from "../features/dashboard/pages/ServiciosPage";
 
 export const AppRouter = () => {
   return (
