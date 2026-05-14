@@ -1,0 +1,90 @@
+/* ============================================================
+   ServicioModal.css  –  Lava Rápido Vehicular
+   Estilos exclusivos del modal de creación/edición de servicios
+   ============================================================ */
+
+/* ── Fondo oscuro ────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 27, 62, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* ── Tarjeta del modal ───────────────────────────────────────── */
+.modal-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 16px 48px rgba(13, 27, 62, 0.2);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--texto-oscuro);
+  margin-bottom: 24px;
+}
+
+/* ── Campos del formulario ───────────────────────────────────── */
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.modal-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-gris);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.modal-field input,
+.modal-field textarea {
+  padding: 10px 14px;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: var(--radio);
+  background: var(--gris-fondo);
+  font-size: 14px;
+  color: var(--texto-oscuro);
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+.modal-field input:focus,
+.modal-field textarea:focus {
+  border-color: var(--azul-claro);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+}
+
+/* ── Botones de acción ───────────────────────────────────────── */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-btn-cancelar,
+.modal-btn-guardar {
+  padding: 10px 22px;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transicion);
+}
+.modal-btn-cancelar { background: var(--gris-borde); color: var(--texto-oscuro); }
+.modal-btn-guardar  { background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-claro)); color: #fff; }
+.modal-btn-cancelar:hover,
+.modal-btn-guardar:hover { opacity: 0.85; }

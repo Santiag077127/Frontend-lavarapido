@@ -1,8 +1,10 @@
+import "./ServiciosPage.css";
+
 import { useState } from "react";
-import { Servicio, ServicioForm } from "../types";
-import { getServicios, createServicio, updateServicio, deleteServicio } from "../services/servicioService";
-import { ServiciosTable } from "../components/ServiciosTable";
-import { ServicioModal }  from "../components/ServicioModal";
+import { Servicio, ServicioForm } from "../../types";
+import { getServicios, createServicio, updateServicio, deleteServicio } from "../../services/servicioService";
+import { ServiciosTable } from "../../components/ServiciosTable";
+import { ServicioModal }  from "../../components/ServicioModal";
 
 export const ServiciosPage = () => {
 

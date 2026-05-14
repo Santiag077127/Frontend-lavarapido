@@ -1,4 +1,6 @@
-import { Servicio } from "../types";
+import "./ServiciosTable.css";
+
+import { Servicio } from "../../types";
 
 interface Props {
   servicios:  Servicio[];

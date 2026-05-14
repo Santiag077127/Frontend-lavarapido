@@ -1,0 +1,17 @@
+/* ============================================================
+   DashboardPage.css  –  Lava Rápido Vehicular
+   Layout principal del dashboard (sidebar + contenido)
+   ============================================================ */
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Contenido principal ─────────────────────────────────────── */
+.dashboard-content {
+  flex: 1;
+  background: var(--gris-fondo);
+  padding: 32px;
+  overflow-y: auto;
+}

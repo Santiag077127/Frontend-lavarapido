@@ -1,0 +1,61 @@
+/* ============================================================
+   Sidebar.css  –  Lava Rápido Vehicular
+   Estilos exclusivos del menú lateral de navegación
+   ============================================================ */
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--azul-oscuro), var(--azul-medio));
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Logo ────────────────────────────────────────────────────── */
+.sidebar-logo img {
+  width: 120px;
+  margin: 0 auto 24px;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 198, 255, 0.25));
+}
+
+/* ── Navegación ──────────────────────────────────────────────── */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--transicion), color var(--transicion);
+}
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── Botón cerrar sesión ─────────────────────────────────────── */
+.sidebar-logout {
+  margin-top: auto;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transicion);
+}
+.sidebar-logout:hover { background: rgba(255, 255, 255, 0.1); }

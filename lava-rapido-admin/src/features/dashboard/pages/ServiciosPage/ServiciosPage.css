@@ -1,0 +1,38 @@
+/* ============================================================
+   ServiciosPage.css  –  Lava Rápido Vehicular
+   Estilos exclusivos del header y layout de la página de servicios
+   ============================================================ */
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Encabezado de página ────────────────────────────────────── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--texto-oscuro);
+}
+
+/* ── Botón nuevo ─────────────────────────────────────────────── */
+.btn-nuevo {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-claro));
+  color: #fff;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transicion);
+  box-shadow: 0 4px 14px rgba(13, 27, 62, 0.25);
+}
+.btn-nuevo:hover { transform: translateY(-2px); }
