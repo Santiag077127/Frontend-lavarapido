@@ -14,6 +14,12 @@ import RegisterScreen from '../features/auth/screens/RegisterScreen'
 
 import ReservationScreen from '../features/reservations/screens/ReservationScreen'
 
+import MyServicesScreen from '../features/profile/screens/MyServicesScreen'
+
+import MapScreen from '../features/map/screens/MapScreen'
+
+import ServiceDetailsScreen from '../features/profile/screens/ServiceDetailsScreen'
+
 const Stack = createNativeStackNavigator()
 
 export default function AppNavigator() {
@@ -55,6 +61,23 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Reservation"
         component={ReservationScreen}
+      />
+
+      {/* 🗺️ MAPA */}
+      <Stack.Screen
+        name="Map"
+        component={MapScreen}
+      />
+      {/* 📋 DETALLE SERVICIO (Perfil) */}
+      <Stack.Screen
+        name="ServiceDetails"
+        component={ServiceDetailsScreen}
+      />
+
+      {/* 📅 MIS SERVICIOS */}
+      <Stack.Screen
+        name="MyServices"
+        component={MyServicesScreen}
       />
 
       {/* 🔐 LOGIN */}
