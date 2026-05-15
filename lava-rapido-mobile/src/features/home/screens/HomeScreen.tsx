@@ -1,18 +1,29 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
+
 import {
   View,
   Text,
-  StyleSheet,
+ StyleSheet,
   Image,
   TextInput,
-  ScrollView,
   TouchableOpacity,
-  Pressable
+  Pressable,
+  Platform,
+  StatusBar,
+  FlatList
 } from 'react-native'
 
+import { SafeAreaView } from 'react-native-safe-area-context'
+
 import { Ionicons } from '@expo/vector-icons'
+
 import { images } from '../../../assets/images'
-import { useNavigation, NavigationProp } from '@react-navigation/native'
+
+import {
+  useNavigation,
+  NavigationProp
+} from '@react-navigation/native'
+
 import { ThemeContext } from '../../../theme/ThemeContext'
 
 /* 🔹 TIPOS */
@@ -25,6 +36,7 @@ type RootStackParamList = {
       image: any
     }
   }
+
   Login: undefined
 }
 
@@ -34,9 +46,12 @@ type Props = {
 
 export default function HomeScreen({ isLoggedIn }: Props) {
 
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
+  const navigation =
+    useNavigation<NavigationProp<RootStackParamList>>()
 
   const { theme } = useContext(ThemeContext)
+
+  const [search, setSearch] = useState('')
 
   const services = [
     {
@@ -46,6 +61,7 @@ export default function HomeScreen({ isLoggedIn }: Props) {
         'Limpieza de carrocería, aplicación de shampoo, secado a mano y limpieza de rines.',
       image: images.ServicioBasico
     },
+
     {
       id: 2,
       title: 'Lavado de Motor',
@@ -53,6 +69,7 @@ export default function HomeScreen({ isLoggedIn }: Props) {
         'Limpieza técnica con desengrasantes especiales.',
       image: images.ServicioMotor
     },
+
     {
       id: 3,
       title: 'Aspirado Profundo',
@@ -60,6 +77,7 @@ export default function HomeScreen({ isLoggedIn }: Props) {
         'Alfombras, asientos, baúl y rincones de difícil acceso.',
       image: images.ServicioAspirado
     },
+
     {
       id: 4,
       title: 'Lavado de Tapicería',
@@ -67,6 +85,7 @@ export default function HomeScreen({ isLoggedIn }: Props) {
         'Limpieza con máquinas de inyección y succión.',
       image: images.ServicioTapiceria
     },
+
     {
       id: 5,
       title: 'Pulido y Abrillantado',
@@ -74,6 +93,7 @@ export default function HomeScreen({ isLoggedIn }: Props) {
         'Eliminación de micro-rayones y restauración del brillo.',
       image: images.ServicioPulido
     },
+
     {
       id: 6,
       title: 'Encerado Profesional',
@@ -83,149 +103,227 @@ export default function HomeScreen({ isLoggedIn }: Props) {
     }
   ]
 
+  /* 🔍 FILTRAR SERVICIOS */
+  const filteredServices = services.filter((service) =>
+    service.title
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  )
+
   return (
 
-    <ScrollView
+    <SafeAreaView
       style={[
-        styles.container,
-        { backgroundColor: theme.background }
+        styles.safeArea,
+        {
+          backgroundColor: theme.background
+        }
       ]}
-      showsVerticalScrollIndicator={false}
     >
 
-      {/* 🔍 BUSCADOR */}
+      {/* 🔍 BUSCADOR FIJO */}
       <View
         style={[
-          styles.searchContainer,
-          { backgroundColor: theme.card }
+          styles.searchWrapper,
+          {
+            backgroundColor: theme.background
+          }
         ]}
       >
-        <TextInput
-          placeholder="Buscar servicios..."
-          placeholderTextColor={theme.textSecondary}
-          style={[
-            styles.searchInput,
-            { color: theme.text }
-          ]}
-        />
 
-        <Ionicons
-          name="search"
-          size={20}
-          color={theme.text}
-        />
-      </View>
-
-      {/* 🔐 LOGIN */}
-      {!isLoggedIn && (
         <View
           style={[
-            styles.loginCard,
-            { backgroundColor: theme.card }
+            styles.searchContainer,
+            {
+              backgroundColor: theme.card
+            }
           ]}
         >
-          <Text
-            style={[
-              styles.loginText,
-              { color: theme.text }
-            ]}
-          >
-            Inicia sesión para reservar 🚗
-          </Text>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed
-            ]}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Ionicons
-              name="log-in-outline"
-              size={20}
-              color="#fff"
-            />
-
-            <Text style={styles.buttonText}>
-              Iniciar Sesión
-            </Text>
-          </Pressable>
-        </View>
-      )}
-
-      {/* 🚗 SERVICIOS */}
-      {services.map((item) => (
-
-        <TouchableOpacity
-          key={item.id}
-          style={[
-            styles.card,
-            { backgroundColor: theme.card }
-          ]}
-          onPress={() =>
-            navigation.navigate('ServiceDetail', {
-              service: item
-            })
-          }
-        >
-
-          <Image
-            source={item.image}
-            style={styles.image}
+          <Ionicons
+            name="search"
+            size={20}
+            color={theme.textSecondary}
+            style={styles.searchIcon}
           />
 
-          <View style={styles.textContainer}>
+          <TextInput
+            placeholder="Buscar servicios..."
+            placeholderTextColor={theme.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            style={[
+              styles.searchInput,
+              {
+                color: theme.text
+              }
+            ]}
+          />
 
-            <Text
+        </View>
+
+      </View>
+
+      {/* 🚗 LISTA */}
+      <FlatList
+        data={filteredServices}
+        keyExtractor={(item) => item.id.toString()}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 15,
+          paddingBottom: 40,
+          paddingTop: 10
+        }}
+        ListHeaderComponent={
+          !isLoggedIn ? (
+
+            <View
               style={[
-                styles.title,
-                { color: theme.text }
+                styles.loginCard,
+                {
+                  backgroundColor: theme.card
+                }
               ]}
             >
-              {item.title}
-            </Text>
 
-            <Text
-              style={[
-                styles.description,
-                { color: theme.textSecondary }
-              ]}
-            >
-              {item.description}
-            </Text>
+              <Text
+                style={[
+                  styles.loginText,
+                  {
+                    color: theme.text
+                  }
+                ]}
+              >
+                Inicia sesión para reservar 🚗
+              </Text>
 
-          </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.button,
+                  pressed && styles.buttonPressed
+                ]}
+                onPress={() =>
+                  navigation.navigate('Login')
+                }
+              >
 
-        </TouchableOpacity>
+                <Ionicons
+                  name="log-in-outline"
+                  size={20}
+                  color="#fff"
+                />
 
-      ))}
+                <Text style={styles.buttonText}>
+                  Iniciar Sesión
+                </Text>
 
-    </ScrollView>
+              </Pressable>
+
+            </View>
+
+          ) : null
+        }
+        renderItem={({ item }) => (
+
+          <TouchableOpacity
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card
+              }
+            ]}
+            activeOpacity={0.9}
+            onPress={() =>
+              navigation.navigate('ServiceDetail', {
+                service: item
+              })
+            }
+          >
+
+            <Image
+              source={item.image}
+              style={styles.image}
+            />
+
+            <View style={styles.textContainer}>
+
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    color: theme.text
+                  }
+                ]}
+              >
+                {item.title}
+              </Text>
+
+              <Text
+                style={[
+                  styles.description,
+                  {
+                    color: theme.textSecondary
+                  }
+                ]}
+              >
+                {item.description}
+              </Text>
+
+            </View>
+
+          </TouchableOpacity>
+
+        )}
+      />
+
+    </SafeAreaView>
   )
 }
 
 /* 🎨 ESTILOS */
 const styles = StyleSheet.create({
 
-  container: {
-    flex: 1,
-    padding: 15,
+  safeArea: {
+  flex: 1,
   },
 
-  /* 🔍 SEARCH */
+  /* 🔍 WRAPPER */
+  searchWrapper: {
+  paddingHorizontal: 15,
+  paddingTop: 2,
+  paddingBottom: 5,
+  zIndex: 10,
+  },
+
   searchContainer: {
     flexDirection: 'row',
-    borderRadius: 30,
-    paddingHorizontal: 15,
     alignItems: 'center',
-    marginVertical: 15,
-    height: 50,
-    justifyContent: 'space-between',
+
+    height: 55,
+
+    borderRadius: 18,
+
+    paddingHorizontal: 15,
+
+    elevation: 4,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+
+  searchIcon: {
+    marginRight: 10,
   },
 
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
   },
 
   /* 🔐 LOGIN */
@@ -241,6 +339,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2
     },
+
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -254,12 +353,16 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     backgroundColor: '#1E6FB9',
+
     width: '100%',
     height: 55,
+
     borderRadius: 15,
+
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
+
+    marginTop: 5,
 
     elevation: 5,
 
@@ -268,6 +371,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 3
     },
+
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -287,7 +391,9 @@ const styles = StyleSheet.create({
   /* 🚗 CARDS */
   card: {
     flexDirection: 'row',
+
     borderRadius: 18,
+
     padding: 10,
     marginBottom: 15,
 
@@ -298,6 +404,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2
     },
+
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -321,8 +428,8 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
 
 })
