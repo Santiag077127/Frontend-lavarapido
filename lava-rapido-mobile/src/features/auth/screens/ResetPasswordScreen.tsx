@@ -1,55 +1,58 @@
-import React, { useContext, useState } from 'react'
+import React, { useState, useContext } from 'react'
 
 import {
   View,
- Text,
+  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
-  Alert
+  Alert,
+  Image
 } from 'react-native'
 
 import { Ionicons } from '@expo/vector-icons'
-import { useNavigation } from '@react-navigation/native'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { images } from '../../../assets/images'
 
-type Props = {
-  setIsLoggedIn: (value: boolean) => void
-}
-
-export default function LoginScreen({
-  setIsLoggedIn
-}: Props) {
-
-  const navigation = useNavigation<any>()
+export default function ResetPasswordScreen({ navigation }: any) {
 
   const { theme } = useContext(ThemeContext)
 
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const handleLogin = () => {
+  const handleReset = () => {
 
-    if (!email || !password) {
+    if (!password || !confirmPassword) {
 
       Alert.alert(
         'Campos incompletos',
-        'Ingrese correo y contraseña'
+        'Debes completar todos los campos'
       )
 
       return
     }
 
-    setIsLoggedIn(true)
+    if (password !== confirmPassword) {
 
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }]
-    })
+      Alert.alert(
+        'Error',
+        'Las contraseñas no coinciden'
+      )
+
+      return
+    }
+
+    Alert.alert(
+      'Éxito',
+      'Contraseña actualizada correctamente'
+    )
+
+    navigation.navigate('Login')
   }
 
   return (
@@ -70,7 +73,18 @@ export default function LoginScreen({
         resizeMode="contain"
       />
 
-      {/* SUBTITULO */}
+      {/* TITULO */}
+      <Text
+        style={[
+          styles.title,
+          {
+            color: theme.text
+          }
+        ]}
+      >
+        Nueva Contraseña
+      </Text>
+
       <Text
         style={[
           styles.subtitle,
@@ -79,31 +93,10 @@ export default function LoginScreen({
           }
         ]}
       >
-        Bienvenido a Lava Rápido
+        Ingresa tu nueva contraseña para continuar.
       </Text>
 
-      {/* EMAIL */}
-      <View style={styles.inputContainer}>
-
-        <Ionicons
-          name="mail-outline"
-          size={22}
-          color="#1E6FB9"
-        />
-
-        <TextInput
-          placeholder="Correo electrónico"
-          placeholderTextColor="#94A3B8"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
-
-      </View>
-
-      {/* PASSWORD */}
+      {/* NUEVA CONTRASEÑA */}
       <View style={styles.inputContainer}>
 
         <Ionicons
@@ -113,7 +106,7 @@ export default function LoginScreen({
         />
 
         <TextInput
-          placeholder="Contraseña"
+          placeholder="Nueva contraseña"
           placeholderTextColor="#94A3B8"
           secureTextEntry={!showPassword}
           value={password}
@@ -139,58 +132,57 @@ export default function LoginScreen({
 
       </View>
 
-      {/* RECUPERAR CONTRASEÑA */}
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('ForgotPassword')
-        }
-      >
+      {/* CONFIRMAR CONTRASEÑA */}
+      <View style={styles.inputContainer}>
 
-        <Text style={styles.forgotText}>
-          ¿Olvidaste tu contraseña?
-        </Text>
+        <Ionicons
+          name="shield-checkmark-outline"
+          size={22}
+          color="#1E6FB9"
+        />
 
-      </TouchableOpacity>
-
-      {/* BOTON LOGIN */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-      >
-
-        <Text style={styles.buttonText}>
-          Ingresar
-        </Text>
-
-      </TouchableOpacity>
-
-      {/* REGISTRO */}
-      <View style={styles.footer}>
-
-        <Text
-          style={{
-            color: theme.textSecondary
-          }}
-        >
-          ¿No tienes cuenta?
-        </Text>
+        <TextInput
+          placeholder="Confirmar contraseña"
+          placeholderTextColor="#94A3B8"
+          secureTextEntry={!showConfirmPassword}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={styles.input}
+        />
 
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate('Register')
+            setShowConfirmPassword(
+              !showConfirmPassword
+            )
           }
         >
-
-          <Text style={styles.registerText}>
-            Registrarse
-          </Text>
-
+          <Ionicons
+            name={
+              showConfirmPassword
+                ? 'eye-off-outline'
+                : 'eye-outline'
+            }
+            size={22}
+            color="#94A3B8"
+          />
         </TouchableOpacity>
 
       </View>
 
-    </View>
+      {/* BOTON */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleReset}
+      >
 
+        <Text style={styles.buttonText}>
+          Guardar Contraseña
+        </Text>
+
+      </TouchableOpacity>
+
+    </View>
   )
 }
 
@@ -209,11 +201,19 @@ const styles = StyleSheet.create({
     marginBottom: -20,
   },
 
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
   subtitle: {
     fontSize: 15,
     textAlign: 'center',
     marginBottom: 30,
-    color: '#64748B',
+    paddingHorizontal: 10,
+    lineHeight: 22,
   },
 
   inputContainer: {
@@ -252,14 +252,6 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
 
-  forgotText: {
-    textAlign: 'right',
-    color: '#1E6FB9',
-    fontWeight: '600',
-    fontSize: 14,
-    marginBottom: 25,
-  },
-
   button: {
     backgroundColor: '#1E6FB9',
 
@@ -269,6 +261,8 @@ const styles = StyleSheet.create({
 
     justifyContent: 'center',
     alignItems: 'center',
+
+    marginTop: 10,
 
     elevation: 4,
 
@@ -286,18 +280,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 30,
-  },
-
-  registerText: {
-    color: '#1E6FB9',
-    fontWeight: 'bold',
-    marginLeft: 5,
   },
 
 })
