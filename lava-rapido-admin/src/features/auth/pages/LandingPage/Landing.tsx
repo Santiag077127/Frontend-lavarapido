@@ -25,33 +25,51 @@ const LandingPage = () => {
           </p>
 
           <div className="landing-features">
+
+            {/* ── Web admin ── */}
+            <div className="feature-item">
+              <span className="feature-icon"></span>
+              <div>
+                <p className="feature-title">Web administrativa</p>
+                <p className="feature-desc">
+                  Desarrollada con React, exclusiva para administradores.
+                </p>
+              </div>
+            </div>
+
+            {/* ── App móvil ── */}
             <div className="feature-item">
               <span className="feature-icon"></span>
               <div>
                 <p className="feature-title">App Móvil</p>
                 <p className="feature-desc">
-                  Desarrollada con React Native y Expo para clientes.
+                  Desarrollada con React Native para usuarios y operadores.
                 </p>
               </div>
             </div>
+
+            {/* ── Idiomas ── */}
             <div className="feature-item">
               <span className="feature-icon"></span>
               <div>
-                <p className="feature-title">Seguimiento GPS</p>
+                <p className="feature-title">Multiidioma</p>
                 <p className="feature-desc">
-                  Visualiza el estado del servicio en tiempo real.
+                  Disponible en español, inglés, francés y portugués.
                 </p>
               </div>
             </div>
+
+            {/* ── Tema ── */}
             <div className="feature-item">
               <span className="feature-icon"></span>
               <div>
-                <p className="feature-title">Tema Oscuro</p>
+                <p className="feature-title">Tema personalizable</p>
                 <p className="feature-desc">
-                  Interfaz adaptable con modo claro y oscuro.
+                  Interfaz adaptable con modo claro, oscuro y colores a tu gusto.
                 </p>
               </div>
             </div>
+
           </div>
 
           <div className="landing-actions">
@@ -65,19 +83,14 @@ const LandingPage = () => {
 
             <button
               className="btn-secondary"
-              onClick={() =>
-                alert(
-                  "El registro de usuarios está disponible exclusivamente en la app móvil de Lava Rápido."
-                )
-              }
+              onClick={() => navigate("/register")}
             >
               Registrarse
             </button>
           </div>
 
           <p className="landing-note">
-            ¿Eres cliente? Descarga la app móvil para registrarte y agendar
-            tu servicio.
+            ¿Eres usuario u operador? Descarga la app móvil para acceder al servicio.
           </p>
         </div>
       </div>

@@ -5,19 +5,17 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../../../../store/authStore";
 import { LogoutModal }  from "../LogoutModal";
-import logo from "../../../../assets/images/Logo.png";
+import logo             from "../../../../assets/images/Logo.png";
 
 export const Sidebar = () => {
   const logout   = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
-
-  // Controla si el modal de confirmación está visible
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleConfirmarLogout = () => {
     setModalVisible(false);
-    logout();                          // Limpia token y usuario
-    navigate("/", { replace: true }); // Redirige al login
+    logout();
+    navigate("/", { replace: true });
   };
 
   return (
@@ -29,6 +27,16 @@ export const Sidebar = () => {
         </div>
 
         <nav className="sidebar-nav">
+          {/* ── nuevo ── */}
+          <NavLink
+            to="/dashboard/panel"
+            className={({ isActive }) =>
+              isActive ? "sidebar-link active" : "sidebar-link"
+            }
+          >
+            Inicio
+          </NavLink>
+
           <NavLink
             to="/dashboard/servicios"
             className={({ isActive }) =>
@@ -39,7 +47,6 @@ export const Sidebar = () => {
           </NavLink>
         </nav>
 
-        {/* Abre el modal en vez de cerrar sesión directamente */}
         <button
           className="sidebar-logout"
           onClick={() => setModalVisible(true)}
@@ -49,7 +56,6 @@ export const Sidebar = () => {
 
       </aside>
 
-      {/* Modal solo existe en el DOM cuando está visible */}
       {modalVisible && (
         <LogoutModal
           onConfirmar={handleConfirmarLogout}

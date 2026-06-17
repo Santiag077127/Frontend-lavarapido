@@ -1,23 +1,27 @@
 // Datos enviados al backend para login
 export interface LoginRequest {
-  // Correo del usuario
-  email: string;
-  // Contraseña del usuario
+  email:    string;
   password: string;
 }
+
 // Respuesta del backend después del login
 export interface LoginResponse {
-  // Token JWT de autenticación
   token: string;
-  // Información del usuario autenticado
   user: {
-    // Identificador único
-    userId: string;
-    // Nombre del usuario
+    userId:    string;
     firstName: string;
-    // Correo del usuario
-    email: string;
-    // Rol permitido en el sistema
-    role: "ADMIN" | "USER" | "OPERATOR";
+    email:     string;
+    role:      "ADMIN" | "USER" | "OPERATOR";
   };
+}
+
+// ── nuevo ──
+export interface RegisterPayload {
+  first_name:      string;
+  last_name:       string;
+  email:           string;
+  phone_number:    string;
+  document_type:   "CC" | "TI" | "CE";
+  document_number: string;
+  password:        string;
 }
