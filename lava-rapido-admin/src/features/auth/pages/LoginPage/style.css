@@ -32,7 +32,7 @@
   justify-content: center;
   gap: 20px;
   padding: 40px 28px;
-  background: linear-gradient(160deg, var(--azul-oscuro), var(--azul-medio));
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
 }
 
 .lp-logo {

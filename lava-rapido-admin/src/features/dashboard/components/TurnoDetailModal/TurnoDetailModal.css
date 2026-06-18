@@ -1,0 +1,126 @@
+/* src/features/dashboard/components/TurnoDetailModal/TurnoDetailModal.css */
+
+.tdm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.tdm-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.25);
+}
+
+.tdm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tdm-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.tdm-seccion {
+  margin-bottom: 18px;
+}
+
+.tdm-seccion h3 {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+}
+
+.tdm-seccion p {
+  margin: 0;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.tdm-secundario {
+  color: #6b7280 !important;
+  font-size: 0.85rem !important;
+  margin-top: 2px !important;
+}
+
+.tdm-asignar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tdm-asignar select {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
+}
+
+.tdm-btn-asignar {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tdm-btn-asignar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tdm-acciones {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.tdm-btn-cancelar {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tdm-btn-cancelar:hover {
+  background: #fee2e2;
+}
+
+.tdm-btn-cerrar {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tdm-btn-cerrar:hover {
+  background: #f3f4f6;
+}

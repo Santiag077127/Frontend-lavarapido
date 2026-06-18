@@ -7,7 +7,7 @@
 /* ── LEFT PANEL ── */
 .landing-left {
   width: 40%;
-  background: linear-gradient(160deg, #0d1f4c 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -116,7 +116,7 @@
 .btn-primary {
   flex: 1;
   position: relative;
-  background: linear-gradient(135deg, #1a3a8f, #1565c0);
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
   color: #fff;
   border: none;
   border-radius: 10px;

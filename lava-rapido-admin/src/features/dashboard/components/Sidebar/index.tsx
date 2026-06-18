@@ -45,6 +45,30 @@ export const Sidebar = () => {
           >
             Servicios
           </NavLink>
+          <NavLink
+          to="/dashboard/maps"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Mapa
+        </NavLink>
+        <NavLink
+        to="/dashboard/operadores"
+        className={({ isActive }) =>
+          isActive ? "sidebar-link active" : "sidebar-link"
+        }
+      >
+        Operadores
+      </NavLink>
+      <NavLink
+        to="/dashboard/turnos"
+        className={({ isActive }) =>
+          isActive ? "sidebar-link active" : "sidebar-link"
+        }
+      >
+        Turnos
+      </NavLink>
         </nav>
 
         <button

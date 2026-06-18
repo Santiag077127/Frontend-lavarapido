@@ -85,6 +85,9 @@
   transition: opacity var(--transicion);
 }
 .modal-btn-cancelar { background: var(--gris-borde); color: var(--texto-oscuro); }
-.modal-btn-guardar  { background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-claro)); color: #fff; }
+.modal-btn-guardar {
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  color: #fff;
+}
 .modal-btn-cancelar:hover,
 .modal-btn-guardar:hover { opacity: 0.85; }

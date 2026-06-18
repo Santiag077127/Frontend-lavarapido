@@ -6,12 +6,17 @@
 .sidebar {
   width: 220px;
   min-height: 100vh;
-  background: linear-gradient(180deg, var(--azul-oscuro), var(--azul-medio));
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
   display: flex;
   flex-direction: column;
   padding: 24px 16px;
   gap: 8px;
   flex-shrink: 0;
+  min-height: 100vh;
+  height: 100vh;        /* ← agrega esto */
+  overflow-y: auto;     /* ← agrega esto */
+  position: sticky;     /* ← agrega esto */
+  top: 0;               /* ← agrega esto */
 }
 
 /* ── Logo ────────────────────────────────────────────────────── */
