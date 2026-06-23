@@ -1,67 +1,95 @@
-/* ============================================================
-   ServiciosTable.css  –  Lava Rápido Vehicular
-   Estilos exclusivos de la tabla de servicios
-   ============================================================ */
-
-.tabla-wrapper {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.07);
-}
-
-/* ── Tabla ───────────────────────────────────────────────────── */
-.tabla {
+.tabla-servicios {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
-.tabla thead {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+
+.tabla-servicios thead {
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+}
+
+.tabla-servicios th {
   color: #fff;
-}
-
-.tabla th {
-  padding: 14px 20px;
   text-align: left;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 16px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
-.tabla td {
-  padding: 14px 20px;
+.tabla-servicios td {
+  padding: 16px 20px;
   border-bottom: 1px solid var(--gris-borde);
   color: var(--texto-oscuro);
-  vertical-align: middle;
+  font-size: 0.95rem;
 }
 
-.tabla tbody tr:last-child td { border-bottom: none; }
-
-.tabla tbody tr:hover { background: var(--gris-fondo); }
-
-/* ── Estado vacío ────────────────────────────────────────────── */
-.tabla-vacia {
-  text-align: center;
-  color: var(--texto-gris);
-  padding: 40px !important;
+.tabla-servicios tbody tr:last-child td {
+  border-bottom: none;
 }
 
-/* ── Botones de acción ───────────────────────────────────────── */
-.tabla-acciones { display: flex; gap: 8px; }
+.tabla-servicios tbody tr:hover {
+  background: #f8fafc;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge--activo {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge--inactivo {
+  background: #fee2e2;
+  color: #b91c1c;
+}
 
 .btn-editar,
-.btn-eliminar {
-  padding: 6px 14px;
+.btn-activar,
+.btn-desactivar {
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 16px;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: opacity var(--transicion);
+  margin-right: 8px;
+  transition: var(--transicion);
 }
-.btn-editar   { background: var(--azul-claro); color: #fff; }
-.btn-eliminar { background: var(--error-texto); color: #fff; }
-.btn-editar:hover,
-.btn-eliminar:hover { opacity: 0.85; }
+
+.btn-editar {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-editar:hover {
+  background: #bae6fd;
+}
+
+.btn-activar {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.btn-activar:hover {
+  background: #bbf7d0;
+}
+
+.btn-desactivar {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.btn-desactivar:hover {
+  background: #fecaca;
+}

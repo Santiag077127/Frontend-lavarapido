@@ -1,31 +1,44 @@
-import { Servicio, ServicioForm } from "../types";
+import { api } from "@/services/api";
+import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 
-// Datos de prueba en memoria — reemplazar por axios cuando el backend esté listo
-let servicios: Servicio[] = [
-  { id: "1", nombre: "Lavado Básico",   precio: 15000, duracion: "20 min", descripcion: "Exterior con agua y jabón" },
-  { id: "2", nombre: "Lavado Completo", precio: 30000, duracion: "45 min", descripcion: "Exterior e interior" },
-  { id: "3", nombre: "Lavado Premium",  precio: 55000, duracion: "90 min", descripcion: "Detallado completo con encerado" },
-];
-
-let nextId = 4;
-
-// READ
-export const getServicios = (): Servicio[] => [...servicios];
-
-// CREATE
-export const createServicio = (form: ServicioForm): Servicio => {
-  const nuevo: Servicio = { id: String(nextId++), ...form };
-  servicios.push(nuevo);
-  return nuevo;
+export const getServicios = async (): Promise<Servicio[]> => {
+  const response = await api.get<Servicio[]>("/servicios");
+  return response.data;
 };
 
-// UPDATE
-export const updateServicio = (id: string, form: ServicioForm): Servicio => {
-  servicios = servicios.map((s) => (s.id === id ? { id, ...form } : s));
-  return { id, ...form };
+export const getServiciosDisponibles = async (): Promise<Servicio[]> => {
+  const response = await api.get<Servicio[]>("/servicios/disponibles");
+  return response.data;
 };
 
-// DELETE
-export const deleteServicio = (id: string): void => {
-  servicios = servicios.filter((s) => s.id !== id);
+export const buscarServicios = async (nombre: string): Promise<Servicio[]> => {
+  const response = await api.get<Servicio[]>("/servicios/buscar", {
+    params: { nombre },
+  });
+  return response.data;
+};
+
+export const createServicio = async (form: ServicioForm): Promise<Servicio> => {
+  const response = await api.post<Servicio>("/servicios", form);
+  return response.data;
+};
+
+export const updateServicio = async (
+  idServicio: string,
+  form: ServicioForm
+): Promise<Servicio> => {
+  const response = await api.put<Servicio>(`/servicios/${idServicio}`, form);
+  return response.data;
+};
+
+export const cambiarEstadoServicio = async (
+  idServicio: string,
+  activo: boolean
+): Promise<Servicio> => {
+  const response = await api.patch<Servicio>(
+    `/servicios/${idServicio}/estado`,
+    null,
+    { params: { activo } }
+  );
+  return response.data;
 };

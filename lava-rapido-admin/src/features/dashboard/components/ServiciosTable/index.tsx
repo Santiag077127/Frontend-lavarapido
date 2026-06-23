@@ -1,47 +1,61 @@
+import type { Servicio } from "@/features/dashboard/types";
 import "./ServiciosTable.css";
 
-import { Servicio } from "../../types";
-
-interface Props {
-  servicios:  Servicio[];
-  onEditar:   (servicio: Servicio) => void;
-  onEliminar: (id: string) => void;
+interface ServiciosTableProps {
+  servicios: Servicio[];
+  onEditar: (servicio: Servicio) => void;
+  onCambiarEstado: (servicio: Servicio) => void;
 }
 
-export const ServiciosTable = ({ servicios, onEditar, onEliminar }: Props) => {
+export const ServiciosTable = ({
+  servicios,
+  onEditar,
+  onCambiarEstado,
+}: ServiciosTableProps) => {
   return (
-    <div className="tabla-wrapper">
-      <table className="tabla">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Precio</th>
-            <th>Duración</th>
-            <th>Descripción</th>
-            <th>Acciones</th>
+    <table className="tabla-servicios">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Duración</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {servicios.map((servicio) => (
+          <tr key={servicio.idServicio}>
+            <td>{servicio.nombre}</td>
+            <td>${servicio.precio.toLocaleString("es-CO")}</td>
+            <td>{servicio.duracionMinutos} min</td>
+            <td>
+              <span
+                className={
+                  servicio.estado
+                    ? "badge badge--activo"
+                    : "badge badge--inactivo"
+                }
+              >
+                {servicio.estado ? "Activo" : "Inactivo"}
+              </span>
+            </td>
+            <td>
+              <button className="btn-editar" onClick={() => onEditar(servicio)}>
+                Editar
+              </button>
+              <button
+                className={
+                  servicio.estado ? "btn-desactivar" : "btn-activar"
+                }
+                onClick={() => onCambiarEstado(servicio)}
+              >
+                {servicio.estado ? "Desactivar" : "Activar"}
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {servicios.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="tabla-vacia">No hay servicios registrados</td>
-            </tr>
-          ) : (
-            servicios.map((s) => (
-              <tr key={s.id}>
-                <td>{s.nombre}</td>
-                <td>${s.precio.toLocaleString("es-CO")}</td>
-                <td>{s.duracion}</td>
-                <td>{s.descripcion}</td>
-                <td className="tabla-acciones">
-                  <button className="btn-editar"   onClick={() => onEditar(s)}>Editar</button>
-                  <button className="btn-eliminar" onClick={() => onEliminar(s.id)}>Eliminar</button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 };
