@@ -1,11 +1,15 @@
-// Estructura de un servicio de lavado
 export interface Servicio {
-  id:          string;
-  nombre:      string;
-  precio:      number;
-  duracion:    string;
+  idServicio: string;
+  nombre: string;
   descripcion: string;
+  precio: number;
+  duracionMinutos: number;
+  estado: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Formulario sin id — lo genera el mock
-export type ServicioForm = Omit<Servicio, "id">;
+export type ServicioForm = Pick<
+  Servicio,
+  "nombre" | "descripcion" | "precio" | "duracionMinutos"
+>;

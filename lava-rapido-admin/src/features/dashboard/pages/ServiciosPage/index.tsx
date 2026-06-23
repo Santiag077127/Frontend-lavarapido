@@ -1,65 +1,120 @@
+import { useEffect, useMemo, useState } from "react";
+import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
+import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
+import {
+  getServicios,
+  createServicio,
+  updateServicio,
+  cambiarEstadoServicio,
+} from "@/features/dashboard/services/servicioService";
+import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
 
-import { useState } from "react";
-import { Servicio, ServicioForm } from "../../types";
-import { getServicios, createServicio, updateServicio, deleteServicio } from "../../services/servicioService";
-import { ServiciosTable } from "../../components/ServiciosTable";
-import { ServicioModal }  from "../../components/ServicioModal";
-
 export const ServiciosPage = () => {
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null);
 
-  const [servicios,      setServicios]      = useState<Servicio[]>(getServicios());
-  const [modalAbierto,   setModalAbierto]   = useState(false);
-  const [servicioActivo, setServicioActivo] = useState<Servicio | null>(null);
+  const cargarServicios = async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const data = await getServicios();
+      setServicios(data);
+    } catch {
+      setError("No se pudieron cargar los servicios. Intenta de nuevo.");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarServicios();
+  }, []);
+
+  const serviciosFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return servicios;
+    return servicios.filter((s) => s.nombre.toLowerCase().includes(termino));
+  }, [servicios, busqueda]);
 
   const handleNuevo = () => {
-    setServicioActivo(null);
+    setServicioEditando(null);
     setModalAbierto(true);
   };
 
   const handleEditar = (servicio: Servicio) => {
-    setServicioActivo(servicio);
+    setServicioEditando(servicio);
     setModalAbierto(true);
   };
 
-  const handleEliminar = (id: string) => {
-    deleteServicio(id);
-    setServicios(getServicios());
+  const handleGuardar = async (form: ServicioForm) => {
+    setError(null);
+    try {
+      if (servicioEditando) {
+        await updateServicio(servicioEditando.idServicio, form);
+      } else {
+        await createServicio(form);
+      }
+      setModalAbierto(false);
+      await cargarServicios();
+    } catch {
+      setError("No se pudo guardar el servicio. Verifica los datos.");
+    }
   };
 
-  const handleGuardar = (form: ServicioForm) => {
-    if (servicioActivo) {
-      updateServicio(servicioActivo.id, form);
-    } else {
-      createServicio(form);
+  const handleCambiarEstado = async (servicio: Servicio) => {
+    setError(null);
+    try {
+      await cambiarEstadoServicio(servicio.idServicio, !servicio.estado);
+      await cargarServicios();
+    } catch {
+      setError("No se pudo cambiar el estado del servicio.");
     }
-    setServicios(getServicios());
-    setModalAbierto(false);
   };
 
   return (
-    <div className="page-wrapper">
-
+    <div className="page-servicios">
       <div className="page-header">
-        <h2 className="page-title">Servicios de Lavado</h2>
-        <button className="btn-nuevo" onClick={handleNuevo}>+ Nuevo Servicio</button>
+        <h1>Servicios</h1>
+        <button className="btn-nuevo" onClick={handleNuevo}>
+          + Nuevo Servicio
+        </button>
       </div>
 
-      <ServiciosTable
-        servicios={servicios}
-        onEditar={handleEditar}
-        onEliminar={handleEliminar}
-      />
+      <div className="page-buscador">
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+      </div>
 
-      {/* Modal solo existe en el DOM cuando está abierto */}
+      {error && <p className="page-error">{error}</p>}
+
+      {cargando ? (
+        <p>Cargando servicios...</p>
+      ) : serviciosFiltrados.length === 0 ? (
+        <p className="page-vacio">No se encontraron resultados.</p>
+      ) : (
+        <ServiciosTable
+          servicios={serviciosFiltrados}
+          onEditar={handleEditar}
+          onCambiarEstado={handleCambiarEstado}
+        />
+      )}
+
       {modalAbierto && (
         <ServicioModal
-          servicio={servicioActivo}
+          servicio={servicioEditando}
           onGuardar={handleGuardar}
           onCerrar={() => setModalAbierto(false)}
         />
       )}
-
     </div>
   );
 };
