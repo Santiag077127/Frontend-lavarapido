@@ -1,7 +1,7 @@
 import "./style.css";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { login } from "../../services/authService";
 import { useAuthStore } from "../../../../store/authStore"; 
@@ -88,7 +88,10 @@ export const LoginForm = () => {
         </div>
 
         <div className="lf-field">
-          <label className="lf-label" htmlFor="lf-password">Contraseña</label>
+          <div className="lf-password-row">
+            <label className="lf-label" htmlFor="lf-password">Contraseña</label>
+
+          </div>
           <input
             id="lf-password"
             type="password"
