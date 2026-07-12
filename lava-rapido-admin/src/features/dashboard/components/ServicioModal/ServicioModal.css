@@ -91,3 +91,27 @@
 }
 .modal-btn-cancelar:hover,
 .modal-btn-guardar:hover { opacity: 0.85; }
+
+@media (max-width: 768px) {
+  .modal-card {
+    padding: 24px;
+    max-width: 92vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-card {
+    padding: 18px;
+    max-width: 96vw;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .modal-btn-cancelar,
+  .modal-btn-guardar {
+    width: 100%;
+  }
+}

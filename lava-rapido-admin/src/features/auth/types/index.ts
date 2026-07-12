@@ -15,13 +15,32 @@ export interface LoginResponse {
   };
 }
 
-// ── nuevo ──
+// ── corregido: el backend (UserRegistrationDTO) espera camelCase,
+// no snake_case. Con snake_case estos campos llegaban como null. ──
 export interface RegisterPayload {
-  first_name:      string;
-  last_name:       string;
-  email:           string;
-  phone_number:    string;
-  document_type:   "CC" | "TI" | "CE";
-  document_number: string;
-  password:        string;
+  firstName:      string;
+  lastName:       string;
+  email:          string;
+  phoneNumber:    string;
+  documentType:   "CC" | "TI" | "CE";
+  documentNumber: string;
+  password:       string;
+}
+
+// ── nuevo: recuperar contraseña ──
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResetPasswordPayload {
+  token:           string;
+  nuevaContrasena: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
 }

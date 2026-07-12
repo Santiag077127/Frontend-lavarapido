@@ -17,6 +17,7 @@ export const ServiciosTable = ({
       <thead>
         <tr>
           <th>Nombre</th>
+          <th>Descripción</th>
           <th>Precio</th>
           <th>Duración</th>
           <th>Estado</th>
@@ -27,6 +28,9 @@ export const ServiciosTable = ({
         {servicios.map((servicio) => (
           <tr key={servicio.idServicio}>
             <td>{servicio.nombre}</td>
+            <td className="tabla-descripcion" title={servicio.descripcion}>
+              {servicio.descripcion || "—"}
+            </td>
             <td>${servicio.precio.toLocaleString("es-CO")}</td>
             <td>{servicio.duracionMinutos} min</td>
             <td>

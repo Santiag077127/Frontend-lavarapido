@@ -1,10 +1,20 @@
 .tabla-servicios {
+  display: block;
   width: 100%;
+  min-width: 760px;
+  max-width: 100%;
+  overflow-x: auto;
   border-collapse: collapse;
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.tabla-servicios thead,
+.tabla-servicios tbody,
+.tabla-servicios tr {
+  width: 100%;
 }
 
 .tabla-servicios thead {
@@ -19,6 +29,7 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .tabla-servicios td {
@@ -26,6 +37,7 @@
   border-bottom: 1px solid var(--gris-borde);
   color: var(--texto-oscuro);
   font-size: 0.95rem;
+  vertical-align: middle;
 }
 
 .tabla-servicios tbody tr:last-child td {
@@ -65,6 +77,7 @@
   cursor: pointer;
   margin-right: 8px;
   transition: var(--transicion);
+  white-space: nowrap;
 }
 
 .btn-editar {
@@ -92,4 +105,36 @@
 
 .btn-desactivar:hover {
   background: #fecaca;
+}
+.tabla-descripcion {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .tabla-servicios {
+    min-width: 680px;
+  }
+
+  .tabla-servicios th,
+  .tabla-servicios td {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-editar,
+  .btn-activar,
+  .btn-desactivar {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabla-servicios {
+    border-radius: 0.75rem;
+    min-width: 620px;
+  }
 }
