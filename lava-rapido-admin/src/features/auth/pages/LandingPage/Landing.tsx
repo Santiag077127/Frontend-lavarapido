@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 
 const LandingPage = () => {
@@ -81,12 +81,18 @@ const LandingPage = () => {
               <span className="btn-badge">Solo administradores</span>
             </button>
 
-            <button
-              className="btn-secondary"
-              onClick={() => navigate("/register")}
-            >
-              <span className="">Registrate como usuario</span>
-            </button>
+            <div className="landing-actions-secondary">
+              <button
+                className="btn-secondary"
+                onClick={() => navigate("/register")}
+              >
+                <span>Regístrate como usuario</span>
+              </button>
+
+              <Link to="/forgot-password" className="landing-forgot-link">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </div>
 
           <p className="landing-note">

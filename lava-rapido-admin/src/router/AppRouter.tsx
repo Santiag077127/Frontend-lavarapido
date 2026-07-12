@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage }          from "../features/auth/pages/LoginPage/LoginPage";
 import { RegisterPage }       from "../features/auth/pages/RegisterPage/RegisterPage"; // ← nuevo
+import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage/ForgotPasswordPage"; // ← nuevo
+import { ResetPasswordPage }  from "../features/auth/pages/ResetPasswordPage/ResetPasswordPage";   // ← nuevo
 import { DashboardPage }      from "../features/dashboard/pages/DashboardPage";
 import { ServiciosPage }      from "../features/dashboard/pages/ServiciosPage";
 import { PanelPrincipalPage } from "../features/dashboard/pages/PanelPrincipalPage";
@@ -13,9 +15,11 @@ export const AppRouter = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"         element={<LandingPage />} />
-        <Route path="/login"    element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />  {/* ← nuevo */}
+        <Route path="/"                element={<LandingPage />} />
+        <Route path="/login"           element={<LoginPage />} />
+        <Route path="/register"        element={<RegisterPage />} />        {/* ← nuevo */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />  {/* ← nuevo */}
+        <Route path="/reset-password"  element={<ResetPasswordPage />} />   {/* ← nuevo */}
 
         <Route path="/dashboard" element={<DashboardPage />}>
           <Route index          element={<Navigate to="panel" replace />} />
