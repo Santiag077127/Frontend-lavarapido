@@ -246,3 +246,37 @@
 .rp-back-btn:hover {
   background: #e0e7ff;
 }
+
+@media (max-width: 768px) {
+  .rp-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .rp-row {
+    grid-template-columns: 1fr;
+  }
+
+  .rp-back-btn {
+    top: 1rem;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .rp-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .rp-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .rp-title {
+    font-size: 1.35rem;
+  }
+
+  .rp-subtitle,
+  .rp-login-link {
+    font-size: 0.85rem;
+  }
+}

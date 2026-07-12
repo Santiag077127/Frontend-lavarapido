@@ -106,3 +106,26 @@
 
 .logout-btn-cancelar:hover  { background: var(--gris-borde); }
 .logout-btn-confirmar:hover { opacity: 0.88; transform: translateY(-1px); }
+
+@media (max-width: 768px) {
+  .logout-card {
+    padding: 28px 24px 22px;
+    max-width: 92vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .logout-card {
+    padding: 20px 18px;
+    max-width: 96vw;
+  }
+
+  .logout-actions {
+    flex-direction: column;
+  }
+
+  .logout-btn-cancelar,
+  .logout-btn-confirmar {
+    width: 100%;
+  }
+}

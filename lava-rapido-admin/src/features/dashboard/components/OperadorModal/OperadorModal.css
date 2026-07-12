@@ -105,3 +105,27 @@
 
 .om-btn-cancelar:hover { background: #e5e7eb; }
 .om-btn-guardar:hover  { opacity: 0.88; }
+
+@media (max-width: 768px) {
+  .om-card {
+    padding: 1.5rem;
+    max-width: 96vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .om-card {
+    padding: 1.25rem;
+    max-width: 98vw;
+  }
+
+  .om-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .om-btn-cancelar,
+  .om-btn-guardar {
+    width: 100%;
+  }
+}

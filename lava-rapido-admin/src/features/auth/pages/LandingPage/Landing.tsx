@@ -85,7 +85,7 @@ const LandingPage = () => {
               className="btn-secondary"
               onClick={() => navigate("/register")}
             >
-              Registrarse
+              <span className="">Registrate como usuario</span>
             </button>
           </div>
 

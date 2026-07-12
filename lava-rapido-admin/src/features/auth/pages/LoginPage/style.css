@@ -67,10 +67,32 @@
 
 /* ── RESPONSIVE ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .lp-card  { flex-direction: column; }
+  .lp-card  { flex-direction: column; min-height: auto; }
   .lp-left,
   .lp-right { width: 100%; }
   .lp-left  { padding: 28px 20px; min-height: auto; }
+  .lp-right { padding: 28px 20px; }
   .lp-logo  { width: 150px; }
   .lp-tagline { display: none; }
+}
+
+@media (max-width: 480px) {
+  .lp-bg {
+    padding: 16px;
+    align-items: stretch;
+  }
+
+  .lp-card {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .lp-left,
+  .lp-right {
+    padding: 20px 16px;
+  }
+
+  .lp-logo {
+    width: 130px;
+  }
 }

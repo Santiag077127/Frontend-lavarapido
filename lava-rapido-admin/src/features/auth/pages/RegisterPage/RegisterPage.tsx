@@ -7,13 +7,13 @@ import { register } from "../../services/authService";
 import type { RegisterPayload } from "../../types";
 
 const INITIAL_FORM: RegisterPayload = {
-  first_name:      "",
-  last_name:       "",
-  email:           "",
-  phone_number:    "",
-  document_type:   "CC",
-  document_number: "",
-  password:        "",
+  firstName:      "",
+  lastName:       "",
+  email:          "",
+  phoneNumber:    "",
+  documentType:   "CC",
+  documentNumber: "",
+  password:       "",
 };
 
 export const RegisterPage = () => {
@@ -33,12 +33,12 @@ export const RegisterPage = () => {
 
   // ── Validaciones alineadas con los constraints de la BD ──
   const validate = (): string => {
-    if (!form.first_name.trim())      return "El nombre es obligatorio.";
-    if (!form.document_type)          return "Selecciona el tipo de documento.";
-    if (!form.document_number.trim()) return "El número de documento es obligatorio.";
+    if (!form.firstName.trim())      return "El nombre es obligatorio.";
+    if (!form.documentType)          return "Selecciona el tipo de documento.";
+    if (!form.documentNumber.trim()) return "El número de documento es obligatorio.";
 
     const phoneRegex = /^3[0-9]{9}$/;
-    if (!phoneRegex.test(form.phone_number))
+    if (!phoneRegex.test(form.phoneNumber))
       return "El teléfono debe empezar por 3 y tener 10 dígitos (ej: 3101234567).";
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +67,10 @@ export const RegisterPage = () => {
     try {
       await register(form);
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2500);
+      // El registro web es para usuarios de la app móvil (rol USER),
+      // no para el panel admin, así que no los mandamos a /login
+      // (ese login es solo para ADMIN). Los devolvemos a la landing.
+      setTimeout(() => navigate("/"), 2500);
     } catch (err: any) {
       if (err.response?.status === 409) {
         setError("El correo electrónico ya está registrado.");
@@ -90,7 +93,7 @@ export const RegisterPage = () => {
           <h2 className="rp-success-title">¡Registro exitoso!</h2>
           <p className="rp-success-msg">
             Tu cuenta fue creada correctamente.<br />
-            Serás redirigido al inicio de sesión…
+            Ya puedes iniciar sesión desde la app móvil de Lava Rápido.
           </p>
         </div>
       </div>
@@ -137,10 +140,10 @@ export const RegisterPage = () => {
               </label>
               <input
                 id="rp-first-name"
-                name="first_name"
+                name="firstName"
                 type="text"
                 placeholder="Ej: Carlos"
-                value={form.first_name}
+                value={form.firstName}
                 onChange={handleChange}
                 className="rp-input"
                 autoComplete="given-name"
@@ -154,10 +157,10 @@ export const RegisterPage = () => {
               </label>
               <input
                 id="rp-last-name"
-                name="last_name"
+                name="lastName"
                 type="text"
                 placeholder="Ej: Rojas"
-                value={form.last_name}
+                value={form.lastName}
                 onChange={handleChange}
                 className="rp-input"
                 autoComplete="family-name"
@@ -172,8 +175,8 @@ export const RegisterPage = () => {
               </label>
               <select
                 id="rp-doc-type"
-                name="document_type"
-                value={form.document_type}
+                name="documentType"
+                value={form.documentType}
                 onChange={handleChange}
                 className="rp-select"
                 aria-required="true"
@@ -190,10 +193,10 @@ export const RegisterPage = () => {
               </label>
               <input
                 id="rp-doc-number"
-                name="document_number"
+                name="documentNumber"
                 type="text"
                 placeholder="Ej: 1075123456"
-                value={form.document_number}
+                value={form.documentNumber}
                 onChange={handleChange}
                 className="rp-input"
                 aria-required="true"
@@ -208,10 +211,10 @@ export const RegisterPage = () => {
             </label>
             <input
               id="rp-phone"
-              name="phone_number"
+              name="phoneNumber"
               type="tel"
               placeholder="Ej: 3101234567"
-              value={form.phone_number}
+              value={form.phoneNumber}
               onChange={handleChange}
               className="rp-input"
               autoComplete="tel"
