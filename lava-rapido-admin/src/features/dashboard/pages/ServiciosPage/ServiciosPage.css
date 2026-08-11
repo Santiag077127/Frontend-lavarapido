@@ -64,6 +64,13 @@
   font-size: 0.95rem;
 }
 
+.page-servicios .tabla-wrapper {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 @media (max-width: 768px) {
   .page-header {
     align-items: stretch;
