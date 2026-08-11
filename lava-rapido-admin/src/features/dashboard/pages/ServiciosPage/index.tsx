@@ -101,11 +101,13 @@ export const ServiciosPage = () => {
       ) : serviciosFiltrados.length === 0 ? (
         <p className="page-vacio">No se encontraron resultados.</p>
       ) : (
-        <ServiciosTable
-          servicios={serviciosFiltrados}
-          onEditar={handleEditar}
-          onCambiarEstado={handleCambiarEstado}
-        />
+        <div className="tabla-wrapper">
+          <ServiciosTable
+            servicios={serviciosFiltrados}
+            onEditar={handleEditar}
+            onCambiarEstado={handleCambiarEstado}
+          />
+        </div>
       )}
 
       {modalAbierto && (

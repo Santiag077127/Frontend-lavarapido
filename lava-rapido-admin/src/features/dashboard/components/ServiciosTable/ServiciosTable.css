@@ -1,20 +1,8 @@
 .tabla-servicios {
-  display: block;
   width: 100%;
   min-width: 760px;
-  max-width: 100%;
-  overflow-x: auto;
   border-collapse: collapse;
   background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-.tabla-servicios thead,
-.tabla-servicios tbody,
-.tabla-servicios tr {
-  width: 100%;
 }
 
 .tabla-servicios thead {
