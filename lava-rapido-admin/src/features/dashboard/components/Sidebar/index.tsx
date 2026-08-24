@@ -11,6 +11,7 @@ import {
   Map,
   Tag,
   Users,
+  UserRound,
   Wrench,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -83,6 +84,10 @@ export const Sidebar = () => {
             <NavLink to="/dashboard/turnos" className={({ isActive }) => isActive ? "sidebar-link sidebar-link--active" : "sidebar-link"}>
               <Clock size={18} aria-hidden="true" />
               <span>Turnos</span>
+            </NavLink>
+            <NavLink to="/dashboard/perfil" className={({ isActive }) => isActive ? "sidebar-link sidebar-link--active" : "sidebar-link"}>
+              <UserRound size={18} aria-hidden="true" />
+              <span>Mi perfil</span>
             </NavLink>
           </nav>
 
