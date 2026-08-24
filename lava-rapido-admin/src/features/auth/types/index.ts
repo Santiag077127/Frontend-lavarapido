@@ -36,6 +36,10 @@ export interface ForgotPasswordResponse {
   message: string;
 }
 
+export interface ForgotPasswordErrorResponse {
+  error: string;
+}
+
 export interface ResetPasswordPayload {
   token:           string;
   nuevaContrasena: string;

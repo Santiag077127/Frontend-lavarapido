@@ -1,13 +1,13 @@
 import "./ForgotPasswordPage.css";
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
+import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { forgotPassword } from "../../services/authService";
+import type { ForgotPasswordErrorResponse } from "../../types";
 
 export const ForgotPasswordPage = () => {
-  const navigate = useNavigate();
-
   const [email, setEmail]         = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState("");
@@ -33,9 +33,9 @@ export const ForgotPasswordPage = () => {
       // El backend siempre responde 200, exista o no el correo
       // (por seguridad, no revela qué correos están registrados).
       setSuccess(true);
-    } catch (err: any) {
-      if (err.response?.status >= 500) {
-        setError("Error del servidor. Inténtalo de nuevo más tarde.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError<ForgotPasswordErrorResponse>(error) && error.response) {
+        setError(error.response.data.error);
       } else {
         setError("Error de conexión. Verifica tu internet.");
       }
@@ -48,6 +48,7 @@ export const ForgotPasswordPage = () => {
   if (success) {
     return (
       <div className="fpp-page">
+        <HomeButton />
         <div className="fpp-success-box">
           <span className="fpp-success-icon">✓</span>
           <h2 className="fpp-success-title">Revisa tu correo</h2>
@@ -56,9 +57,6 @@ export const ForgotPasswordPage = () => {
             para restablecer tu contraseña.<br />
             El enlace vence en 30 minutos.
           </p>
-          <Link to="/login" className="fpp-btn-link">
-            Volver a iniciar sesión
-          </Link>
         </div>
       </div>
     );
@@ -66,14 +64,7 @@ export const ForgotPasswordPage = () => {
 
   return (
     <div className="fpp-page">
-
-      <button
-        type="button"
-        className="fpp-back-btn"
-        onClick={() => navigate("/login")}
-      >
-        ← Volver a iniciar sesión
-      </button>
+      <HomeButton />
 
       <div className="fpp-card">
 

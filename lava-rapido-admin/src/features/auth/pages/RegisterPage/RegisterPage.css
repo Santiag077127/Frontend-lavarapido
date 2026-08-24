@@ -105,6 +105,31 @@
   color: #9ca3af;
 }
 
+.rp-input--error {
+  border-color: #dc2626;
+}
+
+.rp-input--error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
+.rp-input--valid {
+  border-color: #16a34a;
+}
+
+.rp-input--valid:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+}
+
+.rp-field-error {
+  margin: 0.125rem 0 0;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 /* ── Error ── */
 .rp-error {
   display: flex;
@@ -150,6 +175,35 @@
 .rp-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.rp-consents {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.rp-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  color: #4b5563;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.rp-consent input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.1rem 0 0;
+  accent-color: #1e40af;
+  flex: 0 0 auto;
+}
+
+.rp-consent a {
+  color: #1e40af;
+  font-weight: 600;
 }
 
 /* ── Spinner ── */
