@@ -12,6 +12,7 @@ import { OperadoresPage } from "@/features/dashboard/pages/OperadoresPage/Operad
 import { TurnosPage } from "@/features/dashboard/pages/TurnosPage/TurnosPage";
 import { VehiculosPage } from "@/features/dashboard/pages/VehiculosPage";
 import { MarcasPage } from "@/features/dashboard/pages/MarcasPage";
+import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
 
 export const AppRouter = () => {
   return (
@@ -32,6 +33,7 @@ export const AppRouter = () => {
           <Route path="marcas" element={<MarcasPage />} />
           <Route path="maps" element={<MapsPage />} />
           <Route path="operadores" element={<OperadoresPage />} />
+          <Route path="perfil" element={<PerfilPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

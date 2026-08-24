@@ -49,3 +49,12 @@ export interface VehiculoForm {
   tipoVehiculo: TipoVehiculo;
   fkIdMarca: string; // UUID
 }
+
+export interface UserProfile {
+  email: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  profilePicture: string;
+}
