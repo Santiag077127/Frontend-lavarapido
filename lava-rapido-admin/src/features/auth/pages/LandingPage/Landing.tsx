@@ -81,7 +81,7 @@ const LandingPage = () => {
               <span className="btn-badge">Solo administradores</span>
             </button>
 
-            <div className="landing-actions-secondary">
+            <div className="landing-actions-row">
               <button
                 className="btn-secondary"
                 onClick={() => navigate("/register")}
@@ -90,7 +90,7 @@ const LandingPage = () => {
               </button>
 
               <Link to="/forgot-password" className="landing-forgot-link">
-                ¿Olvidaste tu contraseña?
+                Recuperar contraseña
               </Link>
             </div>
           </div>

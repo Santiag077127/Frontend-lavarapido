@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 import { resetPassword } from "../../services/authService";
+import { HomeButton } from "../../components/HomeButton/HomeButton";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
@@ -41,7 +42,9 @@ export const ResetPasswordPage = () => {
     try {
       await resetPassword(token, password);
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2500);
+      // Este sitio es el panel administrativo. Tras actualizar la contraseña,
+      // el usuario vuelve a la pantalla principal, no al acceso de administradores.
+      setTimeout(() => navigate("/"), 2500);
     } catch (err: any) {
       const status = err.response?.status;
       const backendMsg: string | undefined = err.response?.data?.message;
@@ -66,11 +69,12 @@ export const ResetPasswordPage = () => {
   if (success) {
     return (
       <div className="rsp-page">
+        <HomeButton />
         <div className="rsp-success-box">
           <span className="rsp-success-icon">✓</span>
           <h2 className="rsp-success-title">Contraseña actualizada</h2>
           <p className="rsp-success-msg">
-            Ya puedes iniciar sesión con tu nueva contraseña.<br />
+            Tu contraseña se actualizó correctamente.<br />
             Serás redirigido…
           </p>
         </div>
@@ -82,6 +86,7 @@ export const ResetPasswordPage = () => {
   if (!token) {
     return (
       <div className="rsp-page">
+        <HomeButton />
         <div className="rsp-success-box">
           <h2 className="rsp-success-title">Enlace inválido</h2>
           <p className="rsp-success-msg">
@@ -97,14 +102,7 @@ export const ResetPasswordPage = () => {
 
   return (
     <div className="rsp-page">
-
-      <button
-        type="button"
-        className="rsp-back-btn"
-        onClick={() => navigate("/login")}
-      >
-        ← Volver a iniciar sesión
-      </button>
+      <HomeButton />
 
       <div className="rsp-card">
 

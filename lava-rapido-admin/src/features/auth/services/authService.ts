@@ -22,7 +22,9 @@ export const register = async (data: RegisterPayload) => {
 // Paso 1: el usuario pide el enlace de recuperación con su correo.
 // El backend siempre responde 200 con un mensaje genérico, exista o no
 // el correo (para no revelar qué correos están registrados).
-export const forgotPassword = async (email: string) => {
+export const forgotPassword = async (
+  email: string,
+): Promise<ForgotPasswordResponse> => {
   const payload: ForgotPasswordPayload = { email };
   const response = await api.post<ForgotPasswordResponse>("/auth/forgot-password", payload);
   return response.data;

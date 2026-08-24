@@ -2,6 +2,7 @@ import "./style.css";
 
 import logo from "../../../../assets/images/Logo.png";
 
+import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { LoginForm } from "../../components/LoginForm/LoginForm";
 /**
  * Página principal del login
@@ -11,6 +12,7 @@ export const LoginPage = () => {
   return (
 
     <main className="lp-bg">
+      <HomeButton />
 
       <div className="lp-card">
 
