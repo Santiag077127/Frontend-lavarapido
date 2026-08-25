@@ -1,0 +1,38 @@
+.auth-home-button {
+  position: absolute;
+  z-index: 1;
+  top: 1.5rem;
+  left: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e40af;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(13, 27, 62, 0.08);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.auth-home-button:hover {
+  border-color: #1e40af;
+  background: #e0e7ff;
+  color: #1e3a8a;
+}
+
+.auth-home-button:focus-visible {
+  outline: 3px solid rgba(30, 64, 175, 0.25);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .auth-home-button {
+    top: 1rem;
+    left: 1rem;
+  }
+}

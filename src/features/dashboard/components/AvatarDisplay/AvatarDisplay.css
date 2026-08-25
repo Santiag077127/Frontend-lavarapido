@@ -1,0 +1,22 @@
+.avatar-display,
+.avatar-display__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  background: #e8f4fc;
+  color: var(--azul-claro);
+}
+
+.avatar-display img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-display__fallback svg {
+  width: 42%;
+  height: 42%;
+}
