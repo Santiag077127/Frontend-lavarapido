@@ -50,11 +50,21 @@ export interface VehiculoForm {
   fkIdMarca: string; // UUID
 }
 
+export const AVATAR_OPTIONS = [
+  "avatar_1",
+  "avatar_2",
+  "avatar_3",
+  "avatar_4",
+  "avatar_5",
+] as const;
+
+export type AvatarId = typeof AVATAR_OPTIONS[number];
+
 export interface UserProfile {
   email: string;
   userId: string;
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  profilePicture: string;
+  profilePicture: AvatarId;
 }

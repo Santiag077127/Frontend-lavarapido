@@ -133,6 +133,61 @@
   font-weight: 400;
 }
 
+.perfil-avatar-selector {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.perfil-avatar-selector legend {
+  margin-bottom: 0.65rem;
+  color: var(--texto-gris);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.perfil-avatar-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(58px, 1fr));
+  gap: 0.75rem;
+}
+
+.perfil-avatar-option {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--gris-borde);
+  border-radius: 50%;
+  background: #e8f4fc;
+  cursor: pointer;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.perfil-avatar-option:hover,
+.perfil-avatar-option--selected {
+  border-color: var(--azul-claro);
+  box-shadow: 0 0 0 3px rgba(56, 175, 255, 0.18);
+}
+
+.perfil-avatar-check {
+  position: absolute;
+  right: 0.1rem;
+  bottom: 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: var(--azul-claro);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .perfil-save {
   display: inline-flex;
   align-items: center;
@@ -186,17 +241,69 @@
   color: #208b4e;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
+  .page-perfil {
+    padding: 0;
+  }
+
+  .page-perfil .page-header {
+    margin-bottom: 1rem;
+  }
+
   .perfil-card {
     flex-direction: column;
-    padding: 1.25rem;
+    width: 100%;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .perfil-avatar {
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+  }
+
+  .perfil-details {
+    margin-top: 1rem;
   }
 
   .perfil-form {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
   }
 
-  .perfil-form {
-    grid-template-columns: 1fr;
+  .perfil-avatar-options {
+    grid-template-columns: repeat(3, minmax(64px, 1fr));
+    max-width: 360px;
+    gap: 0.6rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-perfil .page-header h1 {
+    font-size: 1.45rem;
+  }
+
+  .page-perfil .page-header p {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
+  .perfil-info h2 {
+    font-size: 1.15rem;
+  }
+
+  .perfil-avatar-options {
+    grid-template-columns: repeat(2, minmax(64px, 1fr));
+    max-width: 220px;
+  }
+
+  .perfil-form input {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .perfil-save {
+    padding: 0.65rem 0.8rem;
   }
 }

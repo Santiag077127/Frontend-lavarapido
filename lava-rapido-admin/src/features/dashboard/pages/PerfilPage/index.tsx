@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, Save, UserRound } from "lucide-react";
+import { Mail, Phone, Save } from "lucide-react";
 
 import { useAuthStore } from "../../../../store/authStore";
+import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
 import { getProfile, updateProfile } from "../../services/userService";
-import type { UserProfile } from "../../types";
+import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
 import "./PerfilPage.css";
 
 type ProfileForm = Pick<UserProfile, "firstName" | "lastName" | "phoneNumber" | "profilePicture">;
@@ -12,8 +13,11 @@ const EMPTY_FORM: ProfileForm = {
   firstName: "",
   lastName: "",
   phoneNumber: "",
-  profilePicture: "",
+  profilePicture: "avatar_1",
 };
+
+const isAvatarId = (value: string): value is AvatarId =>
+  AVATAR_OPTIONS.includes(value as AvatarId);
 
 export const PerfilPage = () => {
   const loggedUser = useAuthStore((state) => state.user);
@@ -36,7 +40,7 @@ export const PerfilPage = () => {
           lastName: data.lastName,
           phoneNumber: data.phoneNumber,
           // profilePicture es un identificador textual temporal, no una imagen real.
-          profilePicture: data.profilePicture,
+          profilePicture: isAvatarId(data.profilePicture) ? data.profilePicture : AVATAR_OPTIONS[0],
         });
       } catch {
         setError("No se pudo cargar tu perfil. Intenta de nuevo.");
@@ -70,7 +74,7 @@ export const PerfilPage = () => {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         phoneNumber: form.phoneNumber,
-        profilePicture: form.profilePicture.trim(),
+        profilePicture: form.profilePicture,
       });
       const refreshed = await getProfile();
       const currentProfile = refreshed || updated;
@@ -90,7 +94,6 @@ export const PerfilPage = () => {
   };
 
   const email = profile?.email || loggedUser?.email || "No disponible";
-  const userId = profile?.userId || loggedUser?.userId || "No disponible";
 
   return (
     <div className="page-perfil">
@@ -109,7 +112,7 @@ export const PerfilPage = () => {
       ) : (
         <section className="perfil-card" aria-label="Información del perfil">
           <div className="perfil-avatar" aria-hidden="true">
-            <UserRound size={42} />
+            <AvatarDisplay avatarId={form.profilePicture} />
           </div>
 
           <div className="perfil-info">
@@ -120,10 +123,6 @@ export const PerfilPage = () => {
               <div>
                 <dt><Mail size={17} aria-hidden="true" /> Correo electrónico</dt>
                 <dd>{email}</dd>
-              </div>
-              <div>
-                <dt><UserRound size={17} aria-hidden="true" /> ID de usuario</dt>
-                <dd>{userId}</dd>
               </div>
             </dl>
 
@@ -140,11 +139,28 @@ export const PerfilPage = () => {
                 <span><Phone size={16} aria-hidden="true" /> Teléfono</span>
                 <input name="phoneNumber" type="tel" inputMode="numeric" value={form.phoneNumber} onChange={handleChange} maxLength={10} required />
               </label>
-              <label>
-                Identificador de avatar
-                <input name="profilePicture" value={form.profilePicture} onChange={handleChange} placeholder="avatar_1" />
-                <small>Usa valores como avatar_1 o avatar_2.</small>
-              </label>
+              <fieldset className="perfil-avatar-selector">
+                <legend>Foto de perfil</legend>
+                <div className="perfil-avatar-options">
+                  {AVATAR_OPTIONS.map((avatarId) => (
+                    <button
+                      className={`perfil-avatar-option ${form.profilePicture === avatarId ? "perfil-avatar-option--selected" : ""}`}
+                      type="button"
+                      key={avatarId}
+                      onClick={() => {
+                        setForm((current) => ({ ...current, profilePicture: avatarId }));
+                        setMensaje(null);
+                      }}
+                      aria-label={`Seleccionar ${avatarId}`}
+                      aria-pressed={form.profilePicture === avatarId}
+                    >
+                      <AvatarDisplay avatarId={avatarId} />
+                      {form.profilePicture === avatarId && <span className="perfil-avatar-check" aria-hidden="true">✓</span>}
+                    </button>
+                  ))}
+                </div>
+                <small>Selecciona un avatar predeterminado.</small>
+              </fieldset>
 
               <button className="perfil-save" type="submit" disabled={guardando}>
                 <Save size={17} aria-hidden="true" />
