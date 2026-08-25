@@ -1,0 +1,8 @@
+{
+  "login": { "title": "Se connecter", "email": "Adresse e-mail", "password": "Mot de passe", "button": "Connexion", "forgot": "Mot de passe oublié?" },
+  "register": { "title": "Créer un compte", "name": "Nom complet", "phone": "Téléphone", "button": "S'inscrire" },
+  "services": { "title": "Services disponibles", "search": "Rechercher un service...", "noResults": "Aucun résultat trouvé" },
+  "payment": { "title": "Effectuer le paiement", "method": "Méthode de paiement", "confirm": "Confirmer le paiement", "success": "Paiement réussi", "error": "Erreur de paiement" },
+  "tracking": { "title": "Suivi en temps réel", "noSignal": "Pas de signal GPS de l'opérateur" },
+  "profile": { "title": "Mon profil", "edit": "Modifier les données", "vehicle": "Mon véhicule", "preferences": "Préférences" }
+}
