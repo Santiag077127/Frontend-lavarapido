@@ -1,0 +1,252 @@
+.landing-root {
+  display: flex;
+  min-height: 100vh;
+  background: #f0f4f8;
+}
+
+/* ── LEFT PANEL ── */
+.landing-left {
+  width: 40%;
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  gap: 1.5rem;
+}
+
+.landing-logo img {
+  width: 180px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 24px rgba(0, 120, 255, 0.3));
+}
+
+.landing-tagline {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.landing-tagline span {
+  color: #4fc3f7;
+  font-weight: 600;
+}
+
+/* ── RIGHT PANEL ── */
+.landing-right {
+  width: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 4rem;
+}
+
+.landing-content {
+  max-width: 520px;
+  width: 100%;
+}
+
+.landing-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d1f4c;
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.landing-subtitle {
+  font-size: 0.97rem;
+  color: #5a6a85;
+  line-height: 1.6;
+  margin: 0 0 2rem;
+}
+
+/* ── FEATURES ── */
+.landing-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.feature-item:hover {
+  box-shadow: 0 4px 16px rgba(21, 101, 192, 0.1);
+}
+
+.feature-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.feature-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #0d1f4c;
+  margin: 0 0 2px;
+}
+
+.feature-desc {
+  font-size: 0.82rem;
+  color: #7a8ba0;
+  margin: 0;
+}
+
+/* ── ACTIONS ── */
+.landing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.landing-actions-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  flex: 1;
+  position: relative;
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-badge {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.03em;
+}
+
+.btn-secondary {
+  flex: 1;
+  background: transparent;
+  color: #1565c0;
+  border: 2px solid #1565c0;
+  border-radius: 10px;
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: #e3f0ff;
+}
+
+/* ── NOTE ── */
+.landing-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .landing-root {
+    flex-direction: column;
+  }
+
+  .landing-left {
+    width: 100%;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .landing-right {
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+
+  .landing-actions {
+    flex-direction: column;
+  }
+
+  .landing-actions-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-root {
+    min-height: auto;
+  }
+
+  .landing-left {
+    padding: 2rem 1rem;
+  }
+
+  .landing-right {
+    padding: 1.5rem 1rem;
+  }
+
+  .landing-title {
+    font-size: 1.6rem;
+  }
+
+  .landing-actions {
+    gap: 0.75rem;
+  }
+
+  .feature-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+/* ── Recuperar contraseña ── */
+.landing-forgot-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1565c0;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.landing-forgot-link:hover {
+  color: #1a3a8f;
+  border-color: #1565c0;
+  background: #e3f0ff;
+}

@@ -1,0 +1,98 @@
+/* ============================================================
+   LoginPage.css  –  Lava Rápido Vehicular
+   Estilos exclusivos del layout de la pantalla de Login
+   Namespace: lp-  →  LoginPage
+   ============================================================ */
+
+.lp-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.lp-card {
+  display: flex;
+  width: 100%;
+  max-width: 820px;
+  min-height: 480px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(13, 27, 62, 0.15);
+  background: #fff;
+}
+
+/* ── Panel izquierdo – branding ─────────────────────────────── */
+.lp-left {
+  width: 42%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 40px 28px;
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+}
+
+.lp-logo {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+
+  /* Elimina el fondo oscuro cuadrado del logo
+     fusionándolo con el panel azul detrás */
+  mix-blend-mode: screen;
+
+  /* Sombra azulada que lo integra con el panel */
+  filter: drop-shadow(0 4px 16px rgba(0, 198, 255, 0.25));
+}
+
+.lp-tagline {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+}
+.lp-tagline strong { color: #00c6ff; }
+
+/* ── Panel derecho – formulario ─────────────────────────────── */
+.lp-right {
+  width: 58%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 36px;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lp-card  { flex-direction: column; min-height: auto; }
+  .lp-left,
+  .lp-right { width: 100%; }
+  .lp-left  { padding: 28px 20px; min-height: auto; }
+  .lp-right { padding: 28px 20px; }
+  .lp-logo  { width: 150px; }
+  .lp-tagline { display: none; }
+}
+
+@media (max-width: 480px) {
+  .lp-bg {
+    padding: 16px;
+    align-items: stretch;
+  }
+
+  .lp-card {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .lp-left,
+  .lp-right {
+    padding: 20px 16px;
+  }
+
+  .lp-logo {
+    width: 130px;
+  }
+}
