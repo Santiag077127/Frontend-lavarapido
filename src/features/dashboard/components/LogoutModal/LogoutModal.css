@@ -1,0 +1,131 @@
+/* ============================================================
+   LogoutModal.css  –  Lava Rápido Vehicular
+   Modal de confirmación para cerrar sesión
+   ============================================================ */
+
+.logout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 27, 62, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+
+  /* Animación de entrada del fondo */
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Tarjeta ─────────────────────────────────────────────────── */
+.logout-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(13, 27, 62, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+
+  /* Animación de entrada de la tarjeta */
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Ícono ───────────────────────────────────────────────────── */
+.logout-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #eef2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+/* ── Textos ──────────────────────────────────────────────────── */
+.logout-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--texto-oscuro);
+  margin: 0;
+}
+
+.logout-desc {
+  font-size: 13px;
+  color: var(--texto-gris);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Botones ─────────────────────────────────────────────────── */
+.logout-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.logout-btn-cancelar,
+.logout-btn-confirmar {
+  flex: 1;
+  padding: 11px;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transicion), transform var(--transicion);
+}
+
+.logout-btn-cancelar {
+  background: var(--gris-fondo);
+  border: 1.5px solid var(--gris-borde);
+  color: var(--texto-oscuro);
+}
+
+.logout-btn-confirmar {
+  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(13, 27, 62, 0.25);
+}
+
+.logout-btn-cancelar:hover  { background: var(--gris-borde); }
+.logout-btn-confirmar:hover { opacity: 0.88; transform: translateY(-1px); }
+
+@media (max-width: 768px) {
+  .logout-card {
+    padding: 28px 24px 22px;
+    max-width: 92vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .logout-card {
+    padding: 20px 18px;
+    max-width: 96vw;
+  }
+
+  .logout-actions {
+    flex-direction: column;
+  }
+
+  .logout-btn-cancelar,
+  .logout-btn-confirmar {
+    width: 100%;
+  }
+}
