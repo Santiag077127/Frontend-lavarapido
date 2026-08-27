@@ -8,7 +8,8 @@
       "android"
     ],
     "android": {
-      "package": "com.lavarapido.vehicular"
+      "package": "com.lavarapido.vehicular",
+       "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [
       "expo-font",
