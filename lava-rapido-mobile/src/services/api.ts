@@ -1,51 +1,50 @@
 /**
- * api.ts — Singleton Axios con interceptores HTTPS
- * Patrón: Singleton + Repository
- * RNF5: Toda comunicación via HTTPS
- * RNF7: Token JWT adjunto automáticamente
+ * api.ts
+ * Comunicación entre React Native y Spring Boot
  */
 
 import axios from 'axios';
 
-// 🔐 Token manejado externamente (evita dependencia con Redux)
 let token: string | null = null;
 
-// 🔐 Setter para actualizar token desde Redux o login
 export const setToken = (newToken: string | null) => {
   token = newToken;
 };
 
-// 🔐 Callback para manejar logout (sin depender del store)
 let onLogout: (() => void) | null = null;
 
 export const setLogoutHandler = (callback: () => void) => {
   onLogout = callback;
 };
 
-// 🌐 Instancia de Axios
 const api = axios.create({
-  baseURL: 'https://api.lavarapido.com/v1', // HTTPS obligatorio
+  baseURL: 'http://192.168.100.199:8081',
   timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// 📤 Interceptor: agrega token automáticamente
-api.interceptors.request.use((config) => {
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+api.interceptors.request.use(
+  (config) => {
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
-// 📥 Interceptor: manejo global de errores
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       if (onLogout) {
-        onLogout(); // 🔥 dispara logout desde Redux
+        onLogout();
       }
     }
+
     return Promise.reject(error);
   }
 );
