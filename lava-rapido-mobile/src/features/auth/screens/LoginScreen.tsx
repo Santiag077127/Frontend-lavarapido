@@ -1,303 +1,592 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState } from 'react';
 
 import {
   View,
- Text,
+  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
-  Alert
-} from 'react-native'
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Dimensions,
+  StatusBar,
+  Keyboard,
+} from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons'
-import { useNavigation } from '@react-navigation/native'
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-import { ThemeContext } from '../../../theme/ThemeContext'
-import { images } from '../../../assets/images'
+import { ThemeContext } from '../../../theme/ThemeContext';
+import { images } from '../../../assets/images';
+
+import { authService } from '../../../services/authService';
+import { setToken } from '../../../services/api';
 
 type Props = {
-  setIsLoggedIn: (value: boolean) => void
-}
+  setIsLoggedIn: (value: boolean) => void;
+};
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function LoginScreen({
-  setIsLoggedIn
+  setIsLoggedIn,
 }: Props) {
+  const navigation = useNavigation<any>();
 
-  const navigation = useNavigation<any>()
+  const { theme } = useContext(ThemeContext);
 
-  const { theme } = useContext(ThemeContext)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // Estado para controlar el mensaje de error estético
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = () => {
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+  };
 
-    if (!email || !password) {
+  const clearError = () => {
+    if (errorMessage) setErrorMessage(null);
+  };
 
-      Alert.alert(
-        'Campos incompletos',
-        'Ingrese correo y contraseña'
-      )
+  const handleLogin = async () => {
+    Keyboard.dismiss();
+    clearError();
 
-      return
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password;
+
+    if (!cleanEmail || !cleanPassword) {
+      showError('Ingresa tu correo electrónico y contraseña.');
+      return;
     }
 
-    setIsLoggedIn(true)
+    if (!cleanEmail.includes('@')) {
+      showError('Ingresa un correo electrónico válido.');
+      return;
+    }
 
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }]
-    })
-  }
+    try {
+      setLoading(true);
+
+      const response = await authService.login(
+        cleanEmail,
+        cleanPassword
+      );
+
+      const data = response.data;
+
+      if (!data || !data.token) {
+        throw new Error('El servidor no devolvió un token válido.');
+      }
+
+      setToken(data.token);
+      setIsLoggedIn(true);
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'MainTabs',
+          },
+        ],
+      });
+    } catch (error: any) {
+      console.log(
+        'ERROR LOGIN:',
+        error?.response?.data || error?.message || error
+      );
+
+      let message =
+        'No fue posible iniciar sesión. Intenta nuevamente.';
+
+      const status = error?.response?.status;
+      const backendMessage = error?.response?.data;
+
+      if (status === 401) {
+        message =
+          typeof backendMessage === 'string'
+            ? backendMessage
+            : 'El correo o la contraseña son incorrectos.';
+      } else if (status === 400) {
+        message =
+          typeof backendMessage === 'string'
+            ? backendMessage
+            : 'Los datos enviados no son válidos.';
+      } else if (status === 404) {
+        message =
+          'No se pudo encontrar el servicio de autenticación.';
+      } else if (!error?.response) {
+        message =
+          'No se pudo conectar con el servidor. Verifica que el backend esté encendido y la red Wi-Fi.';
+      }
+
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backgroundColor = theme.background;
 
   return (
-
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.background
+    <>
+      <StatusBar
+        barStyle={
+          theme.background === '#000000' ||
+          theme.background === '#000'
+            ? 'light-content'
+            : 'dark-content'
         }
-      ]}
-    >
-
-      {/* LOGO */}
-      <Image
-        source={images.logo}
-        style={styles.logo}
-        resizeMode="contain"
+        backgroundColor={backgroundColor}
+        translucent={false}
       />
 
-      {/* SUBTITULO */}
-      <Text
+      <KeyboardAvoidingView
         style={[
-          styles.subtitle,
+          styles.keyboardContainer,
           {
-            color: theme.textSecondary
-          }
+            backgroundColor,
+          },
         ]}
-      >
-        Bienvenido a Lava Rápido
-      </Text>
-
-      {/* EMAIL */}
-      <View style={styles.inputContainer}>
-
-        <Ionicons
-          name="mail-outline"
-          size={22}
-          color="#1E6FB9"
-        />
-
-        <TextInput
-          placeholder="Correo electrónico"
-          placeholderTextColor="#94A3B8"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
-
-      </View>
-
-      {/* PASSWORD */}
-      <View style={styles.inputContainer}>
-
-        <Ionicons
-          name="lock-closed-outline"
-          size={22}
-          color="#1E6FB9"
-        />
-
-        <TextInput
-          placeholder="Contraseña"
-          placeholderTextColor="#94A3B8"
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-        />
-
-        <TouchableOpacity
-          onPress={() =>
-            setShowPassword(!showPassword)
-          }
-        >
-          <Ionicons
-            name={
-              showPassword
-                ? 'eye-off-outline'
-                : 'eye-outline'
-            }
-            size={22}
-            color="#94A3B8"
-          />
-        </TouchableOpacity>
-
-      </View>
-
-      {/* RECUPERAR CONTRASEÑA */}
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate('ForgotPassword')
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : undefined
         }
       >
-
-        <Text style={styles.forgotText}>
-          ¿Olvidaste tu contraseña?
-        </Text>
-
-      </TouchableOpacity>
-
-      {/* BOTON LOGIN */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-      >
-
-        <Text style={styles.buttonText}>
-          Ingresar
-        </Text>
-
-      </TouchableOpacity>
-
-      {/* REGISTRO */}
-      <View style={styles.footer}>
-
-        <Text
-          style={{
-            color: theme.textSecondary
-          }}
-        >
-          ¿No tienes cuenta?
-        </Text>
-
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('Register')
+        <ScrollView
+          style={[
+            styles.scrollView,
+            {
+              backgroundColor,
+            },
+          ]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              minHeight: SCREEN_HEIGHT,
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === 'ios'
+              ? 'interactive'
+              : 'on-drag'
           }
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          automaticallyAdjustContentInsets={false}
+          automaticallyAdjustKeyboardInsets={false}
         >
+          <View
+            style={[
+              styles.container,
+              {
+                backgroundColor,
+              },
+            ]}
+          >
+            {/* LOGO */}
+            <Image
+              source={images.logo}
+              style={styles.logo}
+              resizeMode="contain"
+            />
 
-          <Text style={styles.registerText}>
-            Registrarse
-          </Text>
+            {/* TITULO */}
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              Iniciar sesión
+            </Text>
 
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.subtitle,
+                {
+                  color: theme.textSecondary,
+                },
+              ]}
+            >
+              Ingresa a tu cuenta de Lava Rápido
+            </Text>
 
-      </View>
+            {/* BANNER DE ERROR ESTÉTICO */}
+            {errorMessage && (
+              <View style={styles.errorContainer}>
+                <Ionicons
+                  name="alert-circle"
+                  size={20}
+                  color="#EF4444"
+                  style={styles.errorIcon}
+                />
+                <Text style={styles.errorText}>{errorMessage}</Text>
+                <TouchableOpacity onPress={clearError} activeOpacity={0.7}>
+                  <Ionicons name="close" size={18} color="#991B1B" />
+                </TouchableOpacity>
+              </View>
+            )}
 
-    </View>
+            {/* EMAIL */}
+            <View style={styles.fieldWrapper}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                Correo electrónico
+              </Text>
 
-  )
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: '#FFFFFF',
+                    borderColor: errorMessage ? '#FCA5A5' : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={22}
+                  color="#64748B"
+                />
+
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: '#000000',
+                    },
+                  ]}
+                  placeholder="Ingresa tu correo"
+                  placeholderTextColor="#94A3B8"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    clearError();
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  returnKeyType="next"
+                  editable={!loading}
+                />
+              </View>
+            </View>
+
+            {/* CONTRASEÑA */}
+            <View style={styles.fieldWrapper}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                Contraseña
+              </Text>
+
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: '#FFFFFF',
+                    borderColor: errorMessage ? '#FCA5A5' : '#E2E8F0',
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={22}
+                  color="#64748B"
+                />
+
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: '#000000',
+                    },
+                  ]}
+                  placeholder="Ingresa tu contraseña"
+                  placeholderTextColor="#94A3B8"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    clearError();
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="password"
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                  editable={!loading}
+                />
+
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() =>
+                    setShowPassword(!showPassword)
+                  }
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={
+                      showPassword
+                        ? 'eye-off-outline'
+                        : 'eye-outline'
+                    }
+                    size={22}
+                    color="#64748B"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* RECUPERAR CONTRASEÑA */}
+            <TouchableOpacity
+              style={styles.forgotButton}
+              onPress={() => {
+                Keyboard.dismiss();
+                navigation.navigate(
+                  'ForgotPassword'
+                );
+              }}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.forgotText}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </TouchableOpacity>
+
+            {/* BOTÓN LOGIN */}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                {
+                  opacity: loading ? 0.7 : 1,
+                },
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <Text style={styles.buttonText}>
+                  Iniciando sesión...
+                </Text>
+              ) : (
+                <Text style={styles.buttonText}>
+                  Ingresar
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* REGISTRO */}
+            <View style={styles.footer}>
+              <Text
+                style={[
+                  styles.footerText,
+                  {
+                    color: theme.textSecondary,
+                  },
+                ]}
+              >
+                ¿No tienes cuenta?
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  Keyboard.dismiss();
+                  navigation.navigate('Register');
+                }}
+                disabled={loading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.registerText}>
+                  Registrarse
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.bottomSpacer} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
-
-  container: {
+  keyboardContainer: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  container: {
+    flexGrow: 1,
+    width: '100%',
     justifyContent: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: 24,
+    paddingTop: 25,
+    paddingBottom: 30,
   },
-
   logo: {
-    width: 300,
-    height: 260,
+    width: '75%',
+    maxWidth: 300,
+    height: 190,
     alignSelf: 'center',
-    marginBottom: -20,
+    marginBottom: 0,
   },
-
-  subtitle: {
-    fontSize: 15,
+  title: {
+    fontSize: 27,
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#64748B',
+    marginTop: 0,
+    marginBottom: 7,
   },
-
-  inputContainer: {
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  // NUEVOS ESTILOS PARA EL MENSAJE DE ERROR
+  errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    backgroundColor: '#F8FAFC',
-
-    height: 70,
-
-    borderRadius: 20,
-
-    paddingHorizontal: 20,
-
-    marginBottom: 18,
-
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  errorIcon: {
+    marginRight: 10,
+  },
+  errorText: {
+    flex: 1,
+    color: '#991B1B',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  fieldWrapper: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 7,
+    marginLeft: 3,
+  },
+  inputContainer: {
+    width: '100%',
+    minHeight: 62,
+    borderRadius: 17,
     borderWidth: 1.5,
-    borderColor: '#D6E4F0',
-
-    elevation: 2,
-
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 17,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
     },
-
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
   },
-
   input: {
     flex: 1,
+    minHeight: 58,
     marginLeft: 12,
     fontSize: 16,
-    color: '#1E293B',
+    paddingVertical: 0,
   },
-
-  forgotText: {
-    textAlign: 'right',
-    color: '#1E6FB9',
-    fontWeight: '600',
-    fontSize: 14,
-    marginBottom: 25,
-  },
-
-  button: {
-    backgroundColor: '#1E6FB9',
-
-    height: 60,
-
-    borderRadius: 18,
-
+  eyeButton: {
+    width: 42,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-
+    marginRight: -8,
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginTop: -2,
+    marginBottom: 21,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  forgotText: {
+    color: '#000000',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  button: {
+    width: '100%',
+    minHeight: 58,
+    borderRadius: 17,
+    backgroundColor: '#1E6FB9',
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 4,
-
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-
     shadowOpacity: 0.15,
     shadowRadius: 4,
   },
-
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
   },
-
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30,
+    alignItems: 'center',
+    marginTop: 25,
   },
-
+  footerText: {
+    fontSize: 14,
+  },
   registerText: {
     color: '#1E6FB9',
-    fontWeight: 'bold',
+    fontWeight: '800',
+    fontSize: 14,
     marginLeft: 5,
   },
-
-})
+  bottomSpacer: {
+    height: 10,
+  },
+});
