@@ -1,32 +1,66 @@
-import React, { useContext } from 'react'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { Ionicons } from '@expo/vector-icons'
+import React, {
+  useContext,
+} from 'react'
+
+import {
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs'
+
+import {
+  Ionicons,
+} from '@expo/vector-icons'
 
 import HomeScreen from '../features/home/screens/HomeScreen'
+
 import ProfileScreen from '../features/profile/screens/ProfileScreen'
-import { ThemeContext } from '../theme/ThemeContext'
+
 import MapScreen from '../features/map/screens/MapScreen'
-const Tab = createBottomTabNavigator()
+
+import {
+  ThemeContext,
+} from '../theme/ThemeContext'
+
+const Tab =
+  createBottomTabNavigator()
+
+type Props = {
+  isLoggedIn: boolean
+  setIsLoggedIn: (
+    value: boolean
+  ) => void
+}
 
 export default function TabNavigator({
   isLoggedIn,
-  setIsLoggedIn
-}: any) {
+  setIsLoggedIn,
+}: Props) {
 
-  const { theme, darkMode } = useContext(ThemeContext)
+  const {
+    theme,
+    darkMode,
+  } = useContext(
+    ThemeContext
+  )
 
   return (
-
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({
+        route,
+      }) => ({
 
         headerShown: false,
 
-        /* 🎨 TAB BAR */
         tabBarStyle: {
-          backgroundColor: theme.card,
-          borderTopColor: darkMode ? '#222' : '#ddd',
+          backgroundColor:
+            theme.card,
+
+          borderTopColor:
+            darkMode
+              ? '#222'
+              : '#ddd',
+
           height: 60,
+
           paddingBottom: 5,
         },
 
@@ -34,19 +68,37 @@ export default function TabNavigator({
           fontSize: 12,
         },
 
-        /* 🔥 ICONOS */
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({
+          color,
+          size,
+        }) => {
 
-          let iconName: any
+          let iconName:
+            | 'home'
+            | 'map'
+            | 'person' =
+            'home'
 
-          if (route.name === 'Home')
+          if (
+            route.name ===
+            'Home'
+          ) {
             iconName = 'home'
+          }
 
-          else if (route.name === 'Mapa')
+          else if (
+            route.name ===
+            'Mapa'
+          ) {
             iconName = 'map'
+          }
 
-          else if (route.name === 'Perfil')
+          else if (
+            route.name ===
+            'Perfil'
+          ) {
             iconName = 'person'
+          }
 
           return (
             <Ionicons
@@ -57,13 +109,13 @@ export default function TabNavigator({
           )
         },
 
-        /* 🎨 COLORES */
-        tabBarActiveTintColor: '#1E6FB9',
+        tabBarActiveTintColor:
+          theme.primary,
 
-        tabBarInactiveTintColor: darkMode
-          ? '#BDBDBD'
-          : 'gray',
-
+        tabBarInactiveTintColor:
+          darkMode
+            ? '#BDBDBD'
+            : 'gray',
       })}
     >
 
@@ -71,8 +123,12 @@ export default function TabNavigator({
       <Tab.Screen name="Home">
         {() => (
           <HomeScreen
-            isLoggedIn={isLoggedIn}
-            setIsLoggedIn={setIsLoggedIn}
+            isLoggedIn={
+              isLoggedIn
+            }
+            setIsLoggedIn={
+              setIsLoggedIn
+            }
           />
         )}
       </Tab.Screen>
@@ -80,14 +136,18 @@ export default function TabNavigator({
       {/* 🗺️ MAPA */}
       <Tab.Screen
         name="Mapa"
-        component={MapScreen}
+        component={
+          MapScreen
+        }
       />
 
       {/* 👤 PERFIL */}
       <Tab.Screen name="Perfil">
         {() => (
           <ProfileScreen
-            setIsLoggedIn={setIsLoggedIn}
+            setIsLoggedIn={
+              setIsLoggedIn
+            }
           />
         )}
       </Tab.Screen>
@@ -95,3 +155,4 @@ export default function TabNavigator({
     </Tab.Navigator>
   )
 }
+

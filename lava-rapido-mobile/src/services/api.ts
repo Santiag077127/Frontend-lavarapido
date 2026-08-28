@@ -18,7 +18,7 @@ export const setLogoutHandler = (callback: () => void) => {
 };
 
 const api = axios.create({
-  baseURL: 'http://10.3.232.230:8081',
+  baseURL: 'http://192.168.100.199:8081',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
