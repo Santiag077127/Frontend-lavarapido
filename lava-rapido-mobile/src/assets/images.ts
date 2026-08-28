@@ -7,4 +7,10 @@ export const images = {
   ServicioAspirado: require('./ServicioAspirado.png'),
   ServicioEncerado: require('./ServicioEncerado.png'),
   ServicioPulido: require('./ServicioPulido.png'),
+  avatar1: require('./avatar_1.png'),
+  avatar2: require('./avatar_2.png'),
+  avatar3: require('./avatar_3.png'),
+  avatar4: require('./avatar_4.png'),
+  avatar5: require('./avatar_5.png' )
+
 }

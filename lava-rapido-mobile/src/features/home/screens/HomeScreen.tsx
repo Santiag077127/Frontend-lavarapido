@@ -42,9 +42,10 @@ type RootStackParamList = {
 
 type Props = {
   isLoggedIn: boolean
+  setIsLoggedIn: (value: boolean) => void
 }
 
-export default function HomeScreen({ isLoggedIn }: Props) {
+export default function HomeScreen({ isLoggedIn,setIsLoggedIn, }: Props) {
 
   const navigation =
     useNavigation<NavigationProp<RootStackParamList>>()
