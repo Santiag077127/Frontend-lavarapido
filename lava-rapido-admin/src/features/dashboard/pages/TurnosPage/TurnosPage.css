@@ -11,7 +11,16 @@
 
 .gt-header {
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
 }
+
+.gt-btn-nuevo { padding: 10px 14px; border: 0; border-radius: 8px; background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); color: #fff; font-weight: 600; cursor: pointer; }
+.gt-form { display: flex; flex-direction: column; gap: 14px; }
+.gt-form label { display: flex; flex-direction: column; gap: 6px; color: #374151; font-size: .85rem; font-weight: 600; }
+.gt-form input, .gt-form select { padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
 
 .gt-header h1 {
   margin: 0 0 4px;

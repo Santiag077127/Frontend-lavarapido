@@ -1,155 +1,23 @@
-// src/features/dashboard/components/TurnoDetailModal/index.tsx
-//
-// Modal de detalle de un turno. Permite asignar/reasignar operador
-// y cancelar el turno (con confirmación vía ConfirmModal).
-
 import { useState } from "react";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
-import { OperadorOption, Reserva } from "../../services/reservaService";
+import type { EstadoReserva, Reserva } from "../../services/reservaService";
 import "./TurnoDetailModal.css";
 
-interface TurnoDetailModalProps {
-  reserva: Reserva;
-  operadoresDisponibles: OperadorOption[];
-  onClose: () => void;
-  onAsignarOperador: (reservaId: string, operador: OperadorOption) => void | Promise<void>;
-  onCancelarTurno: (reservaId: string) => void | Promise<void>;
-}
+interface Props { reserva: Reserva; onClose: () => void; onCambiarEstado: (estado: EstadoReserva) => Promise<void>; onCancelar: () => Promise<void>; }
+const LABEL: Record<EstadoReserva, string> = { PENDIENTE: "Pendiente", ASIGNADA: "Asignada", EN_PROCESO: "En proceso", FINALIZADA: "Finalizada", CANCELADA: "Cancelada" };
+const NEXT: Partial<Record<EstadoReserva, { estado: EstadoReserva; label: string }>> = { PENDIENTE: { estado: "ASIGNADA", label: "Asignar" }, ASIGNADA: { estado: "EN_PROCESO", label: "Iniciar" }, EN_PROCESO: { estado: "FINALIZADA", label: "Finalizar" } };
+const show = (value: string | null | undefined) => value || "—";
+const dateTime = (value: string | null) => value ? new Date(value).toLocaleString("es-CO") : "—";
 
-const ESTADO_LABEL: Record<Reserva["estado"], string> = {
-  pendiente: "Pendiente",
-  asignada: "Asignada",
-  en_proceso: "En proceso",
-  finalizada: "Finalizada",
-  cancelada: "Cancelada",
-};
-
-const PAGO_LABEL: Record<Reserva["pago"]["estado"], string> = {
-  aprobado: "Pagado",
-  pendiente: "Pago pendiente",
-  rechazado: "Pago rechazado",
-};
-
-export const TurnoDetailModal = ({
-  reserva,
-  operadoresDisponibles,
-  onClose,
-  onAsignarOperador,
-  onCancelarTurno,
-}: TurnoDetailModalProps) => {
-  const [operadorSeleccionado, setOperadorSeleccionado] = useState("");
-  const [mostrarConfirmCancelar, setMostrarConfirmCancelar] = useState(false);
-
-  const puedeAsignar = reserva.estado === "pendiente" || reserva.estado === "asignada";
-  const puedeCancelar = reserva.estado !== "finalizada" && reserva.estado !== "cancelada";
-
-  function handleAsignar() {
-    const operador = operadoresDisponibles.find((op) => op.id === operadorSeleccionado);
-    if (!operador) return;
-    onAsignarOperador(reserva.id, operador);
-    setOperadorSeleccionado("");
-  }
-
-  return (
-    <>
-      <div className="tdm-overlay" onClick={onClose}>
-        <div className="tdm-card" onClick={(e) => e.stopPropagation()}>
-          <div className="tdm-header">
-            <h2>Detalle del turno</h2>
-            <span className={`badge gt-badge-${reserva.estado}`}>
-              {ESTADO_LABEL[reserva.estado]}
-            </span>
-          </div>
-
-          <div className="tdm-seccion">
-            <h3>Cliente</h3>
-            <p>{reserva.cliente.nombre}</p>
-            <p className="tdm-secundario">{reserva.cliente.telefono}</p>
-          </div>
-
-          <div className="tdm-seccion">
-            <h3>Vehículo</h3>
-            <p>
-              {reserva.vehiculo.placa} · {reserva.vehiculo.tipo}
-            </p>
-          </div>
-
-          <div className="tdm-seccion">
-            <h3>Servicio</h3>
-            <p>{reserva.servicio.nombre}</p>
-            <p className="tdm-secundario">
-              ${reserva.servicio.precio.toLocaleString("es-CO")} · {reserva.servicio.duracionMinutos} min ·{" "}
-              {reserva.hora}
-            </p>
-          </div>
-
-          <div className="tdm-seccion">
-            <h3>Pago</h3>
-            <p className="tdm-secundario">
-              {PAGO_LABEL[reserva.pago.estado]}
-              {reserva.pago.metodo
-                ? ` · ${reserva.pago.metodo === "en_linea" ? "En línea" : "Efectivo"}`
-                : ""}
-            </p>
-          </div>
-
-          <div className="tdm-seccion">
-            <h3>Operador asignado</h3>
-            <p>{reserva.operador ? reserva.operador.nombre : "Sin asignar"}</p>
-
-            {puedeAsignar && (
-              <div className="tdm-asignar">
-                <select
-                  value={operadorSeleccionado}
-                  onChange={(e) => setOperadorSeleccionado(e.target.value)}
-                >
-                  <option value="">Seleccionar operador...</option>
-                  {operadoresDisponibles.map((op) => (
-                    <option key={op.id} value={op.id}>
-                      {op.nombre}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="tdm-btn-asignar"
-                  disabled={!operadorSeleccionado}
-                  onClick={handleAsignar}
-                >
-                  {reserva.operador ? "Reasignar" : "Asignar"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="tdm-acciones">
-            {puedeCancelar && (
-              <button
-                className="tdm-btn-cancelar"
-                onClick={() => setMostrarConfirmCancelar(true)}
-              >
-                Cancelar turno
-              </button>
-            )}
-            <button className="tdm-btn-cerrar" onClick={onClose}>
-              Cerrar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {mostrarConfirmCancelar && (
-        <ConfirmModal
-          titulo="Cancelar turno"
-          mensaje={`¿Seguro que quieres cancelar el turno de ${reserva.cliente.nombre}? Esta acción no se puede deshacer.`}
-          textoConfirmar="Sí, cancelar"
-          textoVolver="Volver"
-          onConfirmar={() => {
-            onCancelarTurno(reserva.id);
-            setMostrarConfirmCancelar(false);
-          }}
-          onCancelar={() => setMostrarConfirmCancelar(false)}
-        />
-      )}
-    </>
-  );
+export const TurnoDetailModal = ({ reserva, onClose, onCambiarEstado, onCancelar }: Props) => {
+  const [confirmar, setConfirmar] = useState(false); const [procesando, setProcesando] = useState(false); const siguiente = NEXT[reserva.estado];
+  const ejecutar = async (action: () => Promise<void>) => { setProcesando(true); try { await action(); } finally { setProcesando(false); } };
+  return <><div className="tdm-overlay" onClick={onClose}><div className="tdm-card" onClick={e => e.stopPropagation()}><div className="tdm-header"><h2>Detalle de reserva</h2><span className={`badge gt-badge-${reserva.estado}`}>{LABEL[reserva.estado]}</span></div><section className="tdm-seccion"><h3>Reserva</h3><p className="tdm-secundario">ID: {reserva.idReserva}</p></section>
+    <section className="tdm-seccion"><h3>Cliente</h3><p>{show(reserva.nombreUsuario)}</p><p className="tdm-secundario">ID: {reserva.idUsuario}</p></section>
+    <section className="tdm-seccion"><h3>Vehículo</h3><p>{show(reserva.placaVehiculo)} · {show(reserva.tipoVehiculo)}</p><p className="tdm-secundario">ID: {reserva.idVehiculo}</p></section>
+    <section className="tdm-seccion"><h3>Servicio</h3><p>{show(reserva.nombreServicio)}</p><p className="tdm-secundario">{show(reserva.descripcionServicio)} · ${reserva.precioServicio.toLocaleString("es-CO")} · {reserva.duracionServicio} min<br />ID: {reserva.idServicio}</p></section>
+    <section className="tdm-seccion"><h3>Programación</h3><p>{reserva.fechaReserva} · {reserva.horaReserva}</p><p className="tdm-secundario">Inicio: {dateTime(reserva.fechaHoraInicio)}<br />Fin: {dateTime(reserva.fechaHoraFin)}</p></section>
+    <section className="tdm-seccion"><h3>Registro</h3><p className="tdm-secundario">Creada: {dateTime(reserva.createdAt)}<br />Actualizada: {dateTime(reserva.updatedAt)}</p></section>
+    <div className="tdm-acciones"><div>{siguiente && <button className="tdm-btn-asignar" disabled={procesando} onClick={() => ejecutar(() => onCambiarEstado(siguiente.estado))}>{siguiente.label}</button>}{(reserva.estado === "PENDIENTE" || reserva.estado === "ASIGNADA") && <button className="tdm-btn-cancelar" disabled={procesando} onClick={() => setConfirmar(true)}>Cancelar</button>}</div><button className="tdm-btn-cerrar" onClick={onClose}>Cerrar</button></div>
+  </div></div>{confirmar && <ConfirmModal titulo="Cancelar reserva" mensaje={`¿Seguro que deseas cancelar la reserva de ${reserva.nombreUsuario}?`} textoConfirmar="Sí, cancelar" textoVolver="Volver" onConfirmar={() => ejecutar(async () => { await onCancelar(); setConfirmar(false); })} onCancelar={() => setConfirmar(false)} />}</>;
 };

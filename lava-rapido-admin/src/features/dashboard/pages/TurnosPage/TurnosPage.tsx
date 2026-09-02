@@ -1,218 +1,35 @@
-// src/features/dashboard/pages/TurnosPage/index.tsx
-//
-// Página de supervisión de turnos (RF8 del SRS). Sigue el mismo patrón
-// de carga que OperadoresPage/PanelPrincipalPage: mock por ahora,
-// listo para swap a la API real cuando existan los endpoints.
-
 import { useEffect, useMemo, useState } from "react";
-import {
-  EstadoReserva,
-  OperadorOption,
-  Reserva,
-  asignarOperador,
-  cancelarTurno,
-  getOperadoresDisponibles,
-  getReservas,
-} from "../../services/reservaService";
+import axios from "axios";
 import { TurnoDetailModal } from "../../components/TurnoDetailModal/TurnoDetailModal";
+import { getVehiculos } from "../../services/vehiculoService";
+import { getServiciosDisponibles } from "../../services/servicioService";
+import { cambiarEstado, cancelarReserva, crearReserva, listarReservas, type EstadoReserva, type Reserva } from "../../services/reservaService";
+import type { Servicio, Vehiculo } from "../../types";
 import "./TurnosPage.css";
 
-type FiltroEstado = EstadoReserva | "todos" | "activos";
-
-const FILTROS: { label: string; value: FiltroEstado }[] = [
-  { label: "Activos", value: "activos" },
-  { label: "Pendientes", value: "pendiente" },
-  { label: "Asignadas", value: "asignada" },
-  { label: "En proceso", value: "en_proceso" },
-  { label: "Finalizadas", value: "finalizada" },
-  { label: "Canceladas", value: "cancelada" },
-  { label: "Todos", value: "todos" },
-];
-
-const ESTADO_LABEL: Record<EstadoReserva, string> = {
-  pendiente: "Pendiente",
-  asignada: "Asignada",
-  en_proceso: "En proceso",
-  finalizada: "Finalizada",
-  cancelada: "Cancelada",
-};
-
-const ESTADOS_ACTIVOS: EstadoReserva[] = ["pendiente", "asignada", "en_proceso"];
+type FiltroEstado = EstadoReserva | "TODOS" | "ACTIVOS";
+const FILTROS: { label: string; value: FiltroEstado }[] = [{ label: "Activos", value: "ACTIVOS" }, { label: "Pendientes", value: "PENDIENTE" }, { label: "Asignadas", value: "ASIGNADA" }, { label: "En proceso", value: "EN_PROCESO" }, { label: "Finalizadas", value: "FINALIZADA" }, { label: "Canceladas", value: "CANCELADA" }, { label: "Todos", value: "TODOS" }];
+const LABEL: Record<EstadoReserva, string> = { PENDIENTE: "Pendiente", ASIGNADA: "Asignada", EN_PROCESO: "En proceso", FINALIZADA: "Finalizada", CANCELADA: "Cancelada" };
+const ACTIVOS: EstadoReserva[] = ["PENDIENTE", "ASIGNADA", "EN_PROCESO"];
+const errorMessage = (error: unknown, fallback: string) => axios.isAxiosError(error) ? error.response?.data?.error || (error.response?.status === 403 ? "No tienes permiso para realizar esta acción." : fallback) : fallback;
 
 export const TurnosPage = () => {
-  const [reservas, setReservas] = useState<Reserva[]>([]);
-  const [operadores, setOperadores] = useState<OperadorOption[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const [filtro, setFiltro] = useState<FiltroEstado>("activos");
-  const [busqueda, setBusqueda] = useState("");
-  const [seleccionada, setSeleccionada] = useState<Reserva | null>(null);
-
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  async function cargarDatos() {
-    setCargando(true);
-    const [dataReservas, dataOperadores] = await Promise.all([
-      getReservas(),
-      getOperadoresDisponibles(),
-    ]);
-    setReservas(dataReservas);
-    setOperadores(dataOperadores);
-    setCargando(false);
-  }
-
-  const stats = useMemo(
-    () => ({
-      pendiente: reservas.filter((r) => r.estado === "pendiente").length,
-      asignada: reservas.filter((r) => r.estado === "asignada").length,
-      en_proceso: reservas.filter((r) => r.estado === "en_proceso").length,
-      finalizada: reservas.filter((r) => r.estado === "finalizada").length,
-    }),
-    [reservas]
-  );
-
-  const reservasFiltradas = useMemo(() => {
-    const texto = busqueda.trim().toLowerCase();
-
-    return reservas.filter((r) => {
-      const coincideEstado =
-        filtro === "todos" ||
-        (filtro === "activos" && ESTADOS_ACTIVOS.includes(r.estado)) ||
-        r.estado === filtro;
-
-      const coincideBusqueda =
-        texto === "" ||
-        r.cliente.nombre.toLowerCase().includes(texto) ||
-        r.vehiculo.placa.toLowerCase().includes(texto);
-
-      return coincideEstado && coincideBusqueda;
-    });
-  }, [reservas, filtro, busqueda]);
-
-  function aplicarActualizacion(actualizada: Reserva) {
-    setReservas((prev) => prev.map((r) => (r.id === actualizada.id ? actualizada : r)));
-    setSeleccionada(actualizada);
-  }
-
-  async function handleAsignarOperador(reservaId: string, operador: OperadorOption) {
-    const actualizada = await asignarOperador(reservaId, operador);
-    aplicarActualizacion(actualizada);
-  }
-
-  async function handleCancelarTurno(reservaId: string) {
-    const actualizada = await cancelarTurno(reservaId);
-    aplicarActualizacion(actualizada);
-  }
-
-  return (
-    <div className="gt-page">
-      <div className="gt-header">
-        <h1>Turnos</h1>
-        <p>Supervisa el estado de los servicios en curso y asigna operadores.</p>
-      </div>
-
-      <div className="gt-stats">
-        <div className="gt-stat-card gt-stat-pendiente">
-          <span className="gt-stat-numero">{stats.pendiente}</span>
-          <span className="gt-stat-label">Pendientes</span>
-        </div>
-        <div className="gt-stat-card gt-stat-asignada">
-          <span className="gt-stat-numero">{stats.asignada}</span>
-          <span className="gt-stat-label">Asignadas</span>
-        </div>
-        <div className="gt-stat-card gt-stat-proceso">
-          <span className="gt-stat-numero">{stats.en_proceso}</span>
-          <span className="gt-stat-label">En proceso</span>
-        </div>
-        <div className="gt-stat-card gt-stat-finalizada">
-          <span className="gt-stat-numero">{stats.finalizada}</span>
-          <span className="gt-stat-label">Finalizadas</span>
-        </div>
-      </div>
-
-      <div className="gt-controles">
-        <div className="gt-filtros">
-          {FILTROS.map((f) => (
-            <button
-              key={f.value}
-              className={`gt-filtro-btn ${filtro === f.value ? "gt-filtro-activo" : ""}`}
-              onClick={() => setFiltro(f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <input
-          className="gt-busqueda"
-          type="text"
-          placeholder="Buscar por cliente o placa..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-      </div>
-
-      <div className="gt-tabla-wrapper">
-        <table className="gt-tabla">
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Vehículo</th>
-              <th>Servicio</th>
-              <th>Hora</th>
-              <th>Operador</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {cargando && (
-              <tr>
-                <td colSpan={7} className="gt-vacio">
-                  Cargando turnos...
-                </td>
-              </tr>
-            )}
-            {!cargando && reservasFiltradas.length === 0 && (
-              <tr>
-                <td colSpan={7} className="gt-vacio">
-                  No hay turnos para este filtro.
-                </td>
-              </tr>
-            )}
-            {!cargando &&
-              reservasFiltradas.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.cliente.nombre}</td>
-                  <td>{r.vehiculo.placa}</td>
-                  <td>{r.servicio.nombre}</td>
-                  <td>{r.hora}</td>
-                  <td>{r.operador ? r.operador.nombre : "—"}</td>
-                  <td>
-                    <span className={`badge gt-badge-${r.estado}`}>
-                      {ESTADO_LABEL[r.estado]}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="gt-btn-ver" onClick={() => setSeleccionada(r)}>
-                      Ver
-                    </button>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      {seleccionada && (
-        <TurnoDetailModal
-          reserva={seleccionada}
-          operadoresDisponibles={operadores}
-          onClose={() => setSeleccionada(null)}
-          onAsignarOperador={handleAsignarOperador}
-          onCancelarTurno={handleCancelarTurno}
-        />
-      )}
-    </div>
-  );
+  const [reservas, setReservas] = useState<Reserva[]>([]); const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]); const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [cargando, setCargando] = useState(true); const [error, setError] = useState<string | null>(null); const [filtro, setFiltro] = useState<FiltroEstado>("ACTIVOS"); const [busqueda, setBusqueda] = useState(""); const [seleccionada, setSeleccionada] = useState<Reserva | null>(null); const [formAbierto, setFormAbierto] = useState(false);
+  const [form, setForm] = useState({ vehiculo: "", servicio: "", fecha: "", hora: "06:00" }); const [guardando, setGuardando] = useState(false);
+  const cargar = async () => { setCargando(true); setError(null); try { const [r, v, s] = await Promise.all([listarReservas(), getVehiculos(), getServiciosDisponibles()]); setReservas(r); setVehiculos(v); setServicios(s); } catch (e) { setError(errorMessage(e, "No se pudieron cargar las reservas.")); } finally { setCargando(false); } };
+  useEffect(() => { cargar(); }, []);
+  const stats = useMemo(() => Object.fromEntries(["PENDIENTE", "ASIGNADA", "EN_PROCESO", "FINALIZADA"].map(e => [e, reservas.filter(r => r.estado === e).length])) as Record<string, number>, [reservas]);
+  const filtradas = useMemo(() => { const text = busqueda.trim().toLowerCase(); return reservas.filter(r => (filtro === "TODOS" || (filtro === "ACTIVOS" && ACTIVOS.includes(r.estado)) || r.estado === filtro) && (!text || r.nombreUsuario.toLowerCase().includes(text) || r.placaVehiculo.toLowerCase().includes(text))); }, [reservas, filtro, busqueda]);
+  const actualizar = (r: Reserva) => { setReservas(prev => prev.map(item => item.idReserva === r.idReserva ? r : item)); setSeleccionada(r); };
+  const cambiar = async (estado: EstadoReserva) => { if (!seleccionada) return; try { actualizar(await cambiarEstado(seleccionada.idReserva, estado)); } catch (e) { setError(errorMessage(e, "No se pudo cambiar el estado.")); } };
+  const cancelar = async () => { if (!seleccionada) return; try { actualizar(await cancelarReserva(seleccionada.idReserva)); } catch (e) { setError(errorMessage(e, "No se pudo cancelar la reserva.")); } };
+  const guardar = async (e: React.FormEvent) => { e.preventDefault(); const servicio = servicios.find(s => s.idServicio === form.servicio); const [h, m] = form.hora.split(":").map(Number); const minutes = h * 60 + m; if (!form.vehiculo || !servicio || !form.fecha) return setError("Completa todos los campos de la reserva."); if (minutes < 360 || minutes > 1200 || minutes + servicio.duracionMinutos > 1200) return setError("La reserva debe iniciar entre 06:00 y 20:00 y finalizar antes de las 20:00."); setGuardando(true); setError(null); try { const nueva = await crearReserva({ fkIdVehiculo: form.vehiculo, fkIdServicio: form.servicio, fechaReserva: form.fecha, horaReserva: `${form.hora}:00` }); setReservas(prev => [nueva, ...prev]); setFormAbierto(false); setForm({ vehiculo: "", servicio: "", fecha: "", hora: "06:00" }); } catch (err) { setError(errorMessage(err, "No se pudo registrar la reserva.")); } finally { setGuardando(false); } };
+  return <div className="gt-page"><div className="gt-header"><div><h1>Turnos</h1><p>Supervisa y gestiona las reservas del lava rápido.</p></div><button className="gt-btn-nuevo" onClick={() => setFormAbierto(true)}>+ Registrar reserva presencial</button></div>
+    <div className="gt-stats">{[["PENDIENTE", "Pendientes", "pendiente"], ["ASIGNADA", "Asignadas", "asignada"], ["EN_PROCESO", "En proceso", "proceso"], ["FINALIZADA", "Finalizadas", "finalizada"]].map(([key, label, css]) => <div key={key} className={`gt-stat-card gt-stat-${css}`}><span className="gt-stat-numero">{stats[key]}</span><span className="gt-stat-label">{label}</span></div>)}</div>
+    <div className="gt-controles"><div className="gt-filtros">{FILTROS.map(f => <button key={f.value} className={`gt-filtro-btn ${filtro === f.value ? "gt-filtro-activo" : ""}`} onClick={() => setFiltro(f.value)}>{f.label}</button>)}</div><input className="gt-busqueda" placeholder="Buscar por cliente o placa..." value={busqueda} onChange={e => setBusqueda(e.target.value)} /></div>
+    {error && <p className="page-error">{error}</p>}<div className="gt-tabla-wrapper"><table className="gt-tabla"><thead><tr><th>Fecha / hora</th><th>Placa</th><th>Cliente</th><th>Servicio</th><th>Estado</th><th>Duración</th><th>Precio</th><th /></tr></thead><tbody>{cargando ? <tr><td colSpan={8} className="gt-vacio">Cargando reservas...</td></tr> : filtradas.length === 0 ? <tr><td colSpan={8} className="gt-vacio">No hay reservas para mostrar.</td></tr> : filtradas.map(r => <tr key={r.idReserva}><td>{r.fechaReserva}<br />{r.horaReserva}</td><td>{r.placaVehiculo}</td><td>{r.nombreUsuario}</td><td>{r.nombreServicio}</td><td><span className={`badge gt-badge-${r.estado}`}>{LABEL[r.estado]}</span></td><td>{r.duracionServicio} min</td><td>${r.precioServicio.toLocaleString("es-CO")}</td><td><button className="gt-btn-ver" onClick={() => setSeleccionada(r)}>Ver</button></td></tr>)}</tbody></table></div>
+    {seleccionada && <TurnoDetailModal reserva={seleccionada} onClose={() => setSeleccionada(null)} onCambiarEstado={cambiar} onCancelar={cancelar} />}
+    {formAbierto && <div className="tdm-overlay"><form className="tdm-card gt-form" onSubmit={guardar}><div className="tdm-header"><h2>Reserva presencial</h2></div><label>Vehículo<select value={form.vehiculo} onChange={e => setForm({...form, vehiculo: e.target.value})}><option value="">Seleccionar vehículo...</option>{vehiculos.filter(v => v.estado).map(v => <option key={v.idVehiculo} value={v.idVehiculo}>{v.placa} · {v.nombreUsuario}</option>)}</select></label><label>Servicio<select value={form.servicio} onChange={e => setForm({...form, servicio: e.target.value})}><option value="">Seleccionar servicio...</option>{servicios.filter(s => s.estado).map(s => <option key={s.idServicio} value={s.idServicio}>{s.nombre} · {s.duracionMinutos} min</option>)}</select></label><label>Fecha<input type="date" value={form.fecha} onChange={e => setForm({...form, fecha: e.target.value})} /></label><label>Hora<input type="time" min="06:00" max="20:00" value={form.hora} onChange={e => setForm({...form, hora: e.target.value})} /></label><div className="tdm-acciones"><button type="button" className="tdm-btn-cerrar" onClick={() => setFormAbierto(false)}>Cancelar</button><button className="tdm-btn-asignar" disabled={guardando}>{guardando ? "Guardando..." : "Registrar"}</button></div></form></div>}
+  </div>;
 };
