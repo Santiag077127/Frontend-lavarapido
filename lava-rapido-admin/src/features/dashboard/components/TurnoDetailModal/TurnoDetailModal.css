@@ -96,6 +96,11 @@
   padding-top: 16px;
 }
 
+.tdm-acciones > div {
+  display: flex;
+  gap: 8px;
+}
+
 .tdm-btn-cancelar {
   padding: 9px 16px;
   border-radius: 8px;
