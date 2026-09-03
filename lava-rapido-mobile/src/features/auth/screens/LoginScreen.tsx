@@ -88,14 +88,6 @@ export default function LoginScreen({
       setToken(data.token);
       setIsLoggedIn(true);
 
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'MainTabs',
-          },
-        ],
-      });
     } catch (error: any) {
       console.log(
         'ERROR LOGIN:',

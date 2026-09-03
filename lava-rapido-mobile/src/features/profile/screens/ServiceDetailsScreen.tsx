@@ -1,4 +1,6 @@
+
 import React, { useContext } from 'react'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
 import {
   View,
@@ -12,29 +14,108 @@ import { Ionicons } from '@expo/vector-icons'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 
-export default function ServiceDetailsScreen({ route, navigation }: any) {
+import type { RootStackParamList } from '../../../navigation/types'
+
+import type { ReservationResponse } from '../../reservations/types/reservation.types'
+
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  'ServiceDetails'
+>
+
+export default function ServiceDetailsScreen({
+  route,
+  navigation,
+}: Props) {
 
   const { theme, darkMode } = useContext(ThemeContext)
 
-  const { service } = route.params
+  const { reservation } = route.params
 
-  const renderStatusColor = (status: string) => {
+  const renderStatusColor = (
+    status: ReservationResponse['estado']
+  ) => {
 
     switch (status) {
 
-      case 'En proceso':
+      case 'EN_PROCESO':
         return '#F39C12'
 
-      case 'Pendiente':
+      case 'PENDIENTE':
         return '#3498DB'
 
-      case 'Finalizado':
+      case 'ASIGNADA':
+        return '#9B59B6'
+
+      case 'FINALIZADA':
         return '#27AE60'
+
+      case 'CANCELADA':
+        return '#E74C3C'
 
       default:
         return '#999'
     }
   }
+
+
+  const renderStatusText = (
+    status: ReservationResponse['estado']
+  ) => {
+
+    switch (status) {
+
+      case 'EN_PROCESO':
+        return 'En proceso'
+
+      case 'PENDIENTE':
+        return 'Pendiente'
+
+      case 'ASIGNADA':
+        return 'Asignada'
+
+      case 'FINALIZADA':
+        return 'Finalizado'
+
+      case 'CANCELADA':
+        return 'Cancelado'
+
+      default:
+        return status
+    }
+  }
+
+  const formatDate = (date: string) => {
+
+    if (!date) {
+      return 'No disponible'
+    }
+
+    const [year, month, day] = date.split('-')
+
+    return `${day}/${month}/${year}`
+  }
+
+  const formatTime = (time: string) => {
+
+    if (!time) {
+      return 'No disponible'
+    }
+
+    return time.substring(0, 5)
+  }
+
+  const formatPrice = (price: number) => {
+
+    return `$${price.toLocaleString('es-CO')} COP`
+  }
+
+  const isInProcess =
+    reservation.estado === 'EN_PROCESO' ||
+    reservation.estado === 'FINALIZADA'
+
+  const isFinished =
+    reservation.estado === 'FINALIZADA'
 
   return (
 
@@ -42,39 +123,42 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
       style={[
         styles.container,
         {
-          backgroundColor: theme.background
-        }
+          backgroundColor: theme.background,
+        },
       ]}
       showsVerticalScrollIndicator={false}
     >
 
       {/* HEADER */}
+
       <View
         style={[
           styles.header,
           {
-            backgroundColor: theme.card
-          }
+            backgroundColor: theme.card,
+          },
         ]}
       >
 
         <View style={styles.iconContainer}>
+
           <Ionicons
             name="car-sport"
             size={40}
             color="#fff"
           />
+
         </View>
 
         <Text
           style={[
             styles.title,
             {
-              color: theme.text
-            }
+              color: theme.text,
+            },
           ]}
         >
-          {service.title}
+          {reservation.nombreServicio || 'Servicio'}
         </Text>
 
         <View
@@ -82,26 +166,27 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
             styles.statusBadge,
             {
               backgroundColor:
-                renderStatusColor(service.status)
-            }
+                renderStatusColor(reservation.estado),
+            },
           ]}
         >
 
           <Text style={styles.statusText}>
-            {service.status}
+            {renderStatusText(reservation.estado)}
           </Text>
 
         </View>
 
       </View>
 
-      {/* INFO */}
+      {/* INFORMACIÓN DEL SERVICIO */}
+
       <View
         style={[
           styles.card,
           {
-            backgroundColor: theme.card
-          }
+            backgroundColor: theme.card,
+          },
         ]}
       >
 
@@ -109,12 +194,14 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
           style={[
             styles.sectionTitle,
             {
-              color: theme.text
-            }
+              color: theme.text,
+            },
           ]}
         >
           Información del servicio
         </Text>
+
+        {/* Fecha */}
 
         <View style={styles.infoRow}>
 
@@ -125,14 +212,15 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
           />
 
           <View style={styles.infoContent}>
+
             <Text
               style={[
                 styles.label,
                 {
                   color: darkMode
                     ? '#BDBDBD'
-                    : '#666'
-                }
+                    : '#666',
+                },
               ]}
             >
               Fecha
@@ -142,51 +230,138 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
               style={[
                 styles.value,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
-              {service.date}
+              {formatDate(reservation.fechaReserva)}
             </Text>
+
           </View>
 
         </View>
 
+        {/* Hora */}
+
         <View style={styles.infoRow}>
 
           <Ionicons
-            name="location-outline"
+            name="time-outline"
             size={22}
             color="#1E6FB9"
           />
 
           <View style={styles.infoContent}>
+
             <Text
               style={[
                 styles.label,
                 {
                   color: darkMode
                     ? '#BDBDBD'
-                    : '#666'
-                }
+                    : '#666',
+                },
               ]}
             >
-              Dirección
+              Hora
             </Text>
 
             <Text
               style={[
                 styles.value,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
-              {service.address}
+              {formatTime(reservation.horaReserva)}
             </Text>
+
           </View>
 
         </View>
+
+        {/* Vehículo */}
+
+        <View style={styles.infoRow}>
+
+          <Ionicons
+            name="car-outline"
+            size={22}
+            color="#1E6FB9"
+          />
+
+          <View style={styles.infoContent}>
+
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: darkMode
+                    ? '#BDBDBD'
+                    : '#666',
+                },
+              ]}
+            >
+              Vehículo
+            </Text>
+
+            <Text
+              style={[
+                styles.value,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              {reservation.tipoVehiculo}
+            </Text>
+
+          </View>
+
+        </View>
+
+        {/* Placa */}
+
+        <View style={styles.infoRow}>
+
+          <Ionicons
+            name="pricetag-outline"
+            size={22}
+            color="#1E6FB9"
+          />
+
+          <View style={styles.infoContent}>
+
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: darkMode
+                    ? '#BDBDBD'
+                    : '#666',
+                },
+              ]}
+            >
+              Placa
+            </Text>
+
+            <Text
+              style={[
+                styles.value,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              {reservation.placaVehiculo}
+            </Text>
+
+          </View>
+
+        </View>
+
+        {/* Precio */}
 
         <View style={styles.infoRow}>
 
@@ -197,14 +372,15 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
           />
 
           <View style={styles.infoContent}>
+
             <Text
               style={[
                 styles.label,
                 {
                   color: darkMode
                     ? '#BDBDBD'
-                    : '#666'
-                }
+                    : '#666',
+                },
               ]}
             >
               Precio
@@ -214,25 +390,67 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
               style={[
                 styles.value,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
-              $45.000 COP
+              {formatPrice(reservation.precioServicio)}
             </Text>
+
+          </View>
+
+        </View>
+
+        {/* Duración */}
+
+        <View style={styles.infoRow}>
+
+          <Ionicons
+            name="hourglass-outline"
+            size={22}
+            color="#1E6FB9"
+          />
+
+          <View style={styles.infoContent}>
+
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: darkMode
+                    ? '#BDBDBD'
+                    : '#666',
+                },
+              ]}
+            >
+              Duración
+            </Text>
+
+            <Text
+              style={[
+                styles.value,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              {reservation.duracionServicio} minutos
+            </Text>
+
           </View>
 
         </View>
 
       </View>
 
-      {/* ESTADO */}
+      {/* ESTADO DEL PROCESO */}
+
       <View
         style={[
           styles.card,
           {
-            backgroundColor: theme.card
-          }
+            backgroundColor: theme.card,
+          },
         ]}
       >
 
@@ -240,8 +458,8 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
           style={[
             styles.sectionTitle,
             {
-              color: theme.text
-            }
+              color: theme.text,
+            },
           ]}
         >
           Estado del proceso
@@ -249,34 +467,40 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
 
         <View style={styles.timeline}>
 
+          {/* RESERVA */}
+
           <View style={styles.step}>
+
             <View style={styles.activeDot} />
 
             <Text
               style={[
                 styles.stepText,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
               Reserva confirmada
             </Text>
+
           </View>
 
           <View style={styles.line} />
 
+          {/* EN SERVICIO */}
+
           <View style={styles.step}>
+
             <View
               style={[
                 styles.dot,
                 {
                   backgroundColor:
-                    service.status === 'En proceso'
-                      || service.status === 'Finalizado'
+                    isInProcess
                       ? '#1E6FB9'
-                      : '#ccc'
-                }
+                      : '#ccc',
+                },
               ]}
             />
 
@@ -284,26 +508,30 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
               style={[
                 styles.stepText,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
               Vehículo en servicio
             </Text>
+
           </View>
 
           <View style={styles.line} />
 
+          {/* FINALIZADO */}
+
           <View style={styles.step}>
+
             <View
               style={[
                 styles.dot,
                 {
                   backgroundColor:
-                    service.status === 'Finalizado'
+                    isFinished
                       ? '#27AE60'
-                      : '#ccc'
-                }
+                      : '#ccc',
+                },
               ]}
             />
 
@@ -311,23 +539,30 @@ export default function ServiceDetailsScreen({ route, navigation }: any) {
               style={[
                 styles.stepText,
                 {
-                  color: theme.text
-                }
+                  color: theme.text,
+                },
               ]}
             >
               Servicio finalizado
             </Text>
+
           </View>
 
         </View>
 
       </View>
 
-      {/* BOTONES */}
+      {/* BOTÓN SEGUIMIENTO */}
+
       <View style={styles.actions}>
 
         <TouchableOpacity
-          style={styles.trackButton}
+          style={[
+            styles.trackButton,
+            reservation.estado === 'CANCELADA' &&
+              styles.trackButtonDisabled,
+          ]}
+          disabled={reservation.estado === 'CANCELADA'}
           onPress={() =>
             navigation.navigate('Map')
           }
@@ -382,6 +617,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 10,
+    textAlign: 'center',
   },
 
   statusBadge: {
@@ -403,9 +639,10 @@ const styles = StyleSheet.create({
     elevation: 4,
 
     shadowColor: '#000',
+
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
 
     shadowOpacity: 0.1,
@@ -425,6 +662,7 @@ const styles = StyleSheet.create({
 
   infoContent: {
     marginLeft: 15,
+    flex: 1,
   },
 
   label: {
@@ -487,6 +725,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 
+  trackButtonDisabled: {
+    backgroundColor: '#999',
+  },
+
   trackText: {
     color: '#fff',
     fontWeight: 'bold',
@@ -495,3 +737,4 @@ const styles = StyleSheet.create({
   },
 
 })
+

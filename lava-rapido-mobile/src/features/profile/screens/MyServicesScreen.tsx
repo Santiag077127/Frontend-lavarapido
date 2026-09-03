@@ -1,68 +1,284 @@
-import React, { useContext } from 'react'
+
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native'
 
 import { Ionicons } from '@expo/vector-icons'
 
-import { useNavigation } from '@react-navigation/native'
+import {
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 
-const services = [
-  {
-    id: '1',
-    title: 'Lavado Premium',
-    date: '15 Mayo - 3:00 PM',
-    status: 'En proceso',
-    address: 'Cra 8 # 6-71',
-  },
+import api from '../../../services/api'
 
-  {
-    id: '2',
-    title: 'Lavado Completo',
-    date: '18 Mayo - 10:00 AM',
-    status: 'Pendiente',
-    address: 'Av 26 # 15-20',
-  },
+import { reservationService } from '../../reservations/services/reservationService'
 
-  {
-    id: '3',
-    title: 'Polichado',
-    date: '10 Mayo - 1:00 PM',
-    status: 'Finalizado',
-    address: 'Calle 12 # 8-40',
-  },
-]
+import type {
+  ReservationResponse,
+  ReservationStatus,
+} from '../../reservations/types/reservation.types'
+
+
+interface UserProfile {
+  userId: string
+  email: string
+  firstName: string
+  lastName: string
+  phoneNumber: string
+  profilePicture?: string | null
+}
+
 
 export default function MyServicesScreen() {
 
   const navigation = useNavigation<any>()
 
-  const { theme, darkMode } = useContext(ThemeContext)
+  const {
+    theme,
+    darkMode,
+  } = useContext(ThemeContext)
 
-  const renderStatusColor = (status: string) => {
+  const [reservations, setReservations] =
+    useState<ReservationResponse[]>([])
+
+  const [loading, setLoading] =
+    useState(true)
+
+
+  /*
+   * CARGAR RESERVAS DEL USUARIO AUTENTICADO
+   */
+  const loadReservations = useCallback(
+    async () => {
+
+      try {
+
+        setLoading(true)
+
+        /*
+         * Primero obtenemos el perfil del usuario
+         * autenticado mediante el token.
+         */
+        const profileResponse =
+          await api.get<UserProfile>(
+            '/api/users/profile'
+          )
+
+        const userId =
+          profileResponse.data.userId
+
+        if (!userId) {
+          throw new Error(
+            'No se encontró el ID del usuario autenticado.'
+          )
+        }
+
+        /*
+         * Luego obtenemos las reservas
+         * pertenecientes a ese usuario.
+         */
+        const data =
+          await reservationService.getByUser(
+            userId
+          )
+
+        setReservations(data)
+
+      } catch (error: any) {
+
+        console.error(
+          'ERROR CARGANDO MIS SERVICIOS:',
+          error?.response?.data ||
+          error?.message ||
+          error
+        )
+
+        setReservations([])
+
+        Alert.alert(
+          'Error',
+          'No fue posible cargar tus servicios.'
+        )
+
+      } finally {
+
+        setLoading(false)
+
+      }
+
+    },
+    []
+  )
+
+
+  /*
+   * ACTUALIZAR CADA VEZ QUE SE ENTRA
+   * A LA PANTALLA
+   */
+  useFocusEffect(
+    useCallback(() => {
+
+      loadReservations()
+
+    }, [loadReservations])
+  )
+
+
+  /*
+   * COLOR DEL ESTADO
+   */
+  const renderStatusColor = (
+    status: ReservationStatus
+  ) => {
 
     switch (status) {
 
-      case 'En proceso':
+      case 'EN_PROCESO':
         return '#F39C12'
 
-      case 'Pendiente':
+      case 'PENDIENTE':
         return '#3498DB'
 
-      case 'Finalizado':
+      case 'ASIGNADA':
+        return '#8E44AD'
+
+      case 'FINALIZADA':
         return '#27AE60'
+
+      case 'CANCELADA':
+        return '#E74C3C'
 
       default:
         return '#999'
+
     }
+
   }
+
+
+  /*
+   * TEXTO DEL ESTADO
+   */
+  const renderStatusText = (
+    status: ReservationStatus
+  ) => {
+
+    switch (status) {
+
+      case 'EN_PROCESO':
+        return 'En proceso'
+
+      case 'PENDIENTE':
+        return 'Pendiente'
+
+      case 'ASIGNADA':
+        return 'Asignada'
+
+      case 'FINALIZADA':
+        return 'Finalizado'
+
+      case 'CANCELADA':
+        return 'Cancelado'
+
+      default:
+        return status
+
+    }
+
+  }
+
+
+  /*
+   * FORMATEAR FECHA
+   */
+  const formatDate = (
+    date: string
+  ) => {
+
+    if (!date) {
+      return ''
+    }
+
+    const [year, month, day] =
+      date.split('-')
+
+    return `${day}/${month}/${year}`
+
+  }
+
+
+  /*
+   * FORMATEAR HORA
+   */
+  const formatTime = (
+    time: string
+  ) => {
+
+    if (!time) {
+      return ''
+    }
+
+    const [hour, minute] =
+      time.split(':')
+
+    return `${hour}:${minute}`
+
+  }
+
+
+  /*
+   * LOADING
+   */
+  if (loading) {
+
+    return (
+      <View
+        style={[
+          styles.loadingContainer,
+          {
+            backgroundColor:
+              theme.background,
+          },
+        ]}
+      >
+
+        <ActivityIndicator
+          size="large"
+          color={theme.primary}
+        />
+
+        <Text
+          style={[
+            styles.loadingText,
+            {
+              color: theme.text,
+            },
+          ]}
+        >
+          Cargando tus servicios...
+        </Text>
+
+      </View>
+    )
+
+  }
+
 
   return (
 
@@ -70,8 +286,9 @@ export default function MyServicesScreen() {
       style={[
         styles.container,
         {
-          backgroundColor: theme.background
-        }
+          backgroundColor:
+            theme.background,
+        },
       ]}
     >
 
@@ -79,82 +296,260 @@ export default function MyServicesScreen() {
         style={[
           styles.title,
           {
-            color: theme.text
-          }
+            color: theme.text,
+          },
         ]}
       >
         Mis Servicios
       </Text>
 
+
       <FlatList
-        data={services}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 40
-        }}
-        renderItem={({ item }) => (
+        data={reservations}
+
+        keyExtractor={(item) =>
+          item.idReserva
+        }
+
+        showsVerticalScrollIndicator={
+          false
+        }
+
+        contentContainerStyle={
+          reservations.length === 0
+            ? styles.emptyList
+            : styles.listContent
+        }
+
+        refreshing={loading}
+
+        onRefresh={loadReservations}
+
+        ListEmptyComponent={
+
+          <View
+            style={styles.emptyContainer}
+          >
+
+            <Ionicons
+              name="car-outline"
+              size={60}
+              color={
+                darkMode
+                  ? '#777'
+                  : '#999'
+              }
+            />
+
+            <Text
+              style={[
+                styles.emptyTitle,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              No tienes servicios
+            </Text>
+
+            <Text
+              style={[
+                styles.emptyText,
+                {
+                  color: darkMode
+                    ? '#BDBDBD'
+                    : '#666',
+                },
+              ]}
+            >
+              Cuando realices una reserva,
+              aparecerá aquí.
+            </Text>
+
+          </View>
+
+        }
+
+
+        renderItem={({
+          item,
+        }) => (
 
           <View
             style={[
               styles.card,
               {
-                backgroundColor: theme.card
-              }
+                backgroundColor:
+                  theme.card,
+              },
             ]}
           >
 
             {/* HEADER */}
-            <View style={styles.top}>
 
-              <View>
+            <View
+              style={styles.top}
+            >
+
+              <View
+                style={styles.titleContainer}
+              >
 
                 <Text
                   style={[
                     styles.serviceTitle,
                     {
-                      color: theme.text
-                    }
+                      color:
+                        theme.text,
+                    },
                   ]}
+                  numberOfLines={2}
                 >
-                  {item.title}
+                  {item.nombreServicio ||
+                    'Servicio'}
                 </Text>
 
                 <Text
                   style={[
-                    styles.date,
+                    styles.vehicleText,
                     {
-                      color: darkMode
-                        ? '#BDBDBD'
-                        : '#666'
-                    }
+                      color:
+                        darkMode
+                          ? '#BDBDBD'
+                          : '#666',
+                    },
                   ]}
                 >
-                  {item.date}
+                  {item.placaVehiculo}
+                  {' • '}
+                  {item.tipoVehiculo}
                 </Text>
 
               </View>
+
 
               <View
                 style={[
                   styles.statusBadge,
                   {
                     backgroundColor:
-                      renderStatusColor(item.status)
-                  }
+                      renderStatusColor(
+                        item.estado
+                      ),
+                  },
                 ]}
               >
 
-                <Text style={styles.statusText}>
-                  {item.status}
+                <Text
+                  style={styles.statusText}
+                >
+                  {renderStatusText(
+                    item.estado
+                  )}
                 </Text>
 
               </View>
 
             </View>
 
-            {/* ADDRESS */}
-            <View style={styles.infoRow}>
+
+            {/* FECHA Y HORA */}
+
+            <View
+              style={styles.infoRow}
+            >
+
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color="#1E6FB9"
+              />
+
+              <Text
+                style={[
+                  styles.infoText,
+                  {
+                    color:
+                      theme.text,
+                  },
+                ]}
+              >
+                {formatDate(
+                  item.fechaReserva
+                )}
+                {' - '}
+                {formatTime(
+                  item.horaReserva
+                )}
+              </Text>
+
+            </View>
+
+
+            {/* DURACIÓN */}
+
+            <View
+              style={styles.infoRow}
+            >
+
+              <Ionicons
+                name="time-outline"
+                size={18}
+                color="#1E6FB9"
+              />
+
+              <Text
+                style={[
+                  styles.infoText,
+                  {
+                    color:
+                      theme.text,
+                  },
+                ]}
+              >
+                Duración:{' '}
+                {item.duracionServicio}
+                {' minutos'}
+              </Text>
+
+            </View>
+
+
+            {/* PRECIO */}
+
+            <View
+              style={styles.infoRow}
+            >
+
+              <Ionicons
+                name="cash-outline"
+                size={18}
+                color="#1E6FB9"
+              />
+
+              <Text
+                style={[
+                  styles.infoText,
+                  {
+                    color:
+                      theme.text,
+                  },
+                ]}
+              >
+                $
+                {item.precioServicio.toLocaleString(
+                  'es-CO'
+                )}
+              </Text>
+
+            </View>
+
+
+            {/* UBICACIÓN */}
+
+            <View
+              style={styles.infoRow}
+            >
 
               <Ionicons
                 name="location-outline"
@@ -166,23 +561,44 @@ export default function MyServicesScreen() {
                 style={[
                   styles.infoText,
                   {
-                    color: theme.text
-                  }
+                    color:
+                      theme.text,
+                  },
                 ]}
               >
-                {item.address}
+                Servicio de lavado
               </Text>
 
             </View>
 
-            {/* BUTTONS */}
-            <View style={styles.actions}>
+
+            {/* BOTONES */}
+
+            <View
+              style={styles.actions}
+            >
 
               {/* SEGUIMIENTO */}
+
               <TouchableOpacity
-                style={styles.trackButton}
+                style={[
+                  styles.trackButton,
+                  {
+                    opacity:
+                      item.estado ===
+                      'CANCELADA'
+                        ? 0.5
+                        : 1,
+                  },
+                ]}
+                disabled={
+                  item.estado ===
+                  'CANCELADA'
+                }
                 onPress={() =>
-                  navigation.navigate('Map')
+                  navigation.navigate(
+                    'Map'
+                  )
                 }
               >
 
@@ -192,25 +608,30 @@ export default function MyServicesScreen() {
                   color="#fff"
                 />
 
-                <Text style={styles.trackText}>
+                <Text
+                  style={styles.trackText}
+                >
                   Seguimiento
                 </Text>
 
               </TouchableOpacity>
 
+
               {/* VER DETALLES */}
+
               <TouchableOpacity
                 style={[
                   styles.detailsButton,
                   {
-                    borderColor: '#1E6FB9'
-                  }
+                    borderColor:
+                      '#1E6FB9',
+                  },
                 ]}
                 onPress={() =>
                   navigation.navigate(
                     'ServiceDetails',
                     {
-                      service: item
+                      reservation: item,
                     }
                   )
                 }
@@ -220,8 +641,9 @@ export default function MyServicesScreen() {
                   style={[
                     styles.detailsText,
                     {
-                      color: '#1E6FB9'
-                    }
+                      color:
+                        '#1E6FB9',
+                    },
                   ]}
                 >
                   Ver detalles
@@ -232,12 +654,15 @@ export default function MyServicesScreen() {
             </View>
 
           </View>
+
         )}
       />
 
     </View>
+
   )
 }
+
 
 const styles = StyleSheet.create({
 
@@ -253,6 +678,16 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
 
+  listContent: {
+    paddingBottom: 40,
+  },
+
+  emptyList: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 80,
+  },
+
   card: {
     borderRadius: 22,
     padding: 20,
@@ -264,18 +699,25 @@ const styles = StyleSheet.create({
 
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
 
     shadowOpacity: 0.1,
+
     shadowRadius: 4,
   },
 
   top: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent:
+      'space-between',
     alignItems: 'flex-start',
     marginBottom: 18,
+  },
+
+  titleContainer: {
+    flex: 1,
+    paddingRight: 10,
   },
 
   serviceTitle: {
@@ -283,9 +725,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  date: {
+  vehicleText: {
     marginTop: 5,
-    fontSize: 14,
+    fontSize: 13,
   },
 
   statusBadge: {
@@ -303,17 +745,19 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 13,
   },
 
   infoText: {
     marginLeft: 10,
     fontSize: 15,
+    flex: 1,
   },
 
   actions: {
     flexDirection: 'row',
     gap: 10,
+    marginTop: 7,
   },
 
   trackButton: {
@@ -348,4 +792,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  loadingText: {
+    marginTop: 15,
+    fontSize: 15,
+  },
+
+  emptyContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 15,
+  },
+
+  emptyText: {
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 22,
+  },
+
 })
+

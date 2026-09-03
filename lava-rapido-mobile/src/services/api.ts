@@ -1,3 +1,4 @@
+
 /**
  * api.ts
  * Comunicación entre React Native y Spring Boot
@@ -9,6 +10,11 @@ let token: string | null = null;
 
 export const setToken = (newToken: string | null) => {
   token = newToken;
+
+  console.log(
+    'AUTH TOKEN:',
+    newToken ? 'TOKEN GUARDADO' : 'TOKEN ELIMINADO'
+  );
 };
 
 let onLogout: (() => void) | null = null;
@@ -27,18 +33,54 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    console.log(
+      'API REQUEST:',
+      config.method?.toUpperCase(),
+      config.url,
+      'TOKEN:',
+      token ? 'SI' : 'NO'
+    );
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.log('API REQUEST ERROR:', error);
+    return Promise.reject(error);
+  }
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(
+      'API RESPONSE:',
+      response.status,
+      response.config.url
+    );
+
+    return response;
+  },
+
   (error) => {
+    console.log(
+      'API ERROR:',
+      error.response?.status,
+      error.config?.url
+    );
+
+    console.log(
+      'API ERROR DATA:',
+      error.response?.data
+    );
+
+    console.log(
+      'API ERROR MESSAGE:',
+      error.message
+    );
+
     if (error.response?.status === 401) {
       if (onLogout) {
         onLogout();
@@ -50,3 +92,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

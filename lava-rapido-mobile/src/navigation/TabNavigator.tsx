@@ -123,12 +123,6 @@ export default function TabNavigator({
       <Tab.Screen name="Home">
         {() => (
           <HomeScreen
-            isLoggedIn={
-              isLoggedIn
-            }
-            setIsLoggedIn={
-              setIsLoggedIn
-            }
           />
         )}
       </Tab.Screen>
