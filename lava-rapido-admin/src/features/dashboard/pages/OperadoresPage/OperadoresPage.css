@@ -38,6 +38,37 @@
 
 .op-btn-nuevo:hover { opacity: 0.88; }
 
+.op-header__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.op-btn-desactivar-todos {
+  background: #fff5f5;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.op-btn-desactivar-todos:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.op-success {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 0.875rem;
+}
+
 /* ── Estadísticas ── */
 .op-stats {
   display: grid;
@@ -155,6 +186,14 @@
   }
 
   .op-btn-nuevo {
+    width: 100%;
+  }
+
+  .op-header__actions {
+    flex-direction: column;
+  }
+
+  .op-btn-desactivar-todos {
     width: 100%;
   }
 }
