@@ -72,6 +72,16 @@
   font-size: 0.85rem;
 }
 
+.tdm-seccion select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
+}
+
 .tdm-btn-asignar {
   padding: 8px 14px;
   border-radius: 8px;

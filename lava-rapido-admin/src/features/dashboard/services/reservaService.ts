@@ -9,6 +9,8 @@ export interface Reserva {
   duracionServicio: number; fechaReserva: string; horaReserva: string;
   fechaHoraInicio: string | null; fechaHoraFin: string | null; estado: EstadoReserva;
   createdAt: string; updatedAt: string;
+  idAsignacion?: string | null;
+  asignacion?: { idAsignacion?: string } | null;
 }
 
 export interface CrearReservaPayload { fkIdVehiculo: string; fkIdServicio: string; fechaReserva: string; horaReserva: string; }
