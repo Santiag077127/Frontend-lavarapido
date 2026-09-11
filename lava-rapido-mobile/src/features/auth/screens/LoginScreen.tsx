@@ -21,17 +21,19 @@ import { useNavigation } from '@react-navigation/native';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { images } from '../../../assets/images';
 
-import { authService } from '../../../services/authService';
+import { authService, UserRole } from '../../../services/authService';
 import { setToken } from '../../../services/api';
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void;
+  setRole?: (role: UserRole) => void;
 };
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function LoginScreen({
   setIsLoggedIn,
+  setRole,
 }: Props) {
   const navigation = useNavigation<any>();
 
@@ -86,6 +88,7 @@ export default function LoginScreen({
       }
 
       setToken(data.token);
+      setRole?.(data.user?.role ?? 'USER');
       setIsLoggedIn(true);
 
     } catch (error: any) {

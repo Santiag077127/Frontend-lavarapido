@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Landing: undefined;
 
   MainTabs: undefined;
+  OperatorTabs: undefined;
 
   Login: undefined;
   Register: undefined;

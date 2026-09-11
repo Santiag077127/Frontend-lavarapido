@@ -7,6 +7,7 @@ import {
 
 import LandingScreen from '../features/landing/screens/LandingScreen';
 import TabNavigator from './TabNavigator';
+import OperatorNavigator from './OperatorNavigator';
 
 import ServiceDetailScreen from '../features/services/screens/ServiceDetailScreen';
 import ReservationScreen from '../features/reservations/screens/ReservationScreen';
@@ -27,6 +28,7 @@ import MapScreen from '../features/map/screens/MapScreen';
 import RegisterVehicleScreen from '../features/vehicles/screens/RegisterVehicleScreen';
 
 import type { RootStackParamList } from './types';
+import type { UserRole } from '../services/authService';
 
 const Stack =
   createNativeStackNavigator<RootStackParamList>();
@@ -36,12 +38,17 @@ type Props = {
   setIsLoggedIn: (
     value: boolean
   ) => void;
+  role: UserRole | null;
+  setRole: (role: UserRole) => void;
 };
 
 export default function AppNavigator({
   isLoggedIn,
   setIsLoggedIn,
+  role,
+  setRole,
 }: Props) {
+  const isOperator = role === 'OPERATOR';
   return (
     <Stack.Navigator
       screenOptions={{
@@ -61,6 +68,7 @@ export default function AppNavigator({
                 setIsLoggedIn={
                   setIsLoggedIn
                 }
+                setRole={setRole}
               />
             )}
           </Stack.Screen>
@@ -98,74 +106,33 @@ export default function AppNavigator({
         </>
       ) : (
         <>
-          <Stack.Screen name="MainTabs">
-            {() => (
-              <TabNavigator
-                isLoggedIn={
-                  isLoggedIn
-                }
-                setIsLoggedIn={
-                  setIsLoggedIn
-                }
-              />
-            )}
-          </Stack.Screen>
+          {isOperator ? (
+            <Stack.Screen name="OperatorTabs">
+              {() => (
+                <OperatorNavigator setIsLoggedIn={setIsLoggedIn} />
+              )}
+            </Stack.Screen>
+          ) : (
+            <>
+              <Stack.Screen name="MainTabs">
+                {() => (
+                  <TabNavigator
+                    isLoggedIn={isLoggedIn}
+                    setIsLoggedIn={setIsLoggedIn}
+                  />
+                )}
+              </Stack.Screen>
 
-          <Stack.Screen
-            name="ServiceDetail"
-            component={
-              ServiceDetailScreen
-            }
-          />
-
-          <Stack.Screen
-            name="Reservation"
-            component={
-              ReservationScreen
-            }
-          />
-
-          <Stack.Screen
-            name="MyReservations"
-            component={
-              MyReservationsScreen
-            }
-          />
-
-          <Stack.Screen
-            name="RegisterVehicle"
-            component={
-              RegisterVehicleScreen
-            }
-          />
-
-          <Stack.Screen
-            name="Map"
-            component={
-              MapScreen
-            }
-          />
-
-          <Stack.Screen
-            name="ServiceDetails"
-            component={
-              ServiceDetailsScreen
-            }
-          />
-
-          <Stack.Screen
-            name="MyServices"
-            component={
-              MyServicesScreen
-            }
-          />
-
-          <Stack.Screen
-            name="EditProfile"
-            component={
-              EditProfileScreen
-            }
-          />
+              <Stack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
+              <Stack.Screen name="Reservation" component={ReservationScreen} />
+              <Stack.Screen name="MyReservations" component={MyReservationsScreen} />
+              <Stack.Screen name="RegisterVehicle" component={RegisterVehicleScreen} />
+              <Stack.Screen name="Map" component={MapScreen} />
+              <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} />
+              <Stack.Screen name="MyServices" component={MyServicesScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            </>
+          )}
         </>
       )}
     </Stack.Navigator>
