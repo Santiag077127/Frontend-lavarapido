@@ -163,7 +163,10 @@
 .col-num     { color: #9ca3af; }
 .col-cliente { font-weight: 600; color: #111827; }
 .col-vehiculo{ color: #6b7280; }
+.col-operador{ color: #374151; }
+.col-operador--muted { color: #9ca3af; }
 .col-hora    { color: #9ca3af; white-space: nowrap; }
+.col-vacio { color: #6b7280; text-align: center; }
 
 /* ── Badges de estado ── */
 .badge {
@@ -178,3 +181,4 @@
 .badge--pendiente  { background: #FEF9C3; color: #92400E; }
 .badge--en-proceso { background: #E0F2FE; color: #0369A1; }
 .badge--finalizado { background: #DCFCE7; color: #15803D; }
+.badge--cancelada  { background: #FEE2E2; color: #B91C1C; }
