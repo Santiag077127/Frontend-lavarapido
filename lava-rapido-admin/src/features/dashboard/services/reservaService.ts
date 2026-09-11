@@ -11,6 +11,7 @@ export interface Reserva {
   createdAt: string; updatedAt: string;
   idAsignacion?: string | null;
   asignacion?: { idAsignacion?: string } | null;
+  operadorNombre: string | null;
 }
 
 export interface CrearReservaPayload { fkIdVehiculo: string; fkIdServicio: string; fechaReserva: string; horaReserva: string; }
