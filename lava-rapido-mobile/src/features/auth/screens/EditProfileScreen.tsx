@@ -7,7 +7,6 @@ import React, {
 
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -31,6 +30,7 @@ import {
 import {
   ThemeContext,
 } from '../../../theme/ThemeContext'
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 
 import {
   images,

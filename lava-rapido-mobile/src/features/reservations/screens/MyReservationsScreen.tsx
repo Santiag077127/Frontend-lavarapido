@@ -8,7 +8,6 @@ import React, {
 
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -22,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api from '../../../services/api';
 
 import { reservationService } from '../services/reservationService';

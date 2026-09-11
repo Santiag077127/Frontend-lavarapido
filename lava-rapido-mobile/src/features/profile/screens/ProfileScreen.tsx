@@ -12,7 +12,6 @@ import {
   Switch,
   Image,
   ActivityIndicator,
-  Alert,
   ScrollView,
   RefreshControl,
   useWindowDimensions,
@@ -26,6 +25,7 @@ import {
 } from '@react-navigation/native'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 import api, { setToken } from '../../../services/api'
 

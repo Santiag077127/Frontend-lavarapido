@@ -55,9 +55,7 @@ export default function TabNavigator({
             theme.card,
 
           borderTopColor:
-            darkMode
-              ? '#222'
-              : '#ddd',
+            theme.border,
 
           height: 60,
 
@@ -113,9 +111,7 @@ export default function TabNavigator({
           theme.primary,
 
         tabBarInactiveTintColor:
-          darkMode
-            ? '#BDBDBD'
-            : 'gray',
+          theme.textSecondary,
       })}
     >
 

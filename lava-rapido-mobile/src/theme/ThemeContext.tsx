@@ -7,23 +7,38 @@ import React, {
 export const ThemeContext = createContext<any>(null)
 
 const lightTheme = {
-  background: '#BFD0DB',
+  // Misma paleta de la interfaz web.
+  background: '#f0f4f8',
   card: '#FFFFFF',
-  text: '#000000',
-  textSecondary: '#555555',
+  text: '#0d1f4c',
+  textSecondary: '#5a6a85',
+  border: '#e2e8f0',
+  inputBackground: '#FFFFFF',
+  placeholder: '#94a3b8',
+  errorBackground: '#fff0f0',
+  errorText: '#c0392b',
+  errorBorder: '#f5c6cb',
 
-  // Color principal utilizado por las pantallas
-  primary: '#1E6FB9',
+  primary: '#1565c0',
+  primaryLight: '#38afff',
+  primaryDark: '#1a3a8f',
 }
 
 const darkTheme = {
-  background: '#121212',
-  card: '#1E1E1E',
+  background: '#0d1b3e',
+  card: '#16294d',
   text: '#FFFFFF',
-  textSecondary: '#D6D6D6',
+  textSecondary: '#cbd5e1',
+  border: '#1a3a6e',
+  inputBackground: '#16294d',
+  placeholder: '#94a3b8',
+  errorBackground: '#3b1515',
+  errorText: '#fca5a5',
+  errorBorder: '#7f1d1d',
 
-  // Mismo color principal en modo oscuro
-  primary: '#1E6FB9',
+  primary: '#38afff',
+  primaryLight: '#4fc3f7',
+  primaryDark: '#1565c0',
 }
 
 export function ThemeProvider({

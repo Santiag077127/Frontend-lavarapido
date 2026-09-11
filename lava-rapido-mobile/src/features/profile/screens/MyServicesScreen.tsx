@@ -13,7 +13,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native'
 
 import { Ionicons } from '@expo/vector-icons'
@@ -24,6 +23,7 @@ import {
 } from '@react-navigation/native'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 
 import api from '../../../services/api'
 
