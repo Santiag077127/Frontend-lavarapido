@@ -28,12 +28,12 @@ export default function LandingScreen() {
 
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#BFD0DB"
+        backgroundColor="#f0f4f8"
       />
 
       {/* 🚀 HERO */}
       <LinearGradient
-        colors={['#BFD0DB', '#D6EAF8']}
+        colors={['#f0f4f8', '#e3f0ff']}
         style={styles.hero}
       >
 
@@ -87,7 +87,7 @@ export default function LandingScreen() {
         <View style={styles.phone}>
 
           <LinearGradient
-            colors={['#1E6FB9', '#5DADE2']}
+            colors={['#38afff', '#1a3a8f', '#1565c0']}
             style={styles.phoneGradient}
           >
 
@@ -247,7 +247,7 @@ export default function LandingScreen() {
 
       {/* 🚀 CTA */}
       <LinearGradient
-        colors={['#1E6FB9', '#5DADE2']}
+        colors={['#38afff', '#1a3a8f', '#1565c0']}
         style={styles.cta}
       >
 
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#BFD0DB',
+    backgroundColor: '#f0f4f8',
   },
 
   hero: {
@@ -289,9 +289,9 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    backgroundColor: 'rgba(30,111,185,0.1)',
+    backgroundColor: 'rgba(21,101,192,0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(30,111,185,0.2)',
+    borderColor: 'rgba(21,101,192,0.2)',
     alignSelf: 'flex-start',
     paddingHorizontal: 15,
     paddingVertical: 8,
@@ -300,14 +300,14 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: '#1E6FB9',
+    color: '#1565c0',
     fontWeight: '600',
   },
 
   title: {
     fontSize: 42,
     fontWeight: '900',
-    color: '#1E1E1E',
+    color: '#0d1f4c',
   },
 
   titleBlue: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 16,
     lineHeight: 24,
-    color: '#4A5568',
+    color: '#5a6a85',
   },
 
   buttonsContainer: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   phone: {
     width: width * 0.82,
     height: 620,
-    backgroundColor: '#EAF2F8',
+    backgroundColor: '#e3f0ff',
     borderRadius: 40,
     padding: 10,
     elevation: 10,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '100%',
     height: 10,
-    backgroundColor: '#D6E4EE',
+    backgroundColor: '#dbeafe',
     borderRadius: 20,
     overflow: 'hidden',
     marginTop: 15,

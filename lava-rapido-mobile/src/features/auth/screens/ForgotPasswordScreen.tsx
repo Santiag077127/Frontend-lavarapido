@@ -6,13 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Image,
 } from 'react-native'
 
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 
 export default function ForgotPasswordScreen({ navigation }: any) {

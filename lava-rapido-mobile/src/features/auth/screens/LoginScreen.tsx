@@ -214,18 +214,28 @@ export default function LoginScreen({
               Ingresa a tu cuenta de Lava Rápido
             </Text>
 
-            {/* BANNER DE ERROR ESTÉTICO */}
+            {/* BANNER DE ERROR */}
             {errorMessage && (
-              <View style={styles.errorContainer}>
+              <View
+                style={[
+                  styles.errorContainer,
+                  {
+                    backgroundColor: theme.errorBackground,
+                    borderColor: theme.errorBorder,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="alert-circle"
                   size={20}
-                  color="#EF4444"
+                  color={theme.errorText}
                   style={styles.errorIcon}
                 />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+                <Text style={[styles.errorText, { color: theme.errorText }]}>
+                  {errorMessage}
+                </Text>
                 <TouchableOpacity onPress={clearError} activeOpacity={0.7}>
-                  <Ionicons name="close" size={18} color="#991B1B" />
+                  <Ionicons name="close" size={18} color={theme.errorText} />
                 </TouchableOpacity>
               </View>
             )}
@@ -247,26 +257,26 @@ export default function LoginScreen({
                 style={[
                   styles.inputContainer,
                   {
-                    backgroundColor: '#FFFFFF',
-                    borderColor: errorMessage ? '#FCA5A5' : '#E2E8F0',
+                    backgroundColor: theme.inputBackground,
+                    borderColor: errorMessage ? theme.errorBorder : theme.border,
                   },
                 ]}
               >
                 <Ionicons
                   name="mail-outline"
                   size={22}
-                  color="#64748B"
+                  color={theme.textSecondary}
                 />
 
                 <TextInput
                   style={[
                     styles.input,
                     {
-                      color: '#000000',
+                      color: theme.text,
                     },
                   ]}
                   placeholder="Ingresa tu correo"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.placeholder}
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
@@ -299,26 +309,26 @@ export default function LoginScreen({
                 style={[
                   styles.inputContainer,
                   {
-                    backgroundColor: '#FFFFFF',
-                    borderColor: errorMessage ? '#FCA5A5' : '#E2E8F0',
+                    backgroundColor: theme.inputBackground,
+                    borderColor: errorMessage ? theme.errorBorder : theme.border,
                   },
                 ]}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={22}
-                  color="#64748B"
+                  color={theme.textSecondary}
                 />
 
                 <TextInput
                   style={[
                     styles.input,
                     {
-                      color: '#000000',
+                      color: theme.text,
                     },
                   ]}
                   placeholder="Ingresa tu contraseña"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={theme.placeholder}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -348,7 +358,7 @@ export default function LoginScreen({
                         : 'eye-outline'
                     }
                     size={22}
-                    color="#64748B"
+                    color={theme.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -366,7 +376,7 @@ export default function LoginScreen({
               disabled={loading}
               activeOpacity={0.7}
             >
-              <Text style={styles.forgotText}>
+              <Text style={[styles.forgotText, { color: theme.primary }]}>
                 ¿Olvidaste tu contraseña?
               </Text>
             </TouchableOpacity>
@@ -376,6 +386,7 @@ export default function LoginScreen({
               style={[
                 styles.button,
                 {
+                  backgroundColor: theme.primary,
                   opacity: loading ? 0.7 : 1,
                 },
               ]}
@@ -415,7 +426,7 @@ export default function LoginScreen({
                 disabled={loading}
                 activeOpacity={0.7}
               >
-                <Text style={styles.registerText}>
+                <Text style={[styles.registerText, { color: theme.primary }]}>
                   Registrarse
                 </Text>
               </TouchableOpacity>
@@ -467,13 +478,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 20,
   },
-  // NUEVOS ESTILOS PARA EL MENSAJE DE ERROR
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FCA5A5',
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -484,7 +492,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     flex: 1,
-    color: '#991B1B',
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
@@ -502,13 +509,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     width: '100%',
     minHeight: 62,
-    borderRadius: 17,
+    borderRadius: 12,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 17,
     elevation: 1,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
@@ -538,19 +544,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   forgotText: {
-    color: '#000000',
     fontWeight: '700',
     fontSize: 14,
   },
   button: {
     width: '100%',
     minHeight: 58,
-    borderRadius: 17,
-    backgroundColor: '#1E6FB9',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -573,7 +576,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerText: {
-    color: '#1E6FB9',
     fontWeight: '800',
     fontSize: 14,
     marginLeft: 5,

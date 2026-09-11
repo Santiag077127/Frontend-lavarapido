@@ -8,7 +8,6 @@ import React, {
 
 import {
   ActivityIndicator,
-  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -32,6 +31,7 @@ import type {
 } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 
 import { vehicleService } from '../../vehicles/services/vehicleService';
 import type { Vehicle } from '../../vehicles/types/vehicle.types';
