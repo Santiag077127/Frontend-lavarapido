@@ -12,6 +12,18 @@ export interface RegisterData {
   password: string;
 }
 
+export type UserRole = 'USER' | 'OPERATOR' | 'ADMIN';
+
+export interface LoginResponse {
+  token: string;
+  user: {
+    userId: string;
+    firstName: string;
+    email: string;
+    role: UserRole;
+  };
+}
+
 export const authService = {
   register: (data: RegisterData) =>
     api.post('/api/users/register', data),
@@ -20,7 +32,7 @@ export const authService = {
     email: string,
     password: string
   ) =>
-    api.post('/api/users/login', {
+    api.post<LoginResponse>('/api/users/login', {
       email,
       password,
     }),
