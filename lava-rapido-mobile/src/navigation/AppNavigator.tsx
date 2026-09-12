@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 import {
@@ -25,7 +24,8 @@ import ServiceDetailsScreen from '../features/profile/screens/ServiceDetailsScre
 
 import MapScreen from '../features/map/screens/MapScreen';
 
-import RegisterVehicleScreen from '../features/vehicles/screens/RegisterVehicleScreen';
+import MyVehiclesScreen from '../features/vehicles/screens/MyVehiclesScreen';
+import AddVehicleScreen from '../features/vehicles/screens/AddVehicleScreen';
 
 import type { RootStackParamList } from './types';
 import type { UserRole } from '../services/authService';
@@ -49,6 +49,7 @@ export default function AppNavigator({
   setRole,
 }: Props) {
   const isOperator = role === 'OPERATOR';
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -65,9 +66,7 @@ export default function AppNavigator({
           <Stack.Screen name="Login">
             {() => (
               <LoginScreen
-                setIsLoggedIn={
-                  setIsLoggedIn
-                }
+                setIsLoggedIn={setIsLoggedIn}
                 setRole={setRole}
               />
             )}
@@ -76,32 +75,24 @@ export default function AppNavigator({
           <Stack.Screen name="Register">
             {() => (
               <RegisterScreen
-                setIsLoggedIn={
-                  setIsLoggedIn
-                }
+                setIsLoggedIn={setIsLoggedIn}
               />
             )}
           </Stack.Screen>
 
           <Stack.Screen
             name="ForgotPassword"
-            component={
-              ForgotPasswordScreen
-            }
+            component={ForgotPasswordScreen}
           />
 
           <Stack.Screen
             name="VerifyCode"
-            component={
-              VerifyCodeScreen
-            }
+            component={VerifyCodeScreen}
           />
 
           <Stack.Screen
             name="ResetPassword"
-            component={
-              ResetPasswordScreen
-            }
+            component={ResetPasswordScreen}
           />
         </>
       ) : (
@@ -109,7 +100,9 @@ export default function AppNavigator({
           {isOperator ? (
             <Stack.Screen name="OperatorTabs">
               {() => (
-                <OperatorNavigator setIsLoggedIn={setIsLoggedIn} />
+                <OperatorNavigator
+                  setIsLoggedIn={setIsLoggedIn}
+                />
               )}
             </Stack.Screen>
           ) : (
@@ -123,14 +116,51 @@ export default function AppNavigator({
                 )}
               </Stack.Screen>
 
-              <Stack.Screen name="ServiceDetail" component={ServiceDetailScreen} />
-              <Stack.Screen name="Reservation" component={ReservationScreen} />
-              <Stack.Screen name="MyReservations" component={MyReservationsScreen} />
-              <Stack.Screen name="RegisterVehicle" component={RegisterVehicleScreen} />
-              <Stack.Screen name="Map" component={MapScreen} />
-              <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} />
-              <Stack.Screen name="MyServices" component={MyServicesScreen} />
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen
+                name="ServiceDetail"
+                component={ServiceDetailScreen}
+              />
+
+              <Stack.Screen
+                name="Reservation"
+                component={ReservationScreen}
+              />
+
+              <Stack.Screen
+                name="MyReservations"
+                component={MyReservationsScreen}
+              />
+
+              <Stack.Screen
+                name="Map"
+                component={MapScreen}
+              />
+
+              <Stack.Screen
+                name="ServiceDetails"
+                component={ServiceDetailsScreen}
+              />
+
+              <Stack.Screen
+                name="MyServices"
+                component={MyServicesScreen}
+              />
+
+              <Stack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+              />
+
+              {/* VEHÍCULOS */}
+              <Stack.Screen
+                name="MyVehicles"
+                component={MyVehiclesScreen}
+              />
+
+              <Stack.Screen
+                name="AddVehicle"
+                component={AddVehicleScreen}
+              />
             </>
           )}
         </>
@@ -138,4 +168,3 @@ export default function AppNavigator({
     </Stack.Navigator>
   );
 }
-
