@@ -301,7 +301,7 @@ export default function ReservationScreen() {
                   text: 'Registrar vehículo',
                   onPress: () => {
                     navigation.navigate(
-                      'RegisterVehicle',
+                      'AddVehicle',
                     );
                   },
                 },
@@ -1230,7 +1230,7 @@ export default function ReservationScreen() {
                 ]}
                 onPress={() =>
                   navigation.navigate(
-                    'RegisterVehicle',
+                    'AddVehicle',
                   )
                 }
               >

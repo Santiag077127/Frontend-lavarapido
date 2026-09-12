@@ -871,6 +871,19 @@ export default function ProfileScreen({
 
         <MenuItem
           icon="car-outline"
+          title="Mis vehiculos"
+          description="Administra los vehiculos registrados"
+          onPress={() =>
+            navigation.navigate(
+              'MyVehicles'
+            )
+          }
+          theme={theme}
+          darkMode={darkMode}
+        />
+
+        <MenuItem
+          icon="receipt-outline"
           title="Mis servicios"
           description="Consulta tus servicios"
           onPress={() =>
