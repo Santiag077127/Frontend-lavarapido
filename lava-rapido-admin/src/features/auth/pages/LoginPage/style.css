@@ -10,7 +10,9 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
+  position: relative;
 }
+
 
 .lp-card {
   display: flex;
@@ -32,7 +34,7 @@
   justify-content: center;
   gap: 20px;
   padding: 40px 28px;
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
 }
 
 .lp-logo {

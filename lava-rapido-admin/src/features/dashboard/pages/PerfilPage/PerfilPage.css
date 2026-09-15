@@ -8,6 +8,27 @@
   margin-bottom: 1.5rem;
 }
 
+.perfil-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  margin-bottom: 0.8rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  color: var(--accent);
+  background: var(--surface);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.perfil-back-link:hover {
+  color: #fff;
+  background: var(--accent);
+}
+
 .page-perfil .page-header h1 {
   margin: 0;
   color: var(--texto-oscuro);
@@ -23,7 +44,7 @@
   display: flex;
   align-items: flex-start;
   gap: 1.5rem;
-  max-width: 720px;
+  max-width: none;
   padding: 2rem;
   background: #fff;
   border: 1px solid var(--gris-borde);
@@ -41,7 +62,7 @@
   overflow: hidden;
   border-radius: 50%;
   background: #e8f4fc;
-  color: var(--azul-claro);
+  color: var(--accent);
 }
 
 .perfil-avatar img {
@@ -124,13 +145,24 @@
 
 .perfil-form input:focus {
   outline: none;
-  border-color: var(--azul-claro);
+  border-color: var(--accent);
+}
+
+.perfil-form input.perfil-input--error {
+  border-color: var(--error-texto);
+  background: var(--error-bg);
 }
 
 .perfil-form small {
   color: var(--texto-gris);
   font-size: 0.75rem;
   font-weight: 400;
+}
+
+.perfil-form .perfil-field-error {
+  color: var(--error-texto);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .perfil-avatar-selector {
@@ -182,7 +214,7 @@
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 50%;
-  background: var(--azul-claro);
+  background: var(--accent);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
@@ -197,7 +229,7 @@
   padding: 0.7rem 1rem;
   border: 0;
   border-radius: 8px;
-  background: var(--azul-claro);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
   font: inherit;

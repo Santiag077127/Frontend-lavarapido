@@ -83,7 +83,7 @@
   padding: 13px;
   border: none;
   border-radius: var(--radio);
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #fff;
   font-size: 15px;
   font-weight: 600;

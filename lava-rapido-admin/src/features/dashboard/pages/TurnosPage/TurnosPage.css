@@ -17,7 +17,7 @@
   align-items: center;
 }
 
-.gt-btn-nuevo { padding: 10px 14px; border: 0; border-radius: 8px; background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); color: #fff; font-weight: 600; cursor: pointer; }
+.gt-btn-nuevo { padding: 10px 14px; border: 0; border-radius: 8px; background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%); color: #fff; font-weight: 600; cursor: pointer; }
 .gt-form { display: flex; flex-direction: column; gap: 14px; }
 .gt-form label { display: flex; flex-direction: column; gap: 6px; color: #374151; font-size: .85rem; font-weight: 600; }
 .gt-form input, .gt-form select { padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
@@ -113,7 +113,7 @@
 }
 
 .gt-filtro-activo {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #ffffff;
   border-color: transparent;
 }
@@ -141,7 +141,7 @@
 }
 
 .gt-tabla thead {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
 }
 
 .gt-tabla th {
@@ -170,7 +170,7 @@
   border-radius: 6px;
   border: 1px solid #d1d5db;
   background: #ffffff;
-  color: #1a3a8f;
+  color: var(--accent);
   font-size: 0.8rem;
   cursor: pointer;
 }

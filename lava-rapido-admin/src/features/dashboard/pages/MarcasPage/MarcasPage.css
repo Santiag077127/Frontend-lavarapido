@@ -76,7 +76,7 @@
 }
 
 .filtro-activo {
-  background: var(--azul-claro);
+  background: var(--accent);
   color: white;
   border-color: var(--azul-claro);
 }
@@ -136,7 +136,7 @@
   border: none;
   border-radius: 999px;
   padding: 0.45rem 0.8rem;
-  background: var(--azul-claro);
+  background: var(--accent);
   color: white;
   cursor: pointer;
 }

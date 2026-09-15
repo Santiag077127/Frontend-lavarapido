@@ -1,14 +1,17 @@
 import "./ResetPasswordPage.css";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 import { resetPassword } from "../../services/authService";
 import { HomeButton } from "../../components/HomeButton/HomeButton";
+import { ThemeContext } from "../../../../theme/theme";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export const ResetPasswordPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -72,7 +75,7 @@ export const ResetPasswordPage = () => {
         <HomeButton />
         <div className="rsp-success-box">
           <span className="rsp-success-icon">✓</span>
-          <h2 className="rsp-success-title">Contraseña actualizada</h2>
+          <h2 className="rsp-success-title">{t("auth.passwordUpdated")}</h2>
           <p className="rsp-success-msg">
             Tu contraseña se actualizó correctamente.<br />
             Serás redirigido…
@@ -107,9 +110,9 @@ export const ResetPasswordPage = () => {
       <div className="rsp-card">
 
         <div className="rsp-header">
-          <h2 className="rsp-title">Nueva contraseña</h2>
+          <h2 className="rsp-title">{t("auth.newPassword")}</h2>
           <p className="rsp-subtitle">
-            Ingresa y confirma tu nueva contraseña.
+            {t("auth.newPasswordSubtitle")}
           </p>
         </div>
 
@@ -123,7 +126,7 @@ export const ResetPasswordPage = () => {
         <form onSubmit={handleSubmit} noValidate>
           <div className="rsp-field">
             <label className="rsp-label" htmlFor="rsp-password">
-              Nueva contraseña
+              {t("auth.newPassword")}
             </label>
             <input
               id="rsp-password"
@@ -140,7 +143,7 @@ export const ResetPasswordPage = () => {
 
           <div className="rsp-field">
             <label className="rsp-label" htmlFor="rsp-confirm">
-              Confirmar contraseña
+              {t("auth.confirmPassword")}
             </label>
             <input
               id="rsp-confirm"
@@ -166,7 +169,7 @@ export const ResetPasswordPage = () => {
                   strokeWidth="3" strokeDasharray="40" strokeDashoffset="10" />
               </svg>
             )}
-            {isLoading ? "Actualizando..." : "Actualizar contraseña"}
+            {isLoading ? t("auth.updating") : t("auth.updatePassword")}
           </button>
         </form>
 

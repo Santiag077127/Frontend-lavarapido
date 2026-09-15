@@ -18,10 +18,12 @@ html {
 /* ── BODY ───────────────────────────────────────────────────── */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #e8f0fe;
+  background: var(--page-bg);
+  color: var(--page-text);
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
+  transition: background var(--transicion), color var(--transicion);
 }
 
 button,
@@ -38,4 +40,303 @@ iframe {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+.dashboard-content > :is(
+  .panel-principal,
+  .page-servicios,
+  .gt-page,
+  .op-page,
+  .page-vehiculos,
+  .page-marcas,
+  .maps-page,
+  .page-perfil,
+  .configuracion-page
+) {
+  width: min(100%, 1160px);
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.dashboard-content :is(h1, h2, h3, .panel-titulo, .op-title) {
+  color: var(--page-title);
+}
+
+.dashboard-content :is(p, td, label, .panel-subtitulo, .op-subtitle) {
+  color: var(--page-text);
+}
+
+.dashboard-content :is(
+  .turnos-card,
+  .stat-card,
+  .op-stat,
+  .op-table-wrap,
+  .op-tabla-wrapper,
+  .gt-tabla-wrapper,
+  .tabla-wrapper,
+  .servicios-table-container,
+  .perfil-card,
+  .marca-stat-card,
+  .vehiculo-stat-card,
+  .config-card
+) {
+  background: var(--surface);
+  border-color: var(--surface-border);
+}
+
+.dashboard-content :is(table thead tr, .turnos-tabla thead tr) {
+  background: var(--surface-soft);
+}
+
+.dashboard-content :is(th, .turnos-tabla th) {
+  color: var(--page-muted);
+}
+
+.dashboard-content :is(td, .turnos-tabla td) {
+  color: var(--page-text);
+}
+
+:root[data-theme="dark"] .dashboard-content :is(input, select, textarea) {
+  color: var(--page-title);
+  background: #111827;
+  border-color: var(--surface-border);
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .turnos-tabla tbody tr:hover,
+  .op-tabla tbody tr:hover,
+  .tabla tbody tr:hover,
+  .tabla-servicios tbody tr:hover
+) {
+  background: #172033;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  table,
+  tbody,
+  .tabla,
+  .tabla-servicios,
+  .gt-tabla,
+  .op-tabla,
+  .turnos-tabla
+) {
+  background: var(--surface) !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  tr,
+  .tabla-servicios tbody tr,
+  .tabla tbody tr,
+  .gt-tabla tbody tr,
+  .op-tabla tbody tr,
+  .turnos-tabla tbody tr
+) {
+  background: var(--surface) !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .tabla-servicios td,
+  .tabla td,
+  .gt-tabla td,
+  .op-tabla td,
+  .turnos-tabla td
+) {
+  color: var(--page-text) !important;
+  border-color: var(--surface-border) !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .tabla-servicios th,
+  .tabla th,
+  .gt-tabla th,
+  .op-tabla th,
+  .turnos-tabla th
+) {
+  color: #dbeafe !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .tabla-descripcion,
+  .op-col-dato,
+  .col-vacio,
+  .page-vacio
+) {
+  color: var(--page-muted) !important;
+}
+
+:root[data-accent] :is(
+  .lf-btn,
+  .fpp-btn,
+  .fpp-btn-link,
+  .rsp-btn,
+  .rsp-btn-link,
+  .rp-btn,
+  .btn-nuevo,
+  .gt-btn-nuevo,
+  .gt-filtro-activo,
+  .op-btn-nuevo,
+  .op-tabla thead tr,
+  .modal-btn-guardar,
+  .om-btn-guardar,
+  .logout-btn-confirmar,
+  .tdm-btn-asignar,
+  .perfil-save
+) {
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 58%, var(--accent) 100%) !important;
+  color: #fff !important;
+}
+
+:root[data-accent] :is(
+  .hero-primary,
+  .monthly-card--primary,
+  .mockup-header
+) {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent) 48%, var(--accent-strong) 100%) !important;
+}
+
+:root[data-accent] :is(
+  .lf-input:focus,
+  .fpp-input:focus,
+  .rsp-input:focus,
+  .rp-input:focus,
+  .rp-select:focus,
+  .perfil-form input:focus,
+  .gt-busqueda:focus,
+  .page-buscador:focus
+) {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+:root[data-accent] :is(
+  .rp-consent input,
+  input[type="checkbox"],
+  input[type="radio"]
+) {
+  accent-color: var(--accent);
+}
+
+:root[data-accent] :is(
+  .rp-link,
+  .rp-back-btn,
+  .auth-home-button,
+  .pago-refrescar,
+  .gt-btn-ver,
+  .landing-nav-links a:hover
+) {
+  color: var(--accent) !important;
+}
+
+:root[data-accent] :is(.filtro-btn, .gt-filtro-btn) {
+  color: var(--accent-strong) !important;
+  background: var(--surface) !important;
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--surface-border)) !important;
+}
+
+:root[data-accent] :is(
+  .filtro-activo,
+  .gt-filtro-activo,
+  .accent-option[aria-pressed="true"],
+  .config-toggle[aria-pressed="true"],
+  .btn-toggle,
+  .perfil-avatar-check
+) {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .lp-card,
+  .rp-card,
+  .rp-success-box,
+  .fpp-card,
+  .fpp-success-box,
+  .rsp-card,
+  .rsp-success-box,
+  .modal-card,
+  .om-card,
+  .logout-card,
+  .tdm-card
+) {
+  background: var(--surface) !important;
+  border-color: var(--surface-border) !important;
+  color: var(--page-text);
+}
+
+:root[data-theme="dark"] :is(
+  .lf-title,
+  .rp-title,
+  .rp-success-title,
+  .fpp-title,
+  .fpp-success-title,
+  .rsp-title,
+  .rsp-success-title,
+  .perfil-info h2,
+  .perfil-details dd
+) {
+  color: var(--page-title) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .lf-subtitle,
+  .rp-subtitle,
+  .rp-login-link,
+  .rp-consent,
+  .rp-success-msg,
+  .fpp-subtitle,
+  .fpp-success-msg,
+  .rsp-subtitle,
+  .rsp-success-msg,
+  .perfil-form label,
+  .perfil-details dt,
+  .perfil-form small
+) {
+  color: var(--page-muted) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .lf-input,
+  .rp-input,
+  .rp-select,
+  .fpp-input,
+  .rsp-input,
+  .perfil-form input
+) {
+  color: var(--page-title) !important;
+  background: var(--surface-soft) !important;
+  border-color: var(--surface-border) !important;
+}
+
+@media (max-width: 768px) {
+  .dashboard-content > :is(
+    .panel-principal,
+    .page-servicios,
+    .gt-page,
+    .op-page,
+    .page-vehiculos,
+    .page-marcas,
+    .maps-page,
+    .page-perfil,
+    .configuracion-page
+  ) {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content > :is(
+    .panel-principal,
+    .page-servicios,
+    .gt-page,
+    .op-page,
+    .page-vehiculos,
+    .page-marcas,
+    .maps-page,
+    .page-perfil,
+    .configuracion-page
+  ) {
+    padding: 0.75rem;
+  }
 }

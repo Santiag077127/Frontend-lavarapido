@@ -1,9 +1,10 @@
 import "./MapsPage.css";
 import "leaflet/dist/leaflet.css";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { ThemeContext } from "@/theme/theme";
 
 import { locations, type Location } from "../../data/locations";
 
@@ -23,14 +24,16 @@ const defaultIcon = L.icon({
 L.Marker.prototype.options.icon = defaultIcon;
 
 export const MapsPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const [selected, setSelected] = useState<Location | null>(null);
 
   return (
     <div className="maps-page">
 
       <div className="maps-header">
-        <h2 className="maps-titulo">Ubicaciones</h2>
-        <p className="maps-subtitulo">Puntos de atención registrados</p>
+        <h2 className="maps-titulo">{t("map.title")}</h2>
+        <p className="maps-subtitulo">{t("map.subtitle")}</p>
       </div>
 
       <div className="maps-layout">
@@ -60,7 +63,7 @@ export const MapsPage = () => {
 
         {/* ── Panel lateral ── */}
         <div className="maps-panel">
-          <p className="maps-panel-label">Autolavados</p>
+          <p className="maps-panel-label">{t("map.panel")}</p>
 
           {locations.map(loc => (
             <div

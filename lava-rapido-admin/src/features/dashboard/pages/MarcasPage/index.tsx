@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { getMarcas, cambiarEstadoMarca } from "@/features/dashboard/services/marcaService";
+import { ThemeContext } from "@/theme/theme";
 import type { Marca } from "@/features/dashboard/types";
 import "./MarcasPage.css";
 
 type FiltroEstado = "todos" | "activos" | "inactivos";
 
 const FILTROS: { label: string; value: FiltroEstado }[] = [
-  { label: "Todos", value: "todos" },
-  { label: "Activos", value: "activos" },
-  { label: "Inactivos", value: "inactivos" },
+  { label: "common.all", value: "todos" },
+  { label: "common.activePlural", value: "activos" },
+  { label: "common.inactivePlural", value: "inactivos" },
 ];
 
 export const MarcasPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,23 +72,23 @@ export const MarcasPage = () => {
     <div className="page-marcas">
       <div className="page-header">
         <div>
-          <h1>Marcas</h1>
-          <p>Administración de marcas asociadas a los vehículos.</p>
+          <h1>{t("brands.title")}</h1>
+          <p>{t("brands.subtitle")}</p>
         </div>
       </div>
 
       <div className="stats-grid">
         <div className="stat-card stat--azul">
           <p className="stat-card__valor">{stats.total}</p>
-          <p className="stat-card__label">Total</p>
+          <p className="stat-card__label">{t("common.total")}</p>
         </div>
         <div className="stat-card stat--verde">
           <p className="stat-card__valor">{stats.activos}</p>
-          <p className="stat-card__label">Activas</p>
+          <p className="stat-card__label">{t("common.activePlural")}</p>
         </div>
         <div className="stat-card stat--amarillo">
           <p className="stat-card__valor">{stats.inactivos}</p>
-          <p className="stat-card__label">Inactivas</p>
+          <p className="stat-card__label">{t("common.inactivePlural")}</p>
         </div>
       </div>
 
@@ -97,14 +100,14 @@ export const MarcasPage = () => {
               className={`filtro-btn ${filtro === f.value ? "filtro-activo" : ""}`}
               onClick={() => setFiltro(f.value)}
             >
-              {f.label}
+              {t(f.label)}
             </button>
           ))}
         </div>
         <input
           className="page-buscador"
           type="text"
-          placeholder="Buscar por nombre..."
+          placeholder={t("common.searchByName")}
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -113,17 +116,17 @@ export const MarcasPage = () => {
       {error && <p className="page-error">{error}</p>}
 
       {cargando ? (
-        <p>Cargando marcas...</p>
+        <p>{t("brands.loading")}</p>
       ) : marcasFiltradas.length === 0 ? (
-        <p className="page-vacio">No hay marcas para mostrar.</p>
+        <p className="page-vacio">{t("brands.empty")}</p>
       ) : (
         <div className="tabla-wrapper">
           <table className="tabla">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th>{t("common.name")}</th>
+                <th>{t("common.status")}</th>
+                <th>{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -132,12 +135,12 @@ export const MarcasPage = () => {
                   <td>{marca.nombre}</td>
                   <td>
                     <span className={`badge ${marca.estado ? "badge--activo" : "badge--inactivo"}`}>
-                      {marca.estado ? "Activa" : "Inactiva"}
+                      {marca.estado ? t("common.active") : t("common.inactive")}
                     </span>
                   </td>
                   <td>
                     <button className="btn-toggle" onClick={() => handleCambiarEstado(marca)}>
-                      {marca.estado ? "Desactivar" : "Activar"}
+                      {marca.estado ? t("common.deactivate") : t("common.activate")}
                     </button>
                   </td>
                 </tr>

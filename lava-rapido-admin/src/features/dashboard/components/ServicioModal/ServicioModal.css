@@ -61,9 +61,21 @@
 }
 .modal-field input:focus,
 .modal-field textarea:focus {
-  border-color: var(--azul-claro);
+  border-color: var(--accent);
   background: #fff;
   box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+}
+
+.modal-field .modal-input-error {
+  border-color: var(--error-texto);
+  background: var(--error-bg);
+}
+
+.modal-field-error {
+  margin: 0.1rem 0 0;
+  color: var(--error-texto);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 /* ── Botones de acción ───────────────────────────────────────── */
@@ -86,7 +98,7 @@
 }
 .modal-btn-cancelar { background: var(--gris-borde); color: var(--texto-oscuro); }
 .modal-btn-guardar {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #fff;
 }
 .modal-btn-cancelar:hover,

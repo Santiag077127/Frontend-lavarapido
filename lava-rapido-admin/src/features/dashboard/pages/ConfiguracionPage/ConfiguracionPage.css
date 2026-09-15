@@ -1,0 +1,191 @@
+.configuracion-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.config-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.45rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.config-header h2 {
+  margin: 0;
+  color: var(--page-title);
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  line-height: 1.1;
+}
+
+.config-header p {
+  margin: 0.4rem 0 0;
+  color: var(--page-muted);
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.config-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 1rem;
+  min-height: 176px;
+  padding: 1.25rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.config-card > svg {
+  color: var(--accent);
+}
+
+.config-card h3 {
+  margin: 0 0 0.35rem;
+  color: var(--page-title);
+  font-size: 1.02rem;
+}
+
+.config-card p {
+  margin: 0;
+  color: var(--page-muted);
+  line-height: 1.55;
+}
+
+.config-card a,
+.config-card button,
+.config-select {
+  min-height: 42px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.config-card a,
+.config-card button {
+  grid-column: 2;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding: 0 1rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.config-card a:hover,
+.config-card button:hover {
+  color: #fff;
+  background: var(--accent);
+}
+
+.config-toggle {
+  min-width: 150px;
+}
+
+.accent-options {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: auto;
+}
+
+.accent-option span {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+}
+
+.accent-option--blue span {
+  background: #1565c0;
+}
+
+.accent-option--cyan span {
+  background: #0891b2;
+}
+
+.accent-option--indigo span {
+  background: #4f46e5;
+}
+
+.accent-option--emerald span {
+  background: #059669;
+}
+
+.accent-option[aria-pressed="true"],
+.config-toggle[aria-pressed="true"] {
+  color: #fff;
+  background: var(--accent);
+}
+
+.config-select {
+  grid-column: 2;
+  justify-self: start;
+  min-width: 210px;
+  margin-top: auto;
+  padding: 0 0.8rem;
+  border: 1px solid var(--surface-border);
+  color: var(--page-title);
+  background: var(--surface);
+}
+
+.config-card--danger > svg,
+.config-card--danger h3 {
+  color: #c0392b;
+}
+
+.config-card--danger button {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.config-card--danger button:hover {
+  color: #fff;
+  background: #c0392b;
+}
+
+@media (max-width: 820px) {
+  .config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .config-card {
+    grid-template-columns: 1fr;
+  }
+
+  .config-card a,
+  .config-card button,
+  .accent-options,
+  .config-select {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .accent-option {
+    flex: 1 1 130px;
+  }
+}

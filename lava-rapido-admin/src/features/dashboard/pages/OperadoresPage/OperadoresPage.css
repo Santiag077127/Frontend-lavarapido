@@ -25,7 +25,7 @@
 }
 
 .op-btn-nuevo {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -116,7 +116,7 @@
 }
 
 .op-tabla thead tr {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
 }
 
 .op-tabla th {

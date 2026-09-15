@@ -1,17 +1,28 @@
 import "./ForgotPasswordPage.css";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import axios from "axios";
+import { ArrowLeft } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { forgotPassword } from "../../services/authService";
 import type { ForgotPasswordErrorResponse } from "../../types";
+import { useAuthStore } from "../../../../store/authStore";
+import { ThemeContext } from "../../../../theme/theme";
 
 export const ForgotPasswordPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
+  const location = useLocation();
+  const token = useAuthStore((state) => state.token);
   const [email, setEmail]         = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState("");
   const [success, setSuccess]     = useState(false);
+  const vieneDelDashboard = Boolean(
+    (location.state as { fromDashboard?: boolean } | null)?.fromDashboard || token
+  );
 
   const validateEmail = (value: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,10 +59,10 @@ export const ForgotPasswordPage = () => {
   if (success) {
     return (
       <div className="fpp-page">
-        <HomeButton />
+        {vieneDelDashboard ? <DashboardBackLink label={t("common.backToSettings")} /> : <HomeButton />}
         <div className="fpp-success-box">
           <span className="fpp-success-icon">✓</span>
-          <h2 className="fpp-success-title">Revisa tu correo</h2>
+          <h2 className="fpp-success-title">{t("auth.checkEmail")}</h2>
           <p className="fpp-success-msg">
             Si <strong>{email}</strong> está registrado, te enviamos un enlace
             para restablecer tu contraseña.<br />
@@ -64,14 +75,14 @@ export const ForgotPasswordPage = () => {
 
   return (
     <div className="fpp-page">
-      <HomeButton />
+      {vieneDelDashboard ? <DashboardBackLink label={t("common.backToSettings")} /> : <HomeButton />}
 
       <div className="fpp-card">
 
         <div className="fpp-header">
-          <h2 className="fpp-title">Recuperar contraseña</h2>
+          <h2 className="fpp-title">{t("auth.resetPasswordTitle")}</h2>
           <p className="fpp-subtitle">
-            Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.
+            {t("auth.resetPasswordSubtitle")}
           </p>
         </div>
 
@@ -85,7 +96,7 @@ export const ForgotPasswordPage = () => {
         <form onSubmit={handleSubmit} noValidate>
           <div className="fpp-field">
             <label className="fpp-label" htmlFor="fpp-email">
-              Correo electrónico
+              {t("auth.email")}
             </label>
             <input
               id="fpp-email"
@@ -112,7 +123,7 @@ export const ForgotPasswordPage = () => {
                   strokeWidth="3" strokeDasharray="40" strokeDashoffset="10" />
               </svg>
             )}
-            {isLoading ? "Enviando..." : "Enviar enlace de recuperación"}
+            {isLoading ? t("auth.sending") : t("auth.sendReset")}
           </button>
         </form>
 
@@ -120,3 +131,10 @@ export const ForgotPasswordPage = () => {
     </div>
   );
 };
+
+const DashboardBackLink = ({ label }: { label: string }) => (
+  <Link to="/dashboard/configuracion" className="fpp-dashboard-back">
+    <ArrowLeft size={17} />
+    {label}
+  </Link>
+);

@@ -1,13 +1,16 @@
 import "./style.css";
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { login } from "../../services/authService";
 import { useAuthStore } from "../../../../store/authStore"; 
 import type { AuthState } from "../../../../store/authStore";
+import { ThemeContext } from "../../../../theme/theme";
 
 export const LoginForm = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,8 +64,8 @@ export const LoginForm = () => {
 
   return (
     <div className="lf-wrapper">
-      <h2 className="lf-title">Bienvenido</h2>
-      <p className="lf-subtitle">Ingresa tus credenciales para continuar</p>
+      <h2 className="lf-title">{t("auth.loginTitle")}</h2>
+      <p className="lf-subtitle">{t("auth.loginSubtitle")}</p>
 
       {error && (
         <div className="lf-error" role="alert" aria-live="polite">
@@ -74,7 +77,7 @@ export const LoginForm = () => {
       <form onSubmit={handleSubmit} noValidate>
 
         <div className="lf-field">
-          <label className="lf-label" htmlFor="lf-email">Correo electrónico</label>
+          <label className="lf-label" htmlFor="lf-email">{t("auth.email")}</label>
           <input
             id="lf-email"
             type="email"
@@ -89,7 +92,7 @@ export const LoginForm = () => {
 
         <div className="lf-field">
           <div className="lf-password-row">
-            <label className="lf-label" htmlFor="lf-password">Contraseña</label>
+            <label className="lf-label" htmlFor="lf-password">{t("auth.password")}</label>
 
           </div>
           <input
@@ -115,7 +118,7 @@ export const LoginForm = () => {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="40" strokeDashoffset="10" />
             </svg>
           )}
-          {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          {isLoading ? t("auth.signingIn") : t("auth.signIn")}
         </button>
 
       </form>
