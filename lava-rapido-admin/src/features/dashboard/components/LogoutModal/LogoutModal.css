@@ -99,7 +99,7 @@
 }
 
 .logout-btn-confirmar {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%); /* ← actualizado */
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #fff;
   box-shadow: 0 4px 14px rgba(13, 27, 62, 0.25);
 }

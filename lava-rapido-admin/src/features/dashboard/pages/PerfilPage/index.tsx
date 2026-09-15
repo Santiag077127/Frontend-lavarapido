@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
-import { Mail, Phone, Save } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { ArrowLeft, Mail, Phone, Save } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { useAuthStore } from "../../../../store/authStore";
+import { ThemeContext } from "../../../../theme/theme";
 import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
 import { getProfile, updateProfile } from "../../services/userService";
 import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
 import "./PerfilPage.css";
 
 type ProfileForm = Pick<UserProfile, "firstName" | "lastName" | "phoneNumber" | "profilePicture">;
+type ProfileFieldErrors = Partial<Record<keyof Pick<ProfileForm, "firstName" | "lastName" | "phoneNumber">, string>>;
 
 const EMPTY_FORM: ProfileForm = {
   firstName: "",
@@ -19,7 +22,23 @@ const EMPTY_FORM: ProfileForm = {
 const isAvatarId = (value: string): value is AvatarId =>
   AVATAR_OPTIONS.includes(value as AvatarId);
 
+const NAME_REGEX = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
+
+const validateProfileField = (name: keyof ProfileFieldErrors, value: string) => {
+  if (name === "phoneNumber") {
+    return /^\d{10}$/.test(value)
+      ? ""
+      : "El teléfono solo puede contener números y debe tener 10 dígitos.";
+  }
+
+  if (!value.trim()) return "Este campo es obligatorio.";
+  if (!NAME_REGEX.test(value)) return "El nombre no puede contener números ni símbolos.";
+  return value.trim().length < 3 ? "Debe tener mínimo 3 caracteres." : "";
+};
+
 export const PerfilPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const loggedUser = useAuthStore((state) => state.user);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
@@ -27,6 +46,7 @@ export const PerfilPage = () => {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
 
   useEffect(() => {
     const cargarPerfil = async () => {
@@ -42,6 +62,7 @@ export const PerfilPage = () => {
           // profilePicture es un identificador textual temporal, no una imagen real.
           profilePicture: isAvatarId(data.profilePicture) ? data.profilePicture : AVATAR_OPTIONS[0],
         });
+        setFieldErrors({});
       } catch {
         setError("No se pudo cargar tu perfil. Intenta de nuevo.");
       } finally {
@@ -54,7 +75,20 @@ export const PerfilPage = () => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    const fieldName = name as keyof ProfileFieldErrors;
+    const sanitizedValue = fieldName === "phoneNumber"
+      ? value.replace(/\D/g, "")
+      : value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, "");
+
+    setForm((current) => ({ ...current, [name]: sanitizedValue }));
+    setFieldErrors((current) => ({
+      ...current,
+      [fieldName]: sanitizedValue !== value
+        ? fieldName === "phoneNumber"
+          ? "El teléfono solo puede contener números."
+          : "El nombre no puede contener números ni símbolos."
+        : validateProfileField(fieldName, sanitizedValue),
+    }));
     setMensaje(null);
   };
 
@@ -63,8 +97,15 @@ export const PerfilPage = () => {
     setMensaje(null);
     setError(null);
 
-    if (!form.firstName.trim() || !form.lastName.trim() || !/^\d{10}$/.test(form.phoneNumber)) {
-      setError("Ingresa nombre, apellido y un teléfono válido de 10 dígitos.");
+    const errors: ProfileFieldErrors = {
+      firstName: validateProfileField("firstName", form.firstName),
+      lastName: validateProfileField("lastName", form.lastName),
+      phoneNumber: validateProfileField("phoneNumber", form.phoneNumber),
+    };
+    setFieldErrors(errors);
+
+    if (Object.values(errors).some(Boolean)) {
+      setError("Corrige los campos marcados antes de guardar.");
       return;
     }
 
@@ -99,8 +140,12 @@ export const PerfilPage = () => {
     <div className="page-perfil">
       <div className="page-header">
         <div>
-          <h1>Mi perfil</h1>
-          <p>Consulta y actualiza la información de tu cuenta de administrador.</p>
+          <Link to="/dashboard/configuracion" className="perfil-back-link">
+            <ArrowLeft size={17} />
+            {t("common.backToSettings")}
+          </Link>
+          <h1>{t("profile.title")}</h1>
+          <p>{t("profile.subtitle")}</p>
         </div>
       </div>
 
@@ -116,8 +161,8 @@ export const PerfilPage = () => {
           </div>
 
           <div className="perfil-info">
-            <h2>{[form.firstName, form.lastName].filter(Boolean).join(" ") || "Administrador"}</h2>
-            <span className="perfil-role">Administrador</span>
+            <h2>{[form.firstName, form.lastName].filter(Boolean).join(" ") || t("profile.role")}</h2>
+            <span className="perfil-role">{t("profile.role")}</span>
 
             <dl className="perfil-details">
               <div>
@@ -129,15 +174,18 @@ export const PerfilPage = () => {
             <form className="perfil-form" onSubmit={handleSubmit}>
               <label>
                 Nombre
-                <input name="firstName" value={form.firstName} onChange={handleChange} required />
+                <input className={fieldErrors.firstName ? "perfil-input--error" : ""} name="firstName" value={form.firstName} onChange={handleChange} required />
+                {fieldErrors.firstName && <small className="perfil-field-error">{fieldErrors.firstName}</small>}
               </label>
               <label>
                 Apellido
-                <input name="lastName" value={form.lastName} onChange={handleChange} required />
+                <input className={fieldErrors.lastName ? "perfil-input--error" : ""} name="lastName" value={form.lastName} onChange={handleChange} required />
+                {fieldErrors.lastName && <small className="perfil-field-error">{fieldErrors.lastName}</small>}
               </label>
               <label>
                 <span><Phone size={16} aria-hidden="true" /> Teléfono</span>
-                <input name="phoneNumber" type="tel" inputMode="numeric" value={form.phoneNumber} onChange={handleChange} maxLength={10} required />
+                <input className={fieldErrors.phoneNumber ? "perfil-input--error" : ""} name="phoneNumber" type="tel" inputMode="numeric" value={form.phoneNumber} onChange={handleChange} maxLength={10} required />
+                {fieldErrors.phoneNumber && <small className="perfil-field-error">{fieldErrors.phoneNumber}</small>}
               </label>
               <fieldset className="perfil-avatar-selector">
                 <legend>Foto de perfil</legend>
@@ -164,7 +212,7 @@ export const PerfilPage = () => {
 
               <button className="perfil-save" type="submit" disabled={guardando}>
                 <Save size={17} aria-hidden="true" />
-                {guardando ? "Guardando..." : "Guardar cambios"}
+                {guardando ? t("profile.saving") : t("profile.save")}
               </button>
             </form>
           </div>

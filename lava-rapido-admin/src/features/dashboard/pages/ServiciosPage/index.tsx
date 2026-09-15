@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
 import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
+import { ThemeContext } from "@/theme/theme";
 import {
   getServicios,
   createServicio,
@@ -11,6 +12,8 @@ import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
 
 export const ServiciosPage = () => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -79,16 +82,16 @@ export const ServiciosPage = () => {
   return (
     <div className="page-servicios">
       <div className="page-header">
-        <h1>Servicios</h1>
+        <h1>{t("services.title")}</h1>
         <button className="btn-nuevo" onClick={handleNuevo}>
-          + Nuevo Servicio
+          + {t("services.new")}
         </button>
       </div>
 
       <div className="page-buscador">
         <input
           type="text"
-          placeholder="Buscar por nombre..."
+          placeholder={t("common.searchByName")}
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -97,9 +100,9 @@ export const ServiciosPage = () => {
       {error && <p className="page-error">{error}</p>}
 
       {cargando ? (
-        <p>Cargando servicios...</p>
+        <p>{t("services.loading")}</p>
       ) : serviciosFiltrados.length === 0 ? (
-        <p className="page-vacio">No se encontraron resultados.</p>
+        <p className="page-vacio">{t("common.noResults")}</p>
       ) : (
         <div className="tabla-wrapper">
           <ServiciosTable

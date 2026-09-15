@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import type { Servicio } from "@/features/dashboard/types";
+import { ThemeContext } from "@/theme/theme";
 import "./ServiciosTable.css";
 
 interface ServiciosTableProps {
@@ -12,16 +14,19 @@ export const ServiciosTable = ({
   onEditar,
   onCambiarEstado,
 }: ServiciosTableProps) => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
+
   return (
     <table className="tabla-servicios">
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Descripción</th>
-          <th>Precio</th>
-          <th>Duración</th>
-          <th>Estado</th>
-          <th>Acciones</th>
+          <th>{t("common.name")}</th>
+          <th>{t("common.description")}</th>
+          <th>{t("common.price")}</th>
+          <th>{t("common.duration")}</th>
+          <th>{t("common.status")}</th>
+          <th>{t("common.actions")}</th>
         </tr>
       </thead>
       <tbody>
@@ -41,12 +46,12 @@ export const ServiciosTable = ({
                     : "badge badge--inactivo"
                 }
               >
-                {servicio.estado ? "Activo" : "Inactivo"}
+                {servicio.estado ? t("common.active") : t("common.inactive")}
               </span>
             </td>
             <td>
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
-                Editar
+                {t("common.edit")}
               </button>
               <button
                 className={
@@ -54,7 +59,7 @@ export const ServiciosTable = ({
                 }
                 onClick={() => onCambiarEstado(servicio)}
               >
-                {servicio.estado ? "Desactivar" : "Activar"}
+                {servicio.estado ? t("common.deactivate") : t("common.activate")}
               </button>
             </td>
           </tr>

@@ -3,6 +3,6 @@
 .pago-btn--compacto { padding: 6px 10px; font-size: .8rem; }
 .pago-estado { color: #92400e; font-size: .8rem; white-space: nowrap; }
 .pago-error { color: #b91c1c; font-size: .78rem; }
-.pago-refrescar { border: 0; background: transparent; color: #1a3a8f; cursor: pointer; font-weight: 600; text-decoration: underline; }
+.pago-refrescar { border: 0; background: transparent; color: var(--accent); cursor: pointer; font-weight: 600; text-decoration: underline; }
 .pago-aprobado { background: #dcfce7; color: #15803d; }
 .pago-rechazado { background: #fee2e2; color: #b91c1c; }

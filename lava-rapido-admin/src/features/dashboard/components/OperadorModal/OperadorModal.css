@@ -70,7 +70,7 @@
 }
 
 .om-input:focus {
-  border-color: #1a3a8f;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(26, 58, 143, 0.12);
 }
 
@@ -99,7 +99,7 @@
 }
 
 .om-btn-guardar {
-  background: linear-gradient(160deg, #38afff 0%, #1a3a8f 60%, #1565c0 100%);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
   color: #fff;
 }
 

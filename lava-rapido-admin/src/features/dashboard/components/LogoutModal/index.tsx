@@ -1,4 +1,6 @@
 import "./LogoutModal.css";
+import { useContext } from "react";
+import { ThemeContext } from "@/theme/theme";
 
 interface Props {
   onConfirmar: () => void;
@@ -6,6 +8,9 @@ interface Props {
 }
 
 export const LogoutModal = ({ onConfirmar, onCancelar }: Props) => {
+  const theme = useContext(ThemeContext);
+  const t = theme?.t ?? ((key: string) => key);
+
   return (
     // Clic en el fondo oscuro cancela
     <div className="logout-overlay" onClick={onCancelar}>
@@ -15,10 +20,9 @@ export const LogoutModal = ({ onConfirmar, onCancelar }: Props) => {
         <div className="logout-icon">🔒</div>
 
         {/* Mensaje profesional */}
-        <h3 className="logout-title">¿Deseas cerrar sesión?</h3>
+        <h3 className="logout-title">{t("logout.confirmTitle")}</h3>
         <p className="logout-desc">
-          Tu sesión actual finalizará. Deberás ingresar tus
-          credenciales nuevamente para acceder al sistema.
+          {t("logout.confirmDesc")}
         </p>
 
         {/* Acciones */}
@@ -27,13 +31,13 @@ export const LogoutModal = ({ onConfirmar, onCancelar }: Props) => {
             className="logout-btn-cancelar"
             onClick={onCancelar}
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             className="logout-btn-confirmar"
             onClick={onConfirmar}
           >
-            Cerrar sesión
+            {t("settings.logout.action")}
           </button>
         </div>
 
