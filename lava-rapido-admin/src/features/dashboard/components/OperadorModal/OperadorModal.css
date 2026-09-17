@@ -74,6 +74,23 @@
   box-shadow: 0 0 0 3px rgba(26, 58, 143, 0.12);
 }
 
+.om-input.om-input--error {
+  border-color: var(--error-texto);
+  background: var(--error-bg);
+}
+
+.om-input.om-input--error:focus {
+  border-color: var(--error-texto);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.14);
+}
+
+.om-field-error {
+  margin: 0.1rem 0 0;
+  color: var(--error-texto);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .om-actions {
   display: flex;
   gap: 0.75rem;
