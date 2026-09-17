@@ -302,11 +302,33 @@ iframe {
   .rp-select,
   .fpp-input,
   .rsp-input,
-  .perfil-form input
+  .perfil-form input,
+  .modal-field input,
+  .modal-field textarea,
+  .om-input
 ) {
   color: var(--page-title) !important;
   background: var(--surface-soft) !important;
   border-color: var(--surface-border) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .rp-field-error,
+  .modal-field-error,
+  .om-field-error,
+  .perfil-field-error
+) {
+  color: var(--error-texto) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .rp-input--error,
+  .modal-input-error,
+  .om-input--error,
+  .perfil-input--error
+) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-texto) !important;
 }
 
 @media (max-width: 768px) {

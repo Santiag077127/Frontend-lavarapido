@@ -17,9 +17,9 @@ export const register = async (data: RegisterPayload) => {
   return response.data;
 };
 
-// ── nuevo: recuperar contraseña ──
+// ── nuevo: restablecer contraseña ──
 
-// Paso 1: el usuario pide el enlace de recuperación con su correo.
+// Paso 1: el usuario pide el enlace de restablecimiento con su correo.
 // El backend siempre responde 200 con un mensaje genérico, exista o no
 // el correo (para no revelar qué correos están registrados).
 export const forgotPassword = async (

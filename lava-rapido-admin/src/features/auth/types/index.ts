@@ -27,7 +27,7 @@ export interface RegisterPayload {
   password:       string;
 }
 
-// ── nuevo: recuperar contraseña ──
+// ── nuevo: restablecer contraseña ──
 export interface ForgotPasswordPayload {
   email: string;
 }
