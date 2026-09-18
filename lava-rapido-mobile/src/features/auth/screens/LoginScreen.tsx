@@ -457,9 +457,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     width: '100%',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 25,
-    paddingBottom: 30,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 24,
   },
   logo: {
     width: '75%',

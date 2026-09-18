@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 14,
   },
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingBottom: 110,
   },
 
@@ -605,10 +605,10 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
-    marginBottom: 15,
+    marginBottom: 16,
   },
 
   cardHeader: {
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
 
   actionButton: {
     flex: 1,
-    minHeight: 42,
+    minHeight: 48,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
