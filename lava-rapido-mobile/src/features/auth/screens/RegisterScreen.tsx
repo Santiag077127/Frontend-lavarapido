@@ -579,8 +579,8 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingTop: 35,
-    paddingBottom: 40,
+    paddingTop: 24,
+    paddingBottom: 24,
   },
   logo: {
     width: 130,
@@ -591,8 +591,8 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
     maxWidth: 430,
-    paddingHorizontal: 22,
-    gap: 13,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   inputContainer: {
     width: '100%',

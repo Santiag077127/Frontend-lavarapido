@@ -1069,16 +1069,16 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 30,
+    paddingBottom: 24,
   },
 
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: 16,
   },
 
   loadingCard: {
