@@ -14,6 +14,7 @@ import { VehiculosPage } from "@/features/dashboard/pages/VehiculosPage";
 import { MarcasPage } from "@/features/dashboard/pages/MarcasPage";
 import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
 import { ConfiguracionPage } from "@/features/dashboard/pages/ConfiguracionPage/ConfiguracionPage";
+import { PagoResultadoPage } from "@/features/dashboard/pages/PagoResultadoPage/PagoResultadoPage";
 
 export const AppRouter = () => {
   return (
@@ -24,6 +25,8 @@ export const AppRouter = () => {
         <Route path="/register"        element={<RegisterPage />} />        {/* ← nuevo */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />  {/* ← nuevo */}
         <Route path="/reset-password"  element={<ResetPasswordPage />} />   {/* ← nuevo */}
+
+        <Route path="/pagos/resultado" element={<PagoResultadoPage />} />
 
         <Route path="/dashboard" element={<DashboardPage />}>
           <Route index          element={<Navigate to="panel" replace />} />

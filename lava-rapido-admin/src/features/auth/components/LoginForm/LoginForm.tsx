@@ -7,6 +7,7 @@ import { login } from "../../services/authService";
 import { useAuthStore } from "../../../../store/authStore"; 
 import type { AuthState } from "../../../../store/authStore";
 import { ThemeContext } from "../../../../theme/theme";
+import { consumirDestinoTrasLogin } from "../../../../services/authRedirect";
 
 export const LoginForm = () => {
   const theme = useContext(ThemeContext);
@@ -42,6 +43,12 @@ export const LoginForm = () => {
     try {
       const data = await login(email, password);
       setAuth(data.token, data.user);
+
+      const destinoPendiente = consumirDestinoTrasLogin();
+      if (destinoPendiente) {
+        navigate(destinoPendiente, { replace: true });
+        return;
+      }
 
       if (data.user.role === "ADMIN") {
         navigate("/dashboard");
