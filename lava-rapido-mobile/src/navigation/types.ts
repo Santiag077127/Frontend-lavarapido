@@ -29,11 +29,7 @@ export type RootStackParamList = {
     service: Service;
   };
 
-  MyReservations: undefined;
-
   Map: undefined;
-
-  MyServices: undefined;
 
   ServiceDetails: {
     reservation: ReservationResponse;
