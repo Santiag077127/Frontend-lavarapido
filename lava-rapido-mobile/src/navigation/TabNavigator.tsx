@@ -16,6 +16,10 @@ import ProfileScreen from '../features/profile/screens/ProfileScreen'
 
 import MapScreen from '../features/map/screens/MapScreen'
 
+import MyReservationsScreen from '../features/reservations/screens/MyReservationsScreen'
+
+import MyServicesScreen from '../features/profile/screens/MyServicesScreen'
+
 import {
   ThemeContext,
 } from '../theme/ThemeContext'
@@ -73,6 +77,8 @@ export default function TabNavigator({
 
           let iconName:
             | 'home'
+            | 'calendar'
+            | 'receipt'
             | 'map'
             | 'person' =
             'home'
@@ -82,6 +88,20 @@ export default function TabNavigator({
             'Home'
           ) {
             iconName = 'home'
+          }
+
+          else if (
+            route.name ===
+            'Reservas'
+          ) {
+            iconName = 'calendar'
+          }
+
+          else if (
+            route.name ===
+            'Mis servicios'
+          ) {
+            iconName = 'receipt'
           }
 
           else if (
@@ -124,6 +144,20 @@ export default function TabNavigator({
       </Tab.Screen>
 
       {/* 🗺️ MAPA */}
+      <Tab.Screen
+        name="Reservas"
+        component={
+          MyReservationsScreen
+        }
+      />
+
+      <Tab.Screen
+        name="Mis servicios"
+        component={
+          MyServicesScreen
+        }
+      />
+
       <Tab.Screen
         name="Mapa"
         component={

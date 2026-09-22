@@ -1,825 +1,105 @@
+import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { ThemeContext } from '../../../theme/ThemeContext';
+import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
+import api from '../../../services/api';
+import { reservationService } from '../../reservations/services/reservationService';
+import type { ReservationResponse, ReservationStatus } from '../../reservations/types/reservation.types';
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native'
+interface UserProfile { userId: string }
 
-import { Ionicons } from '@expo/vector-icons'
+const STATUS_OPTIONS: { value: ReservationStatus; label: string }[] = [
+  { value: 'EN_PROCESO', label: 'En proceso' },
+  { value: 'PENDIENTE', label: 'Pendientes' },
+  { value: 'ASIGNADA', label: 'Asignadas' },
+  { value: 'FINALIZADA', label: 'Terminados' },
+  { value: 'CANCELADA', label: 'Cancelados' },
+];
 
-import {
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native'
-
-import { ThemeContext } from '../../../theme/ThemeContext'
-import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
-
-import api from '../../../services/api'
-
-import { reservationService } from '../../reservations/services/reservationService'
-
-import type {
-  ReservationResponse,
-  ReservationStatus,
-} from '../../reservations/types/reservation.types'
-
-
-interface UserProfile {
-  userId: string
-  email: string
-  firstName: string
-  lastName: string
-  phoneNumber: string
-  profilePicture?: string | null
-}
-
+const statusLabel = (status: ReservationStatus) => STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+const statusColor = (status: ReservationStatus) => ({ EN_PROCESO: '#F39C12', PENDIENTE: '#3498DB', ASIGNADA: '#8E44AD', FINALIZADA: '#27AE60', CANCELADA: '#E74C3C' }[status]);
+const formatDate = (date: string) => date ? date.split('-').reverse().join('/') : 'No disponible';
+const formatTime = (time: string) => time ? time.substring(0, 5) : 'No disponible';
 
 export default function MyServicesScreen() {
+  const navigation = useNavigation<any>();
+  const { theme, darkMode } = useContext(ThemeContext);
+  const [reservations, setReservations] = useState<ReservationResponse[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>('EN_PROCESO');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
-  const navigation = useNavigation<any>()
-
-  const {
-    theme,
-    darkMode,
-  } = useContext(ThemeContext)
-
-  const [reservations, setReservations] =
-    useState<ReservationResponse[]>([])
-
-  const [loading, setLoading] =
-    useState(true)
-
-
-  /*
-   * CARGAR RESERVAS DEL USUARIO AUTENTICADO
-   */
-  const loadReservations = useCallback(
-    async () => {
-
-      try {
-
-        setLoading(true)
-
-        /*
-         * Primero obtenemos el perfil del usuario
-         * autenticado mediante el token.
-         */
-        const profileResponse =
-          await api.get<UserProfile>(
-            '/api/users/profile'
-          )
-
-        const userId =
-          profileResponse.data.userId
-
-        if (!userId) {
-          throw new Error(
-            'No se encontró el ID del usuario autenticado.'
-          )
-        }
-
-        /*
-         * Luego obtenemos las reservas
-         * pertenecientes a ese usuario.
-         */
-        const data =
-          await reservationService.getByUser(
-            userId
-          )
-
-        setReservations(data)
-
-      } catch (error: any) {
-
-        console.error(
-          'ERROR CARGANDO MIS SERVICIOS:',
-          error?.response?.data ||
-          error?.message ||
-          error
-        )
-
-        setReservations([])
-
-        Alert.alert(
-          'Error',
-          'No fue posible cargar tus servicios.'
-        )
-
-      } finally {
-
-        setLoading(false)
-
-      }
-
-    },
-    []
-  )
-
-
-  /*
-   * ACTUALIZAR CADA VEZ QUE SE ENTRA
-   * A LA PANTALLA
-   */
-  useFocusEffect(
-    useCallback(() => {
-
-      loadReservations()
-
-    }, [loadReservations])
-  )
-
-
-  /*
-   * COLOR DEL ESTADO
-   */
-  const renderStatusColor = (
-    status: ReservationStatus
-  ) => {
-
-    switch (status) {
-
-      case 'EN_PROCESO':
-        return '#F39C12'
-
-      case 'PENDIENTE':
-        return '#3498DB'
-
-      case 'ASIGNADA':
-        return '#8E44AD'
-
-      case 'FINALIZADA':
-        return '#27AE60'
-
-      case 'CANCELADA':
-        return '#E74C3C'
-
-      default:
-        return '#999'
-
+  const loadReservations = useCallback(async () => {
+    try {
+      setError('');
+      const profileResponse = await api.get<UserProfile>('/api/users/profile');
+      const userId = profileResponse.data.userId;
+      if (!userId) throw new Error('No se encontró el ID del usuario autenticado.');
+      setReservations(await reservationService.getByUser(userId));
+    } catch (requestError: any) {
+      console.error('ERROR CARGANDO MIS SERVICIOS:', requestError?.response?.data || requestError?.message || requestError);
+      setReservations([]);
+      setError('No fue posible cargar tus servicios. Intenta nuevamente.');
+      Alert.alert('Error', 'No fue posible cargar tus servicios.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  }, []);
 
-  }
+  useFocusEffect(useCallback(() => { setLoading(true); loadReservations(); }, [loadReservations]));
 
+  const filteredReservations = useMemo(() => reservations.filter((reservation) => reservation.estado === selectedStatus), [reservations, selectedStatus]);
 
-  /*
-   * TEXTO DEL ESTADO
-   */
-  const renderStatusText = (
-    status: ReservationStatus
-  ) => {
+  const handleRefresh = () => { setRefreshing(true); loadReservations(); };
 
-    switch (status) {
-
-      case 'EN_PROCESO':
-        return 'En proceso'
-
-      case 'PENDIENTE':
-        return 'Pendiente'
-
-      case 'ASIGNADA':
-        return 'Asignada'
-
-      case 'FINALIZADA':
-        return 'Finalizado'
-
-      case 'CANCELADA':
-        return 'Cancelado'
-
-      default:
-        return status
-
-    }
-
-  }
-
-
-  /*
-   * FORMATEAR FECHA
-   */
-  const formatDate = (
-    date: string
-  ) => {
-
-    if (!date) {
-      return ''
-    }
-
-    const [year, month, day] =
-      date.split('-')
-
-    return `${day}/${month}/${year}`
-
-  }
-
-
-  /*
-   * FORMATEAR HORA
-   */
-  const formatTime = (
-    time: string
-  ) => {
-
-    if (!time) {
-      return ''
-    }
-
-    const [hour, minute] =
-      time.split(':')
-
-    return `${hour}:${minute}`
-
-  }
-
-
-  /*
-   * LOADING
-   */
-  if (loading) {
-
-    return (
-      <View
-        style={[
-          styles.loadingContainer,
-          {
-            backgroundColor:
-              theme.background,
-          },
-        ]}
-      >
-
-        <ActivityIndicator
-          size="large"
-          color={theme.primary}
-        />
-
-        <Text
-          style={[
-            styles.loadingText,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          Cargando tus servicios...
-        </Text>
-
+  const renderItem = ({ item }: { item: ReservationResponse }) => (
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={styles.top}>
+        <View style={styles.titleContainer}>
+          <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={2}>{item.nombreServicio || 'Servicio'}</Text>
+          <Text style={[styles.vehicleText, { color: theme.textSecondary }]} numberOfLines={1}>{item.placaVehiculo} {' • '} {item.tipoVehiculo}</Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: statusColor(item.estado) }]}><Text style={styles.statusText}>{statusLabel(item.estado)}</Text></View>
       </View>
-    )
+      <View style={styles.infoRow}><Ionicons name="calendar-outline" size={18} color={theme.primary} /><Text style={[styles.infoText, { color: theme.text }]}>{formatDate(item.fechaReserva)} {' · '} {formatTime(item.horaReserva)}</Text></View>
+      <View style={styles.infoRow}><Ionicons name="cash-outline" size={18} color={theme.primary} /><Text style={[styles.infoText, { color: theme.text }]}>${item.precioServicio.toLocaleString('es-CO')}</Text></View>
+      <TouchableOpacity style={[styles.detailsButton, { borderColor: theme.primary }]} activeOpacity={0.8} onPress={() => navigation.navigate('ServiceDetails', { reservation: item })}>
+        <Text style={[styles.detailsText, { color: theme.primary }]}>Detalle</Text><Ionicons name="chevron-forward" size={18} color={theme.primary} />
+      </TouchableOpacity>
+    </View>
+  );
 
-  }
+  const emptyMessage = selectedStatus === 'EN_PROCESO' ? 'No tienes servicios en proceso.' : 'No hay servicios en este estado.';
 
+  if (loading) return <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}><ActivityIndicator size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.text }]}>Cargando tus servicios...</Text></View>;
 
   return (
-
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor:
-            theme.background,
-        },
-      ]}
-    >
-
-      <Text
-        style={[
-          styles.title,
-          {
-            color: theme.text,
-          },
-        ]}
-      >
-        Mis Servicios
-      </Text>
-
-
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <FlatList
-        data={reservations}
-
-        keyExtractor={(item) =>
-          item.idReserva
-        }
-
-        showsVerticalScrollIndicator={
-          false
-        }
-
-        contentContainerStyle={
-          reservations.length === 0
-            ? styles.emptyList
-            : styles.listContent
-        }
-
-        refreshing={loading}
-
-        onRefresh={loadReservations}
-
-        ListEmptyComponent={
-
-          <View
-            style={styles.emptyContainer}
-          >
-
-            <Ionicons
-              name="car-outline"
-              size={60}
-              color={
-                darkMode
-                  ? '#777'
-                  : '#999'
-              }
-            />
-
-            <Text
-              style={[
-                styles.emptyTitle,
-                {
-                  color: theme.text,
-                },
-              ]}
-            >
-              No tienes servicios
-            </Text>
-
-            <Text
-              style={[
-                styles.emptyText,
-                {
-                  color: darkMode
-                    ? '#BDBDBD'
-                    : '#666',
-                },
-              ]}
-            >
-              Cuando realices una reserva,
-              aparecerá aquí.
-            </Text>
-
-          </View>
-
-        }
-
-
-        renderItem={({
-          item,
-        }) => (
-
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor:
-                  theme.card,
-              },
-            ]}
-          >
-
-            {/* HEADER */}
-
-            <View
-              style={styles.top}
-            >
-
-              <View
-                style={styles.titleContainer}
-              >
-
-                <Text
-                  style={[
-                    styles.serviceTitle,
-                    {
-                      color:
-                        theme.text,
-                    },
-                  ]}
-                  numberOfLines={2}
-                >
-                  {item.nombreServicio ||
-                    'Servicio'}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.vehicleText,
-                    {
-                      color:
-                        darkMode
-                          ? '#BDBDBD'
-                          : '#666',
-                    },
-                  ]}
-                >
-                  {item.placaVehiculo}
-                  {' • '}
-                  {item.tipoVehiculo}
-                </Text>
-
-              </View>
-
-
-              <View
-                style={[
-                  styles.statusBadge,
-                  {
-                    backgroundColor:
-                      renderStatusColor(
-                        item.estado
-                      ),
-                  },
-                ]}
-              >
-
-                <Text
-                  style={styles.statusText}
-                >
-                  {renderStatusText(
-                    item.estado
-                  )}
-                </Text>
-
-              </View>
-
-            </View>
-
-
-            {/* FECHA Y HORA */}
-
-            <View
-              style={styles.infoRow}
-            >
-
-              <Ionicons
-                name="calendar-outline"
-                size={18}
-                color="#1E6FB9"
-              />
-
-              <Text
-                style={[
-                  styles.infoText,
-                  {
-                    color:
-                      theme.text,
-                  },
-                ]}
-              >
-                {formatDate(
-                  item.fechaReserva
-                )}
-                {' - '}
-                {formatTime(
-                  item.horaReserva
-                )}
-              </Text>
-
-            </View>
-
-
-            {/* DURACIÓN */}
-
-            <View
-              style={styles.infoRow}
-            >
-
-              <Ionicons
-                name="time-outline"
-                size={18}
-                color="#1E6FB9"
-              />
-
-              <Text
-                style={[
-                  styles.infoText,
-                  {
-                    color:
-                      theme.text,
-                  },
-                ]}
-              >
-                Duración:{' '}
-                {item.duracionServicio}
-                {' minutos'}
-              </Text>
-
-            </View>
-
-
-            {/* PRECIO */}
-
-            <View
-              style={styles.infoRow}
-            >
-
-              <Ionicons
-                name="cash-outline"
-                size={18}
-                color="#1E6FB9"
-              />
-
-              <Text
-                style={[
-                  styles.infoText,
-                  {
-                    color:
-                      theme.text,
-                  },
-                ]}
-              >
-                $
-                {item.precioServicio.toLocaleString(
-                  'es-CO'
-                )}
-              </Text>
-
-            </View>
-
-
-            {/* UBICACIÓN */}
-
-            <View
-              style={styles.infoRow}
-            >
-
-              <Ionicons
-                name="location-outline"
-                size={18}
-                color="#1E6FB9"
-              />
-
-              <Text
-                style={[
-                  styles.infoText,
-                  {
-                    color:
-                      theme.text,
-                  },
-                ]}
-              >
-                Servicio de lavado
-              </Text>
-
-            </View>
-
-
-            {/* BOTONES */}
-
-            <View
-              style={styles.actions}
-            >
-
-              {/* SEGUIMIENTO */}
-
-              <TouchableOpacity
-                style={[
-                  styles.trackButton,
-                  {
-                    opacity:
-                      item.estado ===
-                      'CANCELADA'
-                        ? 0.5
-                        : 1,
-                  },
-                ]}
-                disabled={
-                  item.estado ===
-                  'CANCELADA'
-                }
-                onPress={() =>
-                  navigation.navigate(
-                    'Map'
-                  )
-                }
-              >
-
-                <Ionicons
-                  name="map-outline"
-                  size={18}
-                  color="#fff"
-                />
-
-                <Text
-                  style={styles.trackText}
-                >
-                  Seguimiento
-                </Text>
-
-              </TouchableOpacity>
-
-
-              {/* VER DETALLES */}
-
-              <TouchableOpacity
-                style={[
-                  styles.detailsButton,
-                  {
-                    borderColor:
-                      '#1E6FB9',
-                  },
-                ]}
-                onPress={() =>
-                  navigation.navigate(
-                    'ServiceDetails',
-                    {
-                      reservation: item,
-                    }
-                  )
-                }
-              >
-
-                <Text
-                  style={[
-                    styles.detailsText,
-                    {
-                      color:
-                        '#1E6FB9',
-                    },
-                  ]}
-                >
-                  Ver detalles
-                </Text>
-
-              </TouchableOpacity>
-
-            </View>
-
-          </View>
-
-        )}
+        data={error ? [] : filteredReservations}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.idReserva}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} colors={[theme.primary]} />}
+        ListHeaderComponent={<><View style={styles.header}><Text style={[styles.title, { color: theme.text }]}>Mis servicios</Text><Text style={[styles.subtitle, { color: theme.textSecondary }]}>Consulta el estado de tus reservas</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>{STATUS_OPTIONS.map((option) => <TouchableOpacity key={option.value} onPress={() => setSelectedStatus(option.value)} activeOpacity={0.8} style={[styles.filterButton, { borderColor: theme.border, backgroundColor: theme.card }, selectedStatus === option.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}><Text style={[styles.filterText, { color: theme.textSecondary }, selectedStatus === option.value && styles.filterTextSelected]}>{option.label}</Text></TouchableOpacity>)}</ScrollView></>}
+        ListEmptyComponent={<View style={[styles.emptyContainer, { backgroundColor: error ? theme.errorBackground : theme.card, borderColor: error ? theme.errorBorder : theme.border }]}><Ionicons name={error ? 'alert-circle-outline' : 'car-outline'} size={42} color={error ? theme.errorText : theme.primary} /><Text style={[styles.emptyTitle, { color: error ? theme.errorText : theme.text }]}>{error || emptyMessage}</Text>{error ? <TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>Reintentar</Text></TouchableOpacity> : <Text style={[styles.emptyText, { color: darkMode ? '#BDBDBD' : theme.textSecondary }]}>Cuando tengas una reserva en este estado, aparecerá aquí.</Text>}</View>}
       />
-
-    </View>
-
-  )
+    </SafeAreaView>
+  );
 }
 
-
 const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    padding: 20,
-    paddingTop: 60,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 25,
-  },
-
-  listContent: {
-    paddingBottom: 40,
-  },
-
-  emptyList: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingBottom: 80,
-  },
-
-  card: {
-    borderRadius: 22,
-    padding: 20,
-    marginBottom: 18,
-
-    elevation: 4,
-
-    shadowColor: '#000',
-
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-
-    shadowOpacity: 0.1,
-
-    shadowRadius: 4,
-  },
-
-  top: {
-    flexDirection: 'row',
-    justifyContent:
-      'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 18,
-  },
-
-  titleContainer: {
-    flex: 1,
-    paddingRight: 10,
-  },
-
-  serviceTitle: {
-    fontSize: 19,
-    fontWeight: 'bold',
-  },
-
-  vehicleText: {
-    marginTop: 5,
-    fontSize: 13,
-  },
-
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 50,
-  },
-
-  statusText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 13,
-  },
-
-  infoText: {
-    marginLeft: 10,
-    fontSize: 15,
-    flex: 1,
-  },
-
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 7,
-  },
-
-  trackButton: {
-    flex: 1,
-    backgroundColor: '#1E6FB9',
-    height: 50,
-    borderRadius: 14,
-
-    justifyContent: 'center',
-    alignItems: 'center',
-
-    flexDirection: 'row',
-  },
-
-  trackText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-
-  detailsButton: {
-    flex: 1,
-    borderWidth: 1.5,
-    height: 50,
-    borderRadius: 14,
-
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  detailsText: {
-    fontWeight: 'bold',
-  },
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  loadingText: {
-    marginTop: 15,
-    fontSize: 15,
-  },
-
-  emptyContainer: {
-    alignItems: 'center',
-    paddingHorizontal: 30,
-  },
-
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 15,
-  },
-
-  emptyText: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 22,
-  },
-
-})
-
+  container: { flex: 1 }, loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }, loadingText: { marginTop: 12, fontSize: 15 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24, flexGrow: 1 }, header: { paddingTop: 16, paddingBottom: 16 }, title: { fontSize: 26, fontWeight: '800', marginBottom: 4 }, subtitle: { fontSize: 14 },
+  filterList: { gap: 8, paddingBottom: 24 }, filterButton: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderRadius: 12 }, filterText: { fontSize: 14, fontWeight: '700' }, filterTextSelected: { color: '#FFFFFF' },
+  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 }, top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }, titleContainer: { flex: 1, minWidth: 0, paddingRight: 8 }, serviceTitle: { fontSize: 18, fontWeight: '800' }, vehicleText: { marginTop: 4, fontSize: 13 }, statusBadge: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }, statusText: { color: '#fff', fontWeight: '700', fontSize: 11 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 }, infoText: { marginLeft: 8, fontSize: 14, flex: 1 }, detailsButton: { minHeight: 48, borderWidth: 1, borderRadius: 12, marginTop: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }, detailsText: { fontSize: 14, fontWeight: '700' },
+  emptyContainer: { borderWidth: 1, borderRadius: 16, padding: 24, alignItems: 'center' }, emptyTitle: { marginTop: 12, fontSize: 17, lineHeight: 23, fontWeight: '800', textAlign: 'center' }, emptyText: { marginTop: 8, fontSize: 14, lineHeight: 20, textAlign: 'center' }, retryText: { marginTop: 12, fontSize: 14, fontWeight: '700' },
+});

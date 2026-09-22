@@ -201,6 +201,32 @@ export default function ServiceDetailsScreen({
           Información del servicio
         </Text>
 
+        <Text
+          style={[
+            styles.reservationId,
+            {
+              color: darkMode
+                ? '#BDBDBD'
+                : '#666',
+            },
+          ]}
+        >
+          Reserva #{reservation.idReserva}
+        </Text>
+
+        {!!reservation.descripcionServicio && (
+          <Text
+            style={[
+              styles.serviceDescription,
+              {
+                color: theme.text,
+              },
+            ]}
+          >
+            {reservation.descripcionServicio}
+          </Text>
+        )}
+
         {/* Fecha */}
 
         <View style={styles.infoRow}>
@@ -552,36 +578,6 @@ export default function ServiceDetailsScreen({
 
       </View>
 
-      {/* BOTÓN SEGUIMIENTO */}
-
-      <View style={styles.actions}>
-
-        <TouchableOpacity
-          style={[
-            styles.trackButton,
-            reservation.estado === 'CANCELADA' &&
-              styles.trackButtonDisabled,
-          ]}
-          disabled={reservation.estado === 'CANCELADA'}
-          onPress={() =>
-            navigation.navigate('Map')
-          }
-        >
-
-          <Ionicons
-            name="map-outline"
-            size={20}
-            color="#fff"
-          />
-
-          <Text style={styles.trackText}>
-            Ver seguimiento
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-
     </ScrollView>
   )
 }
@@ -655,6 +651,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  reservationId: {
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 12,
+  },
+
+  serviceDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+
   infoRow: {
     flexDirection: 'row',
     marginBottom: 18,
@@ -708,32 +716,6 @@ const styles = StyleSheet.create({
   stepText: {
     marginLeft: 15,
     fontSize: 15,
-  },
-
-  actions: {
-    marginBottom: 40,
-  },
-
-  trackButton: {
-    backgroundColor: '#1E6FB9',
-    height: 55,
-    borderRadius: 16,
-
-    justifyContent: 'center',
-    alignItems: 'center',
-
-    flexDirection: 'row',
-  },
-
-  trackButtonDisabled: {
-    backgroundColor: '#999',
-  },
-
-  trackText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 10,
-    fontSize: 16,
   },
 
 })

@@ -883,19 +883,6 @@ export default function ProfileScreen({
         />
 
         <MenuItem
-          icon="receipt-outline"
-          title="Mis servicios"
-          description="Consulta tus servicios"
-          onPress={() =>
-            navigation.navigate(
-              'MyServices'
-            )
-          }
-          theme={theme}
-          darkMode={darkMode}
-        />
-
-        <MenuItem
           icon="settings-outline"
           title="Configuración"
           description="Preferencias de la aplicación"

@@ -10,7 +10,6 @@ import OperatorNavigator from './OperatorNavigator';
 
 import ServiceDetailScreen from '../features/services/screens/ServiceDetailScreen';
 import ReservationScreen from '../features/reservations/screens/ReservationScreen';
-import MyReservationsScreen from '../features/reservations/screens/MyReservationsScreen';
 
 import LoginScreen from '../features/auth/screens/LoginScreen';
 import RegisterScreen from '../features/auth/screens/RegisterScreen';
@@ -19,7 +18,6 @@ import VerifyCodeScreen from '../features/auth/screens/VerifyCodeScreen';
 import ResetPasswordScreen from '../features/auth/screens/ResetPasswordScreen';
 import EditProfileScreen from '../features/auth/screens/EditProfileScreen';
 
-import MyServicesScreen from '../features/profile/screens/MyServicesScreen';
 import ServiceDetailsScreen from '../features/profile/screens/ServiceDetailsScreen';
 
 import MapScreen from '../features/map/screens/MapScreen';
@@ -127,11 +125,6 @@ export default function AppNavigator({
               />
 
               <Stack.Screen
-                name="MyReservations"
-                component={MyReservationsScreen}
-              />
-
-              <Stack.Screen
                 name="Map"
                 component={MapScreen}
               />
@@ -139,11 +132,6 @@ export default function AppNavigator({
               <Stack.Screen
                 name="ServiceDetails"
                 component={ServiceDetailsScreen}
-              />
-
-              <Stack.Screen
-                name="MyServices"
-                component={MyServicesScreen}
               />
 
               <Stack.Screen
