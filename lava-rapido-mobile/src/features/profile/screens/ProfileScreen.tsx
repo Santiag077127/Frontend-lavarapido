@@ -23,11 +23,13 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 import api, { setToken } from '../../../services/api'
+import LanguageSelector from '../../../components/profile/LanguageSelector'
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void
@@ -81,6 +83,7 @@ export default function ProfileScreen({
   setIsLoggedIn,
 }: Props) {
   const navigation = useNavigation<any>()
+  const { t } = useTranslation()
 
   const themeContext = useContext(ThemeContext)
 
@@ -131,7 +134,7 @@ export default function ProfileScreen({
       } catch (error: any) {
         console.log(
           'ERROR PERFIL:',
-          error?.response?.data ||
+          error?.response?.status ||
             error?.message
         )
 
@@ -139,11 +142,11 @@ export default function ProfileScreen({
           error?.response?.status === 401
         ) {
           Alert.alert(
-            'Sesión expirada',
-            'Debes iniciar sesión nuevamente.',
+            t('profile.sessionExpired'),
+            t('profile.loginAgain'),
             [
               {
-                text: 'Aceptar',
+                text: t('profile.accept'),
                 onPress: logoutUser,
               },
             ]
@@ -153,8 +156,12 @@ export default function ProfileScreen({
         }
 
         Alert.alert(
-          'Error',
-          'No fue posible cargar tu perfil.'
+          t('profile.errorTitle'),
+          !error?.response
+            ? t('profile.connectionError')
+            : error?.response?.status === 404
+              ? t('profile.notFound')
+              : t('profile.loadError')
         )
       } finally {
         setLoading(false)
@@ -268,27 +275,27 @@ export default function ProfileScreen({
       setProfile(response.data)
 
       Alert.alert(
-        'Avatar actualizado',
-        'Tu avatar se actualizó correctamente.'
+        t('profile.avatarUpdatedTitle'),
+        t('profile.avatarUpdatedMessage')
       )
     } catch (error: any) {
       console.log(
         'ERROR AVATAR:',
-        error?.response?.data ||
+        error?.response?.status ||
           error?.message
       )
 
-      const message =
-        error?.response?.data?.message ||
-        (
-          typeof error?.response?.data ===
-          'string'
-            ? error.response.data
-            : 'No fue posible actualizar el avatar.'
-        )
+      const status = error?.response?.status
+      const message = !error?.response
+        ? t('profile.connectionError')
+        : status === 400
+          ? t('profile.badRequest')
+          : status === 401
+            ? t('profile.unauthorized')
+            : t('profile.avatarError')
 
       Alert.alert(
-        'Error',
+        t('profile.errorTitle'),
         message
       )
     } finally {
@@ -298,15 +305,15 @@ export default function ProfileScreen({
 
   const handleLogout = () => {
     Alert.alert(
-      'Cerrar sesión',
-      '¿Deseas cerrar tu sesión?',
+      t('profile.logoutTitle'),
+      t('profile.logoutMessage'),
       [
         {
-          text: 'Cancelar',
+          text: t('profile.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Cerrar sesión',
+          text: t('profile.logout'),
           style: 'destructive',
           onPress: logoutUser,
         },
@@ -348,7 +355,7 @@ export default function ProfileScreen({
               },
             ]}
           >
-            Cargando perfil...
+            {t('profile.loading')}
           </Text>
 
           <Text
@@ -360,7 +367,7 @@ export default function ProfileScreen({
               },
             ]}
           >
-            Un momento, por favor
+            {t('profile.loadingMessage')}
           </Text>
         </View>
       </View>
@@ -405,7 +412,7 @@ export default function ProfileScreen({
             },
           ]}
         >
-          No se pudo cargar el perfil
+          {t('profile.emptyTitle')}
         </Text>
 
         <Text
@@ -417,8 +424,7 @@ export default function ProfileScreen({
             },
           ]}
         >
-          Comprueba tu conexión e
-          inténtalo nuevamente.
+          {t('profile.emptyMessage')}
         </Text>
 
         <TouchableOpacity
@@ -444,7 +450,7 @@ export default function ProfileScreen({
           <Text
             style={styles.retryText}
           >
-            Intentar nuevamente
+            {t('profile.retry')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -563,7 +569,7 @@ export default function ProfileScreen({
           ]}
           numberOfLines={2}
         >
-          {fullName || 'Usuario'}
+          {fullName || t('profile.defaultUser')}
         </Text>
 
         <Text
@@ -576,7 +582,7 @@ export default function ProfileScreen({
           ]}
           numberOfLines={1}
         >
-          {profile.email || 'Sin correo'}
+          {profile.email || t('profile.noEmail')}
         </Text>
 
         <View
@@ -605,7 +611,7 @@ export default function ProfileScreen({
               },
             ]}
           >
-            Mi perfil
+            {t('profile.title')}
           </Text>
         </View>
       </View>
@@ -656,7 +662,7 @@ export default function ProfileScreen({
                 },
               ]}
             >
-              Información personal
+              {t('profile.personalInfo')}
             </Text>
 
             <Text
@@ -668,14 +674,14 @@ export default function ProfileScreen({
                 },
               ]}
             >
-              Tus datos registrados
+              {t('profile.registeredData')}
             </Text>
           </View>
         </View>
 
         <InfoItem
           icon="person-outline"
-          label="Nombre"
+          label={t('profile.firstName')}
           value={profile.firstName}
           theme={theme}
           darkMode={darkMode}
@@ -683,7 +689,7 @@ export default function ProfileScreen({
 
         <InfoItem
           icon="person-outline"
-          label="Apellido"
+          label={t('profile.lastName')}
           value={profile.lastName}
           theme={theme}
           darkMode={darkMode}
@@ -691,7 +697,7 @@ export default function ProfileScreen({
 
         <InfoItem
           icon="mail-outline"
-          label="Correo electrónico"
+          label={t('profile.email')}
           value={profile.email}
           theme={theme}
           darkMode={darkMode}
@@ -699,7 +705,7 @@ export default function ProfileScreen({
 
         <InfoItem
           icon="call-outline"
-          label="Teléfono"
+          label={t('profile.phone')}
           value={profile.phoneNumber}
           theme={theme}
           darkMode={darkMode}
@@ -737,7 +743,7 @@ export default function ProfileScreen({
                 },
               ]}
             >
-              Elegir avatar
+              {t('profile.chooseAvatar')}
             </Text>
 
             <Text
@@ -749,7 +755,7 @@ export default function ProfileScreen({
                 },
               ]}
             >
-              Personaliza tu imagen de perfil
+              {t('profile.avatarDescription')}
             </Text>
           </View>
 
@@ -858,8 +864,8 @@ export default function ProfileScreen({
       >
         <MenuItem
           icon="create-outline"
-          title="Editar perfil"
-          description="Actualiza tus datos"
+          title={t('profile.edit')}
+          description={t('profile.editDescription')}
           onPress={() =>
             navigation.navigate(
               'EditProfile'
@@ -871,8 +877,8 @@ export default function ProfileScreen({
 
         <MenuItem
           icon="car-outline"
-          title="Mis vehiculos"
-          description="Administra los vehiculos registrados"
+          title={t('profile.vehicles')}
+          description={t('profile.vehiclesDescription')}
           onPress={() =>
             navigation.navigate(
               'MyVehicles'
@@ -884,9 +890,14 @@ export default function ProfileScreen({
 
         <MenuItem
           icon="settings-outline"
-          title="Configuración"
-          description="Preferencias de la aplicación"
+          title={t('profile.settings')}
+          description={t('profile.settingsDescription')}
           onPress={() => {}}
+          theme={theme}
+          darkMode={darkMode}
+        />
+
+        <LanguageSelector
           theme={theme}
           darkMode={darkMode}
         />
@@ -934,7 +945,7 @@ export default function ProfileScreen({
                   },
                 ]}
               >
-                Modo oscuro
+                {t('profile.darkMode')}
               </Text>
 
               <Text
@@ -947,8 +958,8 @@ export default function ProfileScreen({
                 ]}
               >
                 {darkMode
-                  ? 'Activado'
-                  : 'Desactivado'}
+                  ? t('profile.enabled')
+                  : t('profile.disabled')}
               </Text>
             </View>
           </View>
@@ -985,7 +996,7 @@ export default function ProfileScreen({
         <Text
           style={styles.logoutText}
         >
-          Cerrar sesión
+          {t('profile.logout')}
         </Text>
       </TouchableOpacity>
 
@@ -1009,7 +1020,7 @@ export default function ProfileScreen({
             },
           ]}
         >
-          Tu información está protegida y se mantiene privada.
+          {t('profile.privacy')}
         </Text>
       </View>
 
@@ -1028,6 +1039,8 @@ function InfoItem({
   darkMode,
   last = false,
 }: any) {
+  const { t } = useTranslation()
+
   return (
     <View
       style={[
@@ -1085,7 +1098,7 @@ function InfoItem({
             },
           ]}
         >
-          {value || 'No registrado'}
+          {value || t('profile.notRegistered')}
         </Text>
       </View>
     </View>

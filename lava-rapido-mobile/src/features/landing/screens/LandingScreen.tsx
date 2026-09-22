@@ -12,12 +12,14 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 
 const { width } = Dimensions.get('window')
 
 export default function LandingScreen() {
 
   const navigation = useNavigation<any>()
+  const { t } = useTranslation()
 
   return (
 
@@ -39,21 +41,20 @@ export default function LandingScreen() {
 
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
-            🚗 Plataforma Inteligente
+            🚗 {t('landing.badge')}
           </Text>
         </View>
 
         <Text style={styles.title}>
-          Lava Rápido
+          {t('landing.brand')}
         </Text>
 
         <Text style={styles.titleBlue}>
-          Vehicular
+          {t('landing.brandAccent')}
         </Text>
 
         <Text style={styles.subtitle}>
-          Agenda servicios, realiza seguimiento en tiempo real
-          y administra tu vehículo desde una aplicación moderna.
+          {t('landing.subtitle')}
         </Text>
 
         {/* 🔥 BOTONES */}
@@ -64,7 +65,7 @@ export default function LandingScreen() {
             onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.primaryButtonText}>
-              Comenzar
+              {t('landing.start')}
             </Text>
           </TouchableOpacity>
 
@@ -73,7 +74,7 @@ export default function LandingScreen() {
             onPress={() => navigation.navigate('Register')}
           >
             <Text style={styles.secondaryButtonText}>
-              Registrarse
+              {t('landing.register')}
             </Text>
           </TouchableOpacity>
 
@@ -93,11 +94,11 @@ export default function LandingScreen() {
 
             <View style={styles.phoneHeader}>
               <Text style={styles.phoneTitle}>
-                Hola Santiago 👋
+                {t('landing.mockupGreeting')}
               </Text>
 
               <Text style={styles.phoneSubtitle}>
-                Tu vehículo está listo.
+                {t('landing.mockupReady')}
               </Text>
             </View>
 
@@ -108,16 +109,16 @@ export default function LandingScreen() {
 
                 <View>
                   <Text style={styles.cardTitle}>
-                    Lavado Premium
+                    {t('landing.premiumWash')}
                   </Text>
 
                   <Text style={styles.cardDescription}>
-                    Servicio completo
+                    {t('landing.completeService')}
                   </Text>
                 </View>
 
                 <Text style={styles.active}>
-                  Activo
+                  {t('landing.active')}
                 </Text>
 
               </View>
@@ -128,7 +129,7 @@ export default function LandingScreen() {
             <View style={styles.card}>
 
               <Text style={styles.cardTitle}>
-                Seguimiento en tiempo real
+                {t('landing.realtimeTracking')}
               </Text>
 
               <View style={styles.progressBar}>
@@ -136,7 +137,7 @@ export default function LandingScreen() {
               </View>
 
               <Text style={styles.progressText}>
-                75% completado
+                {t('landing.progress')}
               </Text>
 
             </View>
@@ -152,11 +153,11 @@ export default function LandingScreen() {
                 />
 
                 <Text style={styles.smallCardTitle}>
-                  Mapa
+                  {t('landing.map')}
                 </Text>
 
                 <Text style={styles.smallCardText}>
-                  GPS en tiempo real
+                  {t('landing.realtimeGps')}
                 </Text>
               </View>
 
@@ -168,11 +169,11 @@ export default function LandingScreen() {
                 />
 
                 <Text style={styles.smallCardTitle}>
-                  Perfil
+                  {t('landing.profile')}
                 </Text>
 
                 <Text style={styles.smallCardText}>
-                  Gestión de cuenta
+                  {t('landing.accountManagement')}
                 </Text>
               </View>
 
@@ -188,11 +189,11 @@ export default function LandingScreen() {
       <View style={styles.section}>
 
         <Text style={styles.sectionTitle}>
-          Funcionalidades
+          {t('landing.featuresTitle')}
         </Text>
 
         <Text style={styles.sectionSubtitle}>
-          Todo lo que necesitas en una sola app
+          {t('landing.featuresSubtitle')}
         </Text>
 
         <View style={styles.featureCard}>
@@ -203,11 +204,11 @@ export default function LandingScreen() {
           />
 
           <Text style={styles.featureTitle}>
-            App Móvil
+            {t('landing.mobileApp')}
           </Text>
 
           <Text style={styles.featureText}>
-            Aplicación moderna desarrollada con React Native y Expo.
+            {t('landing.mobileAppDescription')}
           </Text>
         </View>
 
@@ -219,11 +220,11 @@ export default function LandingScreen() {
           />
 
           <Text style={styles.featureTitle}>
-            Seguimiento GPS
+            {t('landing.gpsTracking')}
           </Text>
 
           <Text style={styles.featureText}>
-            Visualiza el estado del servicio en tiempo real.
+            {t('landing.gpsTrackingDescription')}
           </Text>
         </View>
 
@@ -235,11 +236,11 @@ export default function LandingScreen() {
           />
 
           <Text style={styles.featureTitle}>
-            Tema Oscuro
+            {t('landing.darkTheme')}
           </Text>
 
           <Text style={styles.featureText}>
-            Interfaz adaptable con modo claro y oscuro.
+            {t('landing.darkThemeDescription')}
           </Text>
         </View>
 
@@ -252,12 +253,11 @@ export default function LandingScreen() {
       >
 
         <Text style={styles.ctaTitle}>
-          Lleva tu vehículo
-          al siguiente nivel
+          {t('landing.ctaTitle')}
         </Text>
 
         <Text style={styles.ctaText}>
-          Optimiza tu experiencia de lavado desde cualquier lugar.
+          {t('landing.ctaText')}
         </Text>
 
         <TouchableOpacity
@@ -265,7 +265,7 @@ export default function LandingScreen() {
           onPress={() => navigation.navigate('Login')}
         >
           <Text style={styles.ctaButtonText}>
-            Empezar Ahora
+            {t('landing.ctaButton')}
           </Text>
         </TouchableOpacity>
 

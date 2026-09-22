@@ -13,10 +13,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { images } from '../../../assets/images';
 import api from '../../../services/api';
 import type { Service } from '../../services/types/service.types';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface UserProfile {
   idUsuario?: string;
@@ -46,10 +48,9 @@ const normalizeText = (text = '') => text
 const getServiceImage = (nombre: string) =>
   serviceImages[normalizeText(nombre)] || images.ServicioBasico;
 
-const formatPrice = (price: number) => `$${price.toLocaleString('es-CO')}`;
-
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [services, setServices] = useState<Service[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [filter, setFilter] = useState<ServiceFilter>('available');
@@ -71,7 +72,7 @@ const HomeScreen = () => {
       setUser(profileResponse.data);
     } catch (err: any) {
       console.error('ERROR HOME:', err?.response?.data || err);
-      setError('No fue posible cargar la información. Intenta nuevamente.');
+      setError(t('mobile.home.error'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -80,7 +81,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [t]);
 
   const availableServices = useMemo(
     () => services.filter((service) => service.estado === true),
@@ -101,7 +102,7 @@ const HomeScreen = () => {
     loadData();
   };
 
-  const getUserName = () => user?.firstName || user?.nombre || 'Usuario';
+  const getUserName = () => user?.firstName || user?.nombre || t('mobile.home.defaultUser');
 
   const handleServicePress = (service: Service) => {
     navigation.navigate('Reservation', { service });
@@ -115,7 +116,7 @@ const HomeScreen = () => {
           <Text style={styles.serviceName} numberOfLines={1}>{item.nombre}</Text>
           {item.estado && (
             <View style={styles.availableBadge}>
-              <Text style={styles.availableBadgeText}>Disponible</Text>
+              <Text style={styles.availableBadgeText}>{t('mobile.home.availableBadge')}</Text>
             </View>
           )}
         </View>
@@ -123,9 +124,9 @@ const HomeScreen = () => {
         <View style={styles.serviceInfo}>
           <View style={styles.infoItem}>
             <Ionicons name="time-outline" size={15} color="#6B7280" />
-            <Text style={styles.infoText}>{item.duracionMinutos} min</Text>
+            <Text style={styles.infoText}>{item.duracionMinutos} {t('mobile.home.minutes')}</Text>
           </View>
-          <Text style={styles.servicePrice}>{formatPrice(item.precio)}</Text>
+          <Text style={styles.servicePrice}>{formatCurrency(item.precio)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -135,17 +136,17 @@ const HomeScreen = () => {
     if (error) return null;
     const hasSearch = search.trim().length > 0;
     const message = hasSearch
-      ? 'No encontramos servicios que coincidan con tu búsqueda.'
+      ? t('mobile.home.noSearchResults')
       : filter === 'available'
-        ? 'No hay servicios disponibles en este momento.'
-        : 'No hay servicios para mostrar en este momento.';
+        ? t('mobile.home.noAvailable')
+        : t('mobile.home.noServices');
 
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIcon}>
           <Ionicons name={hasSearch ? 'search-outline' : 'car-outline'} size={38} color="#1E88E5" />
         </View>
-        <Text style={styles.emptyTitle}>{hasSearch ? 'Sin resultados' : 'Servicios no disponibles'}</Text>
+        <Text style={styles.emptyTitle}>{hasSearch ? t('mobile.home.noSearchResultsTitle') : t('mobile.home.noAvailableTitle')}</Text>
         <Text style={styles.emptyText}>{message}</Text>
       </View>
     );
@@ -154,23 +155,23 @@ const HomeScreen = () => {
   const listHeader = (
     <>
       <View style={styles.header}>
-        <Text style={styles.greeting}>¡Hola! 👋</Text>
+        <Text style={styles.greeting}>{t('mobile.home.greeting')} 👋</Text>
         <Text style={styles.userName}>{getUserName()}</Text>
-        <Text style={styles.headerSubtitle}>¿Qué servicio necesita tu vehículo?</Text>
+        <Text style={styles.headerSubtitle}>{t('mobile.home.vehicleNeed')}</Text>
       </View>
 
       <View style={styles.banner}>
         <View style={styles.bannerContent}>
-          <Text style={styles.bannerTitle}>Tu vehículo merece{`\n`}el mejor cuidado</Text>
-          <Text style={styles.bannerSubtitle}>Reserva tu servicio de lavado de forma rápida y sencilla.</Text>
+          <Text style={styles.bannerTitle}>{t('mobile.home.bannerTitle')}</Text>
+          <Text style={styles.bannerSubtitle}>{t('mobile.home.bannerSubtitle')}</Text>
         </View>
         <View style={styles.bannerIconContainer}><Ionicons name="car-sport" size={72} color="#FFFFFF" /></View>
       </View>
 
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={styles.sectionTitle}>Servicios</Text>
-          <Text style={styles.sectionSubtitle}>Elige el servicio que necesitas</Text>
+          <Text style={styles.sectionTitle}>{t('mobile.home.sectionTitle')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('mobile.home.sectionSubtitle')}</Text>
         </View>
       </View>
 
@@ -180,7 +181,7 @@ const HomeScreen = () => {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Buscar servicio..."
+            placeholder={t('mobile.home.searchPlaceholder')}
             placeholderTextColor="#94A3B8"
             style={styles.searchInput}
             returnKeyType="search"
@@ -190,10 +191,10 @@ const HomeScreen = () => {
         </View>
         <View style={styles.filterGroup}>
           <TouchableOpacity onPress={() => setFilter('available')} style={[styles.filterButton, filter === 'available' && styles.filterButtonSelected]} activeOpacity={0.8}>
-            <Text style={[styles.filterButtonText, filter === 'available' && styles.filterButtonTextSelected]}>Disponibles</Text>
+            <Text style={[styles.filterButtonText, filter === 'available' && styles.filterButtonTextSelected]}>{t('mobile.home.available')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setFilter('all')} style={[styles.filterButton, filter === 'all' && styles.filterButtonSelected]} activeOpacity={0.8}>
-            <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextSelected]}>Todos</Text>
+            <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextSelected]}>{t('mobile.home.all')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -202,14 +203,14 @@ const HomeScreen = () => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={22} color="#DC2626" />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>Reintentar</Text></TouchableOpacity>
+          <TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity>
         </View>
       )}
     </>
   );
 
   if (loading) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#1E88E5" /><Text style={styles.loadingText}>Cargando servicios...</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#1E88E5" /><Text style={styles.loadingText}>{t('mobile.home.loading')}</Text></View>;
   }
 
   return (
@@ -220,7 +221,7 @@ const HomeScreen = () => {
         keyExtractor={(item) => item.idServicio}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={<View style={styles.footer}><Ionicons name="shield-checkmark-outline" size={20} color="#1E88E5" /><Text style={styles.footerText}>Calidad y cuidado para tu vehículo</Text></View>}
+        ListFooterComponent={<View style={styles.footer}><Ionicons name="shield-checkmark-outline" size={20} color="#1E88E5" /><Text style={styles.footerText}>{t('mobile.home.footer')}</Text></View>}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

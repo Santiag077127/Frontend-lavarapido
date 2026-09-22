@@ -5,13 +5,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
+import { useTranslation } from 'react-i18next'
 
 export default function VerifyCodeScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
+  const { t } = useTranslation()
   const [code, setCode] = useState('')
   const handleVerify = () => {
     if (code.length < 6) {
-      Alert.alert('Código inválido', 'Ingresa el código de 6 dígitos')
+      Alert.alert(t('verifyCode.errorTitle'), t('verifyCode.codeRequired'))
       return
     }
     navigation.navigate('ResetPassword')
@@ -22,13 +24,13 @@ export default function VerifyCodeScreen({ navigation }: any) {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             <Image source={images.logo} style={styles.logo} resizeMode="contain" />
-            <Text style={[styles.title, { color: theme.text }]}>Verificar código</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Ingresa el código enviado a tu correo electrónico.</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t('verifyCode.title')}</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('verifyCode.subtitle')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
               <Ionicons name="shield-checkmark-outline" size={22} color={theme.primary} />
               <TextInput placeholder="123456" placeholderTextColor={theme.placeholder} value={code} onChangeText={setCode} keyboardType="numeric" maxLength={6} returnKeyType="done" onSubmitEditing={handleVerify} style={[styles.input, { color: theme.text }]} />
             </View>
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleVerify} activeOpacity={0.8}><Text style={styles.buttonText}>Verificar código</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleVerify} activeOpacity={0.8}><Text style={styles.buttonText}>{t('verifyCode.button')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -19,6 +19,7 @@ import {
 } from 'react-native'
 
 import { Ionicons } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
 
 import {
   useFocusEffect,
@@ -37,6 +38,7 @@ import {
 import api, {
   setToken,
 } from '../../../services/api'
+import LanguageSelector from '../../../components/profile/LanguageSelector'
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void
@@ -91,6 +93,8 @@ export default function OperatorProfileScreen({
 }: Props) {
   const themeContext =
     useContext(ThemeContext)
+
+  const { t } = useTranslation()
 
   const darkMode =
     themeContext?.darkMode ?? false
@@ -214,7 +218,7 @@ export default function OperatorProfileScreen({
       } catch (error: any) {
         console.log(
           'ERROR PERFIL OPERADOR:',
-          error?.response?.data ||
+          error?.response?.status ||
             error?.message
         )
 
@@ -222,11 +226,11 @@ export default function OperatorProfileScreen({
           error?.response?.status === 401
         ) {
           Alert.alert(
-            'Sesión expirada',
-            'Debes iniciar sesión nuevamente.',
+            t('operator.profile.sessionExpired'),
+            t('operator.profile.loginAgain'),
             [
               {
-                text: 'Aceptar',
+                text: t('common.accept'),
                 onPress: logoutUser,
               },
             ]
@@ -236,8 +240,8 @@ export default function OperatorProfileScreen({
         }
 
         Alert.alert(
-          'Error',
-          'No fue posible cargar tu perfil.'
+          t('operator.profile.errorTitle'),
+          t('operator.profile.loadError')
         )
       } finally {
         setLoading(false)
@@ -308,13 +312,13 @@ export default function OperatorProfileScreen({
       )
 
       Alert.alert(
-        'Avatar actualizado',
-        'Tu foto de perfil se actualizó correctamente.'
+        t('operator.profile.avatarUpdatedTitle'),
+        t('operator.profile.avatarUpdatedMessage')
       )
     } catch (error: any) {
       console.log(
         'ERROR CAMBIANDO AVATAR:',
-        error?.response?.data ||
+        error?.response?.status ||
           error?.message
       )
 
@@ -322,11 +326,11 @@ export default function OperatorProfileScreen({
         error?.response?.status === 401
       ) {
         Alert.alert(
-          'Sesión expirada',
-          'Debes iniciar sesión nuevamente.',
+          t('operator.profile.sessionExpired'),
+          t('operator.profile.loginAgain'),
           [
             {
-              text: 'Aceptar',
+              text: t('common.accept'),
               onPress: logoutUser,
             },
           ]
@@ -336,9 +340,10 @@ export default function OperatorProfileScreen({
       }
 
       Alert.alert(
-        'Error',
-        error?.response?.data?.message ||
-          'No fue posible actualizar tu avatar.'
+        t('operator.profile.errorTitle'),
+        error?.response?.status === 400
+          ? t('operator.profile.badRequest')
+          : t('operator.profile.avatarError')
       )
     } finally {
       setSavingAvatar(false)
@@ -347,15 +352,15 @@ export default function OperatorProfileScreen({
 
   const handleLogout = () => {
     Alert.alert(
-      'Cerrar sesión',
-      '¿Deseas cerrar tu sesión?',
+      t('operator.profile.logoutTitle'),
+      t('operator.profile.logoutMessage'),
       [
         {
-          text: 'Cancelar',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Cerrar sesión',
+          text: t('operator.profile.logout'),
           style: 'destructive',
           onPress: logoutUser,
         },
@@ -397,7 +402,7 @@ export default function OperatorProfileScreen({
               },
             ]}
           >
-            Cargando perfil...
+            {t('operator.profile.loading')}
           </Text>
 
           <Text
@@ -409,7 +414,7 @@ export default function OperatorProfileScreen({
               },
             ]}
           >
-            Un momento, por favor
+            {t('operator.profile.loadingMessage')}
           </Text>
         </View>
       </View>
@@ -454,7 +459,7 @@ export default function OperatorProfileScreen({
             },
           ]}
         >
-          No se pudo cargar el perfil
+          {t('operator.profile.loadErrorTitle')}
         </Text>
 
         <Text
@@ -466,8 +471,7 @@ export default function OperatorProfileScreen({
             },
           ]}
         >
-          Comprueba tu conexión e
-          inténtalo nuevamente.
+          {t('operator.profile.retryMessage')}
         </Text>
 
         <TouchableOpacity
@@ -493,7 +497,7 @@ export default function OperatorProfileScreen({
           <Text
             style={styles.retryText}
           >
-            Intentar nuevamente
+            {t('common.retry')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -613,7 +617,7 @@ export default function OperatorProfileScreen({
           ]}
           numberOfLines={2}
         >
-          {fullName || 'Operador'}
+          {fullName || t('operator.profile.operator')}
         </Text>
 
         <Text
@@ -627,7 +631,7 @@ export default function OperatorProfileScreen({
           numberOfLines={1}
         >
           {profile.email ||
-            'Sin correo'}
+            t('operator.profile.noEmail')}
         </Text>
 
         <View
@@ -656,7 +660,7 @@ export default function OperatorProfileScreen({
               },
             ]}
           >
-            OPERADOR
+            {t('operator.profile.operator').toUpperCase()}
           </Text>
         </View>
       </View>
@@ -711,7 +715,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Información personal
+              {t('operator.profile.personalInfo')}
             </Text>
 
             <Text
@@ -723,14 +727,14 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Datos registrados de tu cuenta
+              {t('operator.profile.personalDescription')}
             </Text>
           </View>
         </View>
 
         <InfoItem
           icon="person-outline"
-          label="Nombre"
+          label={t('operator.profile.firstName')}
           value={profile.firstName}
           theme={theme}
           darkMode={darkMode}
@@ -738,7 +742,7 @@ export default function OperatorProfileScreen({
 
         <InfoItem
           icon="person-outline"
-          label="Apellido"
+          label={t('operator.profile.lastName')}
           value={profile.lastName}
           theme={theme}
           darkMode={darkMode}
@@ -746,7 +750,7 @@ export default function OperatorProfileScreen({
 
         <InfoItem
           icon="mail-outline"
-          label="Correo electrónico"
+          label={t('operator.profile.email')}
           value={profile.email}
           theme={theme}
           darkMode={darkMode}
@@ -754,7 +758,7 @@ export default function OperatorProfileScreen({
 
         <InfoItem
           icon="call-outline"
-          label="Teléfono"
+          label={t('operator.profile.phone')}
           value={profile.phoneNumber}
           theme={theme}
           darkMode={darkMode}
@@ -812,7 +816,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Foto de perfil
+              {t('operator.profile.photoTitle')}
             </Text>
 
             <Text
@@ -824,7 +828,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Selecciona el avatar que quieras utilizar
+              {t('operator.profile.photoDescription')}
             </Text>
           </View>
         </View>
@@ -926,7 +930,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Guardando avatar...
+              {t('operator.profile.savingAvatar')}
             </Text>
           </View>
         )}
@@ -982,7 +986,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Información de cuenta
+              {t('operator.profile.accountInfo')}
             </Text>
 
             <Text
@@ -994,23 +998,23 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Información asociada a tu rol
+              {t('operator.profile.accountDescription')}
             </Text>
           </View>
         </View>
 
         <InfoItem
           icon="shield-checkmark-outline"
-          label="Rol"
-          value="Operador"
+          label={t('operator.profile.role')}
+          value={t('operator.profile.operator')}
           theme={theme}
           darkMode={darkMode}
         />
 
         <InfoItem
           icon="checkmark-circle-outline"
-          label="Estado"
-          value="Activo"
+          label={t('operator.profile.status')}
+          value={t('vehicles.status.active')}
           theme={theme}
           darkMode={darkMode}
           last
@@ -1066,7 +1070,7 @@ export default function OperatorProfileScreen({
               },
             ]}
           >
-            Datos protegidos
+            {t('operator.profile.protectedTitle')}
           </Text>
 
           <Text
@@ -1078,11 +1082,7 @@ export default function OperatorProfileScreen({
               },
             ]}
           >
-            Tus datos personales son
-            administrados por el sistema.
-            Puedes cambiar únicamente tu
-            avatar y la apariencia de la
-            aplicación.
+            {t('operator.profile.protectedMessage')}
           </Text>
         </View>
       </View>
@@ -1120,7 +1120,7 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Apariencia
+              {t('operator.profile.appearance')}
             </Text>
 
             <Text
@@ -1132,10 +1132,15 @@ export default function OperatorProfileScreen({
                 },
               ]}
             >
-              Personaliza la apariencia de la aplicación
+              {t('operator.profile.appearanceDescription')}
             </Text>
           </View>
         </View>
+
+        <LanguageSelector
+          theme={theme}
+          darkMode={darkMode}
+        />
 
         <View
           style={[
@@ -1184,7 +1189,7 @@ export default function OperatorProfileScreen({
                   },
                 ]}
               >
-                Modo oscuro
+                {t('operator.profile.darkMode')}
               </Text>
 
               <Text
@@ -1197,8 +1202,8 @@ export default function OperatorProfileScreen({
                 ]}
               >
                 {darkMode
-                  ? 'Activado'
-                  : 'Desactivado'}
+                  ? t('operator.profile.enabled')
+                  : t('operator.profile.disabled')}
               </Text>
             </View>
           </View>
@@ -1237,7 +1242,7 @@ export default function OperatorProfileScreen({
         <Text
           style={styles.logoutText}
         >
-          Cerrar sesión
+          {t('operator.profile.logout')}
         </Text>
       </TouchableOpacity>
 
@@ -1263,7 +1268,7 @@ export default function OperatorProfileScreen({
             },
           ]}
         >
-          Tu información está protegida y se mantiene privada.
+          {t('operator.profile.privacy')}
         </Text>
       </View>
 
@@ -1282,6 +1287,8 @@ function InfoItem({
   darkMode,
   last = false,
 }: any) {
+  const { t } = useTranslation()
+
   return (
     <View
       style={[
@@ -1339,7 +1346,7 @@ function InfoItem({
             },
           ]}
         >
-          {value || 'No registrado'}
+          {value || t('operator.profile.notRegistered')}
         </Text>
       </View>
     </View>

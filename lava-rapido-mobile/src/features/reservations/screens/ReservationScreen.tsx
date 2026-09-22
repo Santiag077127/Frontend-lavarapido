@@ -31,6 +31,7 @@ import type {
 } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 
 import { vehicleService } from '../../vehicles/services/vehicleService';
@@ -83,6 +84,7 @@ export default function ReservationScreen() {
 
   const { darkMode } =
     useContext(ThemeContext);
+  const { t } = useTranslation();
 
   // ----------------------------------------------------------
   // SERVICIO RECIBIDO
@@ -96,7 +98,7 @@ export default function ReservationScreen() {
 
   const serviceName =
     service?.nombre ??
-    'Servicio de lavado';
+    t('mobile.reservation.service');
 
   const serviceDescription =
     service?.descripcion ??
@@ -294,11 +296,11 @@ export default function ReservationScreen() {
             );
           } else {
             Alert.alert(
-              'Sin vehículos',
-              'Debes registrar un vehículo antes de crear una reserva.',
+              t('mobile.reservation.noVehiclesTitle'),
+              t('mobile.reservation.noVehiclesMessage'),
               [
                 {
-                  text: 'Registrar vehículo',
+                  text: t('mobile.reservation.registerVehicle'),
                   onPress: () => {
                     navigation.navigate(
                       'AddVehicle',
@@ -306,7 +308,7 @@ export default function ReservationScreen() {
                   },
                 },
                 {
-                  text: 'Cancelar',
+                  text: t('mobile.reservation.close'),
                   style: 'cancel',
                 },
               ],
@@ -342,8 +344,8 @@ export default function ReservationScreen() {
           );
 
           Alert.alert(
-            'Error',
-            'No se pudieron cargar tus vehículos.',
+            t('mobile.reservation.error'),
+            t('mobile.reservation.vehicleLoadError'),
           );
         } finally {
           setLoadingVehicles(
@@ -390,8 +392,8 @@ export default function ReservationScreen() {
         minimumMinutes
       ) {
         Alert.alert(
-          'Horario no válido',
-          `El servicio debe comenzar después de las ${MIN_HOUR}:00.`,
+          t('mobile.reservation.invalidSchedule'),
+          t('mobile.reservation.startsAfter', { hour: MIN_HOUR }),
         );
 
         return false;
@@ -402,8 +404,8 @@ export default function ReservationScreen() {
         maximumMinutes
       ) {
         Alert.alert(
-          'Horario no válido',
-          `El servicio debe comenzar antes de las ${MAX_HOUR}:00.`,
+          t('mobile.reservation.invalidSchedule'),
+          t('mobile.reservation.startsBefore', { hour: MAX_HOUR }),
         );
 
         return false;
@@ -425,8 +427,8 @@ export default function ReservationScreen() {
           maximumMinutes
         ) {
           Alert.alert(
-            'Horario no válido',
-            `El servicio termina después de las ${MAX_HOUR}:00. Selecciona una hora más temprana.`,
+            t('mobile.reservation.invalidSchedule'),
+            t('mobile.reservation.endsAfter', { hour: MAX_HOUR }),
           );
 
           return false;
@@ -540,8 +542,8 @@ export default function ReservationScreen() {
 
       if (!serviceId) {
         Alert.alert(
-          'Error',
-          'No se encontró el servicio seleccionado.',
+          t('mobile.reservation.error'),
+          t('mobile.reservation.serviceMissing'),
         );
 
         console.error(
@@ -559,8 +561,8 @@ export default function ReservationScreen() {
         !selectedVehicleId
       ) {
         Alert.alert(
-          'Selecciona un vehículo',
-          'Debes seleccionar un vehículo para continuar.',
+          t('mobile.reservation.selectVehicleTitle'),
+          t('mobile.reservation.selectVehicleMessage'),
         );
 
         return;
@@ -597,8 +599,8 @@ export default function ReservationScreen() {
         today
       ) {
         Alert.alert(
-          'Fecha no válida',
-          'No puedes seleccionar una fecha anterior a hoy.',
+          t('mobile.reservation.invalidDate'),
+          t('mobile.reservation.pastDate'),
         );
 
         return;
@@ -631,8 +633,8 @@ export default function ReservationScreen() {
           currentMinutes
         ) {
           Alert.alert(
-            'Hora no válida',
-            'La hora seleccionada ya pasó. Selecciona una hora futura.',
+            t('mobile.reservation.invalidTime'),
+            t('mobile.reservation.pastTime'),
           );
 
           return;
@@ -729,11 +731,11 @@ export default function ReservationScreen() {
         );
 
         Alert.alert(
-          'Reserva creada',
-          'Tu reserva fue creada correctamente.',
+          t('mobile.reservation.createdTitle'),
+          t('mobile.reservation.createdMessage'),
           [
             {
-              text: 'Aceptar',
+              text: t('mobile.reservation.accept'),
               onPress: () => {
                 navigation.navigate(
                   'MainTabs',
@@ -807,31 +809,9 @@ export default function ReservationScreen() {
           error?.response
             ?.data;
 
-        let backendMessage =
-          'No se pudo crear la reserva.';
-
-        if (
-          typeof responseData ===
-          'string'
-        ) {
-          backendMessage =
-            responseData;
-        } else if (
-          responseData?.message
-        ) {
-          backendMessage =
-            responseData.message;
-        } else if (
-          responseData?.error
-        ) {
-          backendMessage =
-            responseData.error;
-        } else if (
-          responseData?.detail
-        ) {
-          backendMessage =
-            responseData.detail;
-        }
+        const backendMessage = typeof responseData === 'string'
+          ? responseData.toLowerCase()
+          : `${responseData?.message ?? ''} ${responseData?.error ?? ''} ${responseData?.detail ?? ''}`.toLowerCase();
 
         // ------------------------------------------------------
         // ERROR DE SOLAPAMIENTO
@@ -859,11 +839,11 @@ export default function ReservationScreen() {
           isOverlapError
         ) {
           Alert.alert(
-            'Horario no disponible',
-            'Este vehículo ya tiene una reserva que coincide con el horario seleccionado. Selecciona otra hora o fecha.',
+            t('mobile.reservation.overlapTitle'),
+            t('mobile.reservation.overlapMessage'),
             [
               {
-                text: 'Cambiar horario',
+                text: t('mobile.reservation.changeSchedule'),
                 style: 'default',
               },
             ],
@@ -881,8 +861,8 @@ export default function ReservationScreen() {
             ?.status === 400
         ) {
           Alert.alert(
-            'Datos no válidos',
-            backendMessage,
+            t('mobile.reservation.invalidData'),
+            t('mobile.reservation.genericCreateError'),
           );
 
           return;
@@ -897,8 +877,8 @@ export default function ReservationScreen() {
             ?.status === 401
         ) {
           Alert.alert(
-            'Sesión expirada',
-            'Tu sesión ha expirado. Inicia sesión nuevamente.',
+            t('mobile.reservation.expiredTitle'),
+            t('mobile.reservation.expiredMessage'),
           );
 
           return;
@@ -913,8 +893,8 @@ export default function ReservationScreen() {
             ?.status >= 500
         ) {
           Alert.alert(
-            'Error del servidor',
-            'No fue posible procesar la reserva en este momento. Intenta nuevamente más tarde.',
+            t('mobile.reservation.serverTitle'),
+            t('mobile.reservation.serverMessage'),
           );
 
           return;
@@ -925,8 +905,8 @@ export default function ReservationScreen() {
         // ------------------------------------------------------
 
         Alert.alert(
-          'Error al crear reserva',
-          backendMessage,
+          t('mobile.reservation.createErrorTitle'),
+          t('mobile.reservation.genericCreateError'),
         );
       } finally {
         setCreatingReservation(
@@ -944,7 +924,7 @@ export default function ReservationScreen() {
       ? `$${servicePrice.toLocaleString(
           'es-CO',
         )}`
-      : 'Precio no disponible';
+      : t('mobile.reservation.notAvailable');
 
   // ==========================================================
   // LOADING
@@ -979,7 +959,7 @@ export default function ReservationScreen() {
             },
           ]}
         >
-          Cargando vehículos...
+          {t('mobile.reservation.loadingVehicles')}
         </Text>
       </View>
     );
@@ -1044,7 +1024,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Nueva reserva
+            {t('mobile.reservation.newTitle')}
           </Text>
 
           <View
@@ -1076,7 +1056,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Servicio seleccionado
+            {t('mobile.reservation.selectedService')}
           </Text>
 
           <Text
@@ -1124,7 +1104,7 @@ export default function ReservationScreen() {
                   },
                 ]}
               >
-                Precio
+                {t('mobile.reservation.price')}
               </Text>
 
               <Text
@@ -1154,7 +1134,7 @@ export default function ReservationScreen() {
                   },
                 ]}
               >
-                Duración
+                {t('mobile.reservation.duration')}
               </Text>
 
               <Text
@@ -1168,8 +1148,8 @@ export default function ReservationScreen() {
               >
                 {serviceDuration >
                 0
-                  ? `${serviceDuration} min`
-                  : 'No disponible'}
+                  ? `${serviceDuration} ${t('mobile.home.minutes')}`
+                  : t('mobile.reservation.notAvailable')}
               </Text>
             </View>
           </View>
@@ -1197,7 +1177,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Selecciona tu vehículo
+            {t('mobile.reservation.selectVehicle')}
           </Text>
 
           {vehicles.length ===
@@ -1216,8 +1196,7 @@ export default function ReservationScreen() {
                   },
                 ]}
               >
-                No tienes vehículos
-                registrados.
+                {t('mobile.reservation.noVehicles')}
               </Text>
 
               <Pressable
@@ -1243,7 +1222,7 @@ export default function ReservationScreen() {
                     },
                   ]}
                 >
-                  Registrar vehículo
+                  {t('mobile.reservation.registerVehicle')}
                 </Text>
               </Pressable>
             </View>
@@ -1317,7 +1296,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Fecha de reserva
+            {t('mobile.reservation.reservationDate')}
           </Text>
 
           <Pressable
@@ -1405,7 +1384,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Hora de reserva
+            {t('mobile.reservation.reservationTime')}
           </Text>
 
           <Pressable
@@ -1472,9 +1451,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Horario permitido:{' '}
-            {MIN_HOUR}:00 a{' '}
-            {MAX_HOUR}:00
+            {t('mobile.reservation.schedule', { min: MIN_HOUR, max: MAX_HOUR })}
           </Text>
         </View>
 
@@ -1500,7 +1477,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Resumen
+            {t('mobile.reservation.summary')}
           </Text>
 
           <View
@@ -1517,7 +1494,7 @@ export default function ReservationScreen() {
                 },
               ]}
             >
-              Servicio
+              {t('mobile.reservation.service')}
             </Text>
 
             <Text
@@ -1547,7 +1524,7 @@ export default function ReservationScreen() {
                 },
               ]}
             >
-              Fecha
+              {t('mobile.reservation.reservationDate')}
             </Text>
 
             <Text
@@ -1579,7 +1556,7 @@ export default function ReservationScreen() {
                 },
               ]}
             >
-              Hora
+              {t('mobile.reservation.reservationTime')}
             </Text>
 
             <Text
@@ -1611,7 +1588,7 @@ export default function ReservationScreen() {
                 },
               ]}
             >
-              Precio
+              {t('mobile.reservation.price')}
             </Text>
 
             <Text
@@ -1670,7 +1647,7 @@ export default function ReservationScreen() {
                 styles.createButtonText
               }
             >
-              Confirmar reserva
+              {t('mobile.reservation.confirm')}
             </Text>
           )}
         </Pressable>
@@ -1697,7 +1674,7 @@ export default function ReservationScreen() {
               },
             ]}
           >
-            Cancelar
+            {t('mobile.reservation.cancel')}
           </Text>
         </Pressable>
       </ScrollView>

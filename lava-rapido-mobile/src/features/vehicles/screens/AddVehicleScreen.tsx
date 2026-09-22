@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 
@@ -38,37 +39,37 @@ type Props = {
 
 const vehicleTypes: {
   value: VehicleType;
-  label: string;
+  labelKey: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
     value: 'CARRO',
-    label: 'Carro',
+    labelKey: 'vehicles.types.car',
     icon: 'car-sport-outline',
   },
   {
     value: 'CAMIONETA',
-    label: 'Camioneta',
+    labelKey: 'vehicles.types.pickup',
     icon: 'car-outline',
   },
   {
     value: 'MOTO',
-    label: 'Moto',
+    labelKey: 'vehicles.types.motorcycle',
     icon: 'bicycle-outline',
   },
   {
     value: 'MOTOCARRO',
-    label: 'Motocarro',
+    labelKey: 'vehicles.types.motortricycle',
     icon: 'car-outline',
   },
   {
     value: 'FURGONETA',
-    label: 'Furgoneta',
+    labelKey: 'vehicles.types.van',
     icon: 'bus-outline',
   },
   {
     value: 'PESADO',
-    label: 'Pesado',
+    labelKey: 'vehicles.types.heavy',
     icon: 'bus-outline',
   },
 ];
@@ -78,6 +79,7 @@ export default function AddVehicleScreen({
   route,
 }: Props) {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const vehicle: Vehicle | undefined =
     route?.params?.vehicle;
@@ -127,20 +129,19 @@ export default function AddVehicleScreen({
         response.data.length === 0
       ) {
         Alert.alert(
-          'Sin marcas disponibles',
-          'No hay marcas activas disponibles en el catálogo.',
+          t('vehicles.form.noBrandsTitle'),
+          t('vehicles.form.noBrandsMessage'),
         );
       }
     } catch (error: any) {
       console.error(
         'Error cargando marcas:',
-        error?.response?.data || error,
+        error?.response?.status || error?.message,
       );
 
       Alert.alert(
-        'Error',
-        error?.response?.data ||
-          'No se pudieron cargar las marcas.',
+        t('vehicles.errors.title'),
+        t('vehicles.errors.brands'),
       );
     } finally {
       setLoadingBrands(false);
@@ -159,8 +160,8 @@ export default function AddVehicleScreen({
 
     if (!placaNormalizada) {
       Alert.alert(
-        'Placa requerida',
-        'Ingresa la placa del vehículo.',
+        t('vehicles.form.plateRequiredTitle'),
+        t('vehicles.form.plateRequired'),
       );
       return false;
     }
@@ -170,32 +171,32 @@ export default function AddVehicleScreen({
 
     if (!plateRegex.test(placaNormalizada)) {
       Alert.alert(
-        'Placa inválida',
-        'La placa debe tener el formato ABC123 o ABC12A.',
+        t('vehicles.form.plateInvalidTitle'),
+        t('vehicles.form.plateInvalid'),
       );
       return false;
     }
 
     if (!selectedBrand) {
       Alert.alert(
-        'Marca requerida',
-        'Selecciona la marca del vehículo.',
+        t('vehicles.form.brandRequiredTitle'),
+        t('vehicles.form.brandRequired'),
       );
       return false;
     }
 
     if (!tipoVehiculo) {
       Alert.alert(
-        'Tipo requerido',
-        'Selecciona el tipo de vehículo.',
+        t('vehicles.form.typeRequiredTitle'),
+        t('vehicles.form.typeRequired'),
       );
       return false;
     }
 
     if (color.length > 30) {
       Alert.alert(
-        'Color inválido',
-        'El color no puede superar los 30 caracteres.',
+        t('vehicles.form.colorInvalidTitle'),
+        t('vehicles.form.colorInvalid'),
       );
       return false;
     }
@@ -225,11 +226,11 @@ export default function AddVehicleScreen({
         );
 
         Alert.alert(
-          'Vehículo actualizado',
-          'Los datos del vehículo fueron actualizados correctamente.',
+          t('vehicles.form.updatedTitle'),
+          t('vehicles.form.updatedMessage'),
           [
             {
-              text: 'Aceptar',
+              text: t('common.accept'),
               onPress: () => navigation.goBack(),
             },
           ],
@@ -238,11 +239,11 @@ export default function AddVehicleScreen({
         await vehicleService.create(data);
 
         Alert.alert(
-          'Vehículo agregado',
-          'El vehículo fue registrado correctamente.',
+          t('vehicles.form.createdTitle'),
+          t('vehicles.form.createdMessage'),
           [
             {
-              text: 'Aceptar',
+              text: t('common.accept'),
               onPress: () => navigation.goBack(),
             },
           ],
@@ -251,21 +252,21 @@ export default function AddVehicleScreen({
     } catch (error: any) {
       console.error(
         'Error guardando vehículo:',
-        error?.response?.data || error,
+        error?.response?.status || error?.message,
       );
 
       let message =
-        'No se pudo guardar el vehículo.';
+        t('vehicles.errors.save');
 
-      if (typeof error?.response?.data === 'string') {
-        message = error.response.data;
-      } else if (
-        error?.response?.data?.message
-      ) {
-        message = error.response.data.message;
+      if (error?.response?.status === 401) {
+        message = t('vehicles.errors.unauthorized');
+      } else if (error?.response?.status === 400) {
+        message = t('vehicles.errors.badRequest');
+      } else if (error?.response?.status === 409) {
+        message = t('vehicles.errors.conflict');
       }
 
-      Alert.alert('Error', message);
+      Alert.alert(t('vehicles.errors.title'), message);
     } finally {
       setSaving(false);
     }
@@ -322,8 +323,8 @@ export default function AddVehicleScreen({
             ]}
           >
             {isEditing
-              ? 'Editar vehículo'
-              : 'Agregar vehículo'}
+              ? t('vehicles.form.editTitle')
+              : t('vehicles.form.addTitle')}
           </Text>
 
           <Text
@@ -335,8 +336,8 @@ export default function AddVehicleScreen({
             ]}
           >
             {isEditing
-              ? 'Actualiza la información'
-              : 'Registra tu vehículo'}
+              ? t('vehicles.form.editSubtitle')
+              : t('vehicles.form.addSubtitle')}
           </Text>
         </View>
       </View>
@@ -379,7 +380,7 @@ export default function AddVehicleScreen({
                 },
               ]}
             >
-              Información del vehículo
+              {t('vehicles.form.infoTitle')}
             </Text>
 
             <Text
@@ -390,8 +391,7 @@ export default function AddVehicleScreen({
                 },
               ]}
             >
-              Ingresa los datos de tu vehículo
-              para utilizarlo en tus reservas.
+              {t('vehicles.form.infoDescription')}
             </Text>
           </View>
         </View>
@@ -404,7 +404,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Placa
+          {t('vehicles.fields.plate')}
         </Text>
 
         <View
@@ -427,7 +427,7 @@ export default function AddVehicleScreen({
             onChangeText={(value) =>
               setPlaca(normalizePlate(value))
             }
-            placeholder="ABC123"
+            placeholder={t('vehicles.form.plateExample')}
             placeholderTextColor={
               theme.textSecondary
             }
@@ -450,7 +450,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Ejemplo: ABC123 o ABC12A
+          {t('vehicles.form.plateExample')}
         </Text>
 
         <Text
@@ -461,7 +461,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Marca
+          {t('vehicles.fields.brand')}
         </Text>
 
         <Pressable
@@ -493,9 +493,9 @@ export default function AddVehicleScreen({
               ]}
             >
               {loadingBrands
-                ? 'Cargando marcas...'
+                ? t('vehicles.form.loadingBrands')
                 : selectedBrandObject?.nombre ||
-                  'Selecciona una marca'}
+                  t('vehicles.form.selectBrand')}
             </Text>
           </View>
 
@@ -523,7 +523,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Tipo de vehículo
+          {t('vehicles.fields.type')}
         </Text>
 
         <View style={styles.typeGrid}>
@@ -570,7 +570,7 @@ export default function AddVehicleScreen({
                     },
                   ]}
                 >
-                  {type.label}
+                  {t(type.labelKey)}
                 </Text>
 
                 {selected && (
@@ -603,7 +603,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Color
+          {t('vehicles.fields.color')}
         </Text>
 
         <View
@@ -624,7 +624,7 @@ export default function AddVehicleScreen({
           <TextInput
             value={color}
             onChangeText={setColor}
-            placeholder="Ejemplo: Rojo"
+            placeholder={t('vehicles.form.colorPlaceholder')}
             placeholderTextColor={
               theme.textSecondary
             }
@@ -646,7 +646,7 @@ export default function AddVehicleScreen({
             },
           ]}
         >
-          Opcional · Máximo 30 caracteres
+          {t('vehicles.form.colorHelper')}
         </Text>
 
         <TouchableOpacity
@@ -680,10 +680,10 @@ export default function AddVehicleScreen({
 
           <Text style={styles.saveButtonText}>
             {saving
-              ? 'Guardando...'
+              ? t('vehicles.form.saving')
               : isEditing
-              ? 'Guardar cambios'
-              : 'Agregar vehículo'}
+              ? t('vehicles.form.saveChanges')
+              : t('vehicles.actions.add')}
           </Text>
         </TouchableOpacity>
 
@@ -707,7 +707,7 @@ export default function AddVehicleScreen({
               },
             ]}
           >
-            Cancelar
+            {t('common.cancel')}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -740,7 +740,7 @@ export default function AddVehicleScreen({
                     { color: theme.text },
                   ]}
                 >
-                  Selecciona una marca
+                  {t('vehicles.form.selectBrand')}
                 </Text>
                 <Text
                   style={[
@@ -748,12 +748,12 @@ export default function AddVehicleScreen({
                     { color: theme.textSecondary },
                   ]}
                 >
-                  {brands.length} marcas disponibles
+                  {t('vehicles.form.brandsAvailable', { count: brands.length })}
                 </Text>
               </View>
 
               <Pressable
-                accessibilityLabel="Cerrar selector de marcas"
+                accessibilityLabel={t('vehicles.form.closeBrandSelector')}
                 style={[
                   styles.closeButton,
                   { backgroundColor: theme.card },
@@ -785,7 +785,7 @@ export default function AddVehicleScreen({
               <TextInput
                 value={brandQuery}
                 onChangeText={setBrandQuery}
-                placeholder="Buscar marca"
+                placeholder={t('vehicles.form.searchBrand')}
                 placeholderTextColor={theme.textSecondary}
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -796,7 +796,7 @@ export default function AddVehicleScreen({
               />
               {brandQuery.length > 0 && (
                 <Pressable
-                  accessibilityLabel="Limpiar búsqueda"
+                  accessibilityLabel={t('vehicles.form.clearSearch')}
                   onPress={() => setBrandQuery('')}
                 >
                   <Ionicons
@@ -827,7 +827,7 @@ export default function AddVehicleScreen({
                       { color: theme.textSecondary },
                     ]}
                   >
-                    No encontramos esa marca.
+                    {t('vehicles.form.noBrandResults')}
                   </Text>
                 </View>
               ) : (

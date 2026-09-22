@@ -17,6 +17,8 @@ import {
 import type { RouteProp } from '@react-navigation/native';
 
 import type { RootStackParamList } from '../../../navigation/types';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../../../utils/formatters';
 
 import { images } from '../../../assets/images';
 
@@ -33,6 +35,7 @@ export default function ServiceDetailScreen() {
     useNavigation<ServiceDetailNavigationProp>();
 
   const route = useRoute<ServiceDetailRouteProp>();
+  const { t } = useTranslation();
 
   const { service } = route.params;
 
@@ -103,7 +106,7 @@ export default function ServiceDetailScreen() {
 
             <Text style={styles.description}>
               {service.descripcion ||
-                'No hay una descripción disponible para este servicio.'}
+                t('mobile.serviceDetail.descriptionUnavailable')}
             </Text>
 
             {/* Información principal */}
@@ -111,25 +114,22 @@ export default function ServiceDetailScreen() {
               {/* Precio */}
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>
-                  Precio
+                  {t('mobile.serviceDetail.price')}
                 </Text>
 
                 <Text style={styles.price}>
-                  $
-                  {service.precio.toLocaleString(
-                    'es-CO'
-                  )}
+                  {formatCurrency(service.precio)}
                 </Text>
               </View>
 
               {/* Duración */}
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>
-                  Duración
+                  {t('mobile.serviceDetail.duration')}
                 </Text>
 
                 <Text style={styles.duration}>
-                  {service.duracionMinutos} minutos
+                  {service.duracionMinutos} {t('mobile.serviceDetail.minutes')}
                 </Text>
               </View>
             </View>
@@ -147,8 +147,8 @@ export default function ServiceDetailScreen() {
 
               <Text style={styles.statusText}>
                 {service.estado
-                  ? 'Servicio disponible'
-                  : 'Servicio no disponible'}
+                  ? t('mobile.serviceDetail.available')
+                  : t('mobile.serviceDetail.unavailable')}
               </Text>
             </View>
 
@@ -165,8 +165,8 @@ export default function ServiceDetailScreen() {
             >
               <Text style={styles.reserveButtonText}>
                 {service.estado
-                  ? 'Reservar servicio'
-                  : 'Servicio no disponible'}
+                  ? t('mobile.serviceDetail.reserve')
+                  : t('mobile.serviceDetail.unavailable')}
               </Text>
             </TouchableOpacity>
           </View>

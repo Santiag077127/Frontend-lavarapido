@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api from '../../../services/api';
 
@@ -51,6 +52,7 @@ export default function MyReservationsScreen() {
   const navigation = useNavigation<any>();
 
   const { theme, darkMode } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const { width } = useWindowDimensions();
 
@@ -214,18 +216,17 @@ export default function MyReservationsScreen() {
     reservation: ReservationResponse
   ) => {
     Alert.alert(
-      'Cancelar reserva',
-      `¿Seguro que deseas cancelar la reserva de ${
-        reservation.nombreServicio ||
-        'este servicio'
-      }?`,
+      t('mobile.reservations.cancelTitle'),
+      t('mobile.reservations.cancelQuestion', {
+        service: reservation.nombreServicio || t('mobile.reservations.serviceFallback'),
+      }),
       [
         {
-          text: 'No',
+          text: t('mobile.reservations.no'),
           style: 'cancel',
         },
         {
-          text: 'Sí, cancelar',
+          text: t('mobile.reservations.yesCancel'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -262,8 +263,8 @@ export default function MyReservationsScreen() {
               );
 
               Alert.alert(
-                'Reserva cancelada',
-                'La reserva fue cancelada correctamente.'
+                t('mobile.reservations.cancelledTitle'),
+                t('mobile.reservations.cancelledMessage')
               );
             } catch (err: any) {
               console.log(
@@ -276,15 +277,9 @@ export default function MyReservationsScreen() {
               const responseData =
                 err?.response?.data;
 
-              const message =
-                responseData?.message ||
-                responseData?.error ||
-                responseData?.detail ||
-                'No fue posible cancelar la reserva.';
-
               Alert.alert(
-                'No se pudo cancelar',
-                message
+                t('mobile.reservations.cancelErrorTitle'),
+                t('mobile.reservations.cancelError')
               );
             } finally {
               setCancellingId(null);
@@ -355,42 +350,42 @@ export default function MyReservationsScreen() {
     switch (estado) {
       case 'PENDIENTE':
         return {
-          label: 'Pendiente',
+          label: t('mobile.reservationDetail.status.pending'),
           color: SAFE_ORANGE,
           icon: 'time-outline' as const,
         };
 
       case 'ASIGNADA':
         return {
-          label: 'Asignada',
+          label: t('mobile.reservationDetail.status.assigned'),
           color: SAFE_BLUE,
           icon: 'checkmark-circle-outline' as const,
         };
 
       case 'EN_PROCESO':
         return {
-          label: 'En proceso',
+          label: t('mobile.reservationDetail.status.inProcess'),
           color: SAFE_BLUE,
           icon: 'water-outline' as const,
         };
 
       case 'FINALIZADA':
         return {
-          label: 'Finalizada',
+          label: t('mobile.reservationDetail.status.finished'),
           color: SAFE_GREEN,
           icon: 'checkmark-done-circle-outline' as const,
         };
 
       case 'CANCELADA':
         return {
-          label: 'Cancelada',
+          label: t('mobile.reservationDetail.status.cancelled'),
           color: SAFE_RED,
           icon: 'close-circle-outline' as const,
         };
 
       default:
         return {
-          label: estado || 'Desconocido',
+          label: t('mobile.reservations.unknown'),
           color: mutedColor,
           icon: 'help-circle-outline' as const,
         };
@@ -471,7 +466,7 @@ export default function MyReservationsScreen() {
                 numberOfLines={2}
               >
                 {item.nombreServicio ||
-                  'Servicio de lavado'}
+                  t('mobile.reservations.serviceFallback')}
               </Text>
 
               <Text
@@ -483,7 +478,7 @@ export default function MyReservationsScreen() {
                 ]}
                 numberOfLines={1}
               >
-                Reserva #
+                {t('mobile.reservationDetail.reservation')} #
                 {item.idReserva
                   ? item.idReserva.slice(0, 8)
                   : '--------'}
@@ -555,7 +550,7 @@ export default function MyReservationsScreen() {
                   },
                 ]}
               >
-                Fecha
+                {t('mobile.reservations.date')}
               </Text>
 
               <Text
@@ -592,7 +587,7 @@ export default function MyReservationsScreen() {
                   },
                 ]}
               >
-                Hora
+                {t('mobile.reservations.time')}
               </Text>
 
               <Text
@@ -629,7 +624,7 @@ export default function MyReservationsScreen() {
                   },
                 ]}
               >
-                Vehículo
+                {t('mobile.reservations.vehicle')}
               </Text>
 
               <Text
@@ -665,7 +660,7 @@ export default function MyReservationsScreen() {
                   },
                 ]}
               >
-                Tipo
+                {t('mobile.reservations.type')}
               </Text>
 
               <Text
@@ -701,7 +696,7 @@ export default function MyReservationsScreen() {
                   },
                 ]}
               >
-                Duración
+                {t('mobile.reservations.duration')}
               </Text>
 
               <Text
@@ -713,7 +708,7 @@ export default function MyReservationsScreen() {
                 ]}
               >
                 {item.duracionServicio || 0}{' '}
-                min
+                {t('mobile.home.minutes')}
               </Text>
             </View>
           </View>
@@ -738,7 +733,7 @@ export default function MyReservationsScreen() {
                 },
               ]}
             >
-              Total
+              {t('mobile.reservations.total')}
             </Text>
 
             <Text
@@ -792,7 +787,7 @@ export default function MyReservationsScreen() {
                       },
                     ]}
                   >
-                    Cancelar
+                    {t('mobile.reservations.cancel')}
                   </Text>
                 </>
               )}
@@ -831,7 +826,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          Cargando tus reservas...
+          {t('mobile.reservations.loading')}
         </Text>
       </View>
     );
@@ -879,7 +874,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          No pudimos cargar tus reservas
+          {t('mobile.reservations.loadErrorTitle')}
         </Text>
 
         <Text
@@ -890,8 +885,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          Verifica tu conexión e inténtalo
-          nuevamente.
+          {t('mobile.reservations.loadError')}
         </Text>
 
         <Pressable
@@ -917,7 +911,7 @@ export default function MyReservationsScreen() {
               styles.primaryButtonText
             }
           >
-            Reintentar
+            {t('mobile.reservations.retry')}
           </Text>
         </Pressable>
       </View>
@@ -963,7 +957,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          No tienes reservas
+          {t('mobile.reservations.emptyTitle')}
         </Text>
 
         <Text
@@ -974,8 +968,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          Cuando reserves un servicio,
-          aparecerá aquí.
+          {t('mobile.reservations.emptyText')}
         </Text>
 
         <Pressable
@@ -1001,7 +994,7 @@ export default function MyReservationsScreen() {
               styles.primaryButtonText
             }
           >
-            Reservar un servicio
+            {t('mobile.reservations.reserveService')}
           </Text>
         </Pressable>
       </View>
@@ -1057,7 +1050,7 @@ export default function MyReservationsScreen() {
               },
             ]}
           >
-            Mis reservas
+            {t('mobile.reservations.title')}
           </Text>
 
           <Text
@@ -1068,8 +1061,7 @@ export default function MyReservationsScreen() {
               },
             ]}
           >
-            Consulta y administra tus
-            servicios
+            {t('mobile.reservations.subtitle')}
           </Text>
         </View>
 

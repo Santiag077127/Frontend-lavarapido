@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../theme/ThemeContext';
 
@@ -49,10 +50,11 @@ export const appAlert = {
 };
 
 const isError = (title: string) =>
-  /error|inválid|no se pudo|expirad/i.test(title);
+  /error|erro|erreur|invalid|inval|no se pudo|impossible|unable|expirad|expired|expirad/i.test(title);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
   const [notification, setNotification] = useState<Notification | null>(null);
 
   const show = (title: string, message?: string, buttons: AlertButton[] = []) => {
@@ -65,7 +67,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const error = notification ? isError(notification.title) : false;
   const buttons = notification?.buttons.length
     ? notification.buttons
-    : [{ text: 'Entendido' }];
+    : [{ text: t('common.ok') }];
 
   const dismiss = (button?: AlertButton) => {
     setNotification(null);
@@ -125,7 +127,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                         { color: secondary ? theme.text : '#ffffff' },
                       ]}
                     >
-                      {button.text ?? 'Entendido'}
+                      {button.text ?? t('common.ok')}
                     </Text>
                   </TouchableOpacity>
                 );
