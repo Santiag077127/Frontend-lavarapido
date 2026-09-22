@@ -23,6 +23,7 @@ import { images } from '../../../assets/images';
 
 import { authService, UserRole } from '../../../services/authService';
 import { setToken } from '../../../services/api';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void;
@@ -38,6 +39,7 @@ export default function LoginScreen({
   const navigation = useNavigation<any>();
 
   const { theme } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,12 +66,12 @@ export default function LoginScreen({
     const cleanPassword = password;
 
     if (!cleanEmail || !cleanPassword) {
-      showError('Ingresa tu correo electrónico y contraseña.');
+      showError(t('login.required'));
       return;
     }
 
     if (!cleanEmail.includes('@')) {
-      showError('Ingresa un correo electrónico válido.');
+      showError(t('login.invalidEmail'));
       return;
     }
 
@@ -84,7 +86,7 @@ export default function LoginScreen({
       const data = response.data;
 
       if (!data || !data.token) {
-        throw new Error('El servidor no devolvió un token válido.');
+        throw new Error(t('login.invalidToken'));
       }
 
       setToken(data.token);
@@ -98,27 +100,19 @@ export default function LoginScreen({
       );
 
       let message =
-        'No fue posible iniciar sesión. Intenta nuevamente.';
+        t('login.genericError');
 
       const status = error?.response?.status;
-      const backendMessage = error?.response?.data;
-
       if (status === 401) {
-        message =
-          typeof backendMessage === 'string'
-            ? backendMessage
-            : 'El correo o la contraseña son incorrectos.';
+        message = t('login.unauthorized');
       } else if (status === 400) {
-        message =
-          typeof backendMessage === 'string'
-            ? backendMessage
-            : 'Los datos enviados no son válidos.';
+        message = t('login.badRequest');
       } else if (status === 404) {
         message =
-          'No se pudo encontrar el servicio de autenticación.';
+          t('login.notFound');
       } else if (!error?.response) {
         message =
-          'No se pudo conectar con el servidor. Verifica que el backend esté encendido y la red Wi-Fi.';
+          t('login.connectionError');
       }
 
       showError(message);
@@ -203,7 +197,7 @@ export default function LoginScreen({
                 },
               ]}
             >
-              Iniciar sesión
+              {t('login.title')}
             </Text>
 
             <Text
@@ -214,7 +208,7 @@ export default function LoginScreen({
                 },
               ]}
             >
-              Ingresa a tu cuenta de Lava Rápido
+              {t('login.subtitle')}
             </Text>
 
             {/* BANNER DE ERROR */}
@@ -253,7 +247,7 @@ export default function LoginScreen({
                   },
                 ]}
               >
-                Correo electrónico
+                {t('login.email')}
               </Text>
 
               <View
@@ -278,7 +272,7 @@ export default function LoginScreen({
                       color: theme.text,
                     },
                   ]}
-                  placeholder="Ingresa tu correo"
+                  placeholder={t('login.emailPlaceholder')}
                   placeholderTextColor={theme.placeholder}
                   value={email}
                   onChangeText={(text) => {
@@ -305,7 +299,7 @@ export default function LoginScreen({
                   },
                 ]}
               >
-                Contraseña
+                {t('login.password')}
               </Text>
 
               <View
@@ -330,7 +324,7 @@ export default function LoginScreen({
                       color: theme.text,
                     },
                   ]}
-                  placeholder="Ingresa tu contraseña"
+                  placeholder={t('login.passwordPlaceholder')}
                   placeholderTextColor={theme.placeholder}
                   value={password}
                   onChangeText={(text) => {
@@ -380,7 +374,7 @@ export default function LoginScreen({
               activeOpacity={0.7}
             >
               <Text style={[styles.forgotText, { color: theme.primary }]}>
-                ¿Olvidaste tu contraseña?
+                {t('login.forgot')}
               </Text>
             </TouchableOpacity>
 
@@ -399,11 +393,11 @@ export default function LoginScreen({
             >
               {loading ? (
                 <Text style={styles.buttonText}>
-                  Iniciando sesión...
+                  {t('login.loading')}
                 </Text>
               ) : (
                 <Text style={styles.buttonText}>
-                  Ingresar
+                  {t('login.button')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -418,7 +412,7 @@ export default function LoginScreen({
                   },
                 ]}
               >
-                ¿No tienes cuenta?
+                {t('login.noAccount')}
               </Text>
 
               <TouchableOpacity
@@ -430,7 +424,7 @@ export default function LoginScreen({
                 activeOpacity={0.7}
               >
                 <Text style={[styles.registerText, { color: theme.primary }]}>
-                  Registrarse
+                  {t('login.register')}
                 </Text>
               </TouchableOpacity>
             </View>

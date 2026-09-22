@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import {
   assignmentService,
   Assignment,
@@ -27,11 +28,20 @@ import {
 // ETIQUETAS DE ESTADO
 // =========================================================
 
-const labels: Record<AssignmentStatus, string> = {
-  asignada: 'Asignada',
-  en_proceso: 'En proceso',
-  completada: 'Completada',
-  cancelada: 'Cancelada',
+const labelKeys: Record<AssignmentStatus, string> = {
+  asignada: 'operator.status.assigned',
+  en_proceso: 'operator.status.inProgress',
+  completada: 'operator.status.completed',
+  cancelada: 'operator.status.cancelled',
+};
+
+const vehicleTypeKeys: Record<string, string> = {
+  CARRO: 'vehicles.types.car',
+  CAMIONETA: 'vehicles.types.pickup',
+  MOTO: 'vehicles.types.motorcycle',
+  MOTOCARRO: 'vehicles.types.motortricycle',
+  FURGONETA: 'vehicles.types.van',
+  PESADO: 'vehicles.types.heavy',
 };
 
 // =========================================================
@@ -40,6 +50,7 @@ const labels: Record<AssignmentStatus, string> = {
 
 export default function AssignedServicesScreen() {
   const { theme } = useContext(ThemeContext);
+  const { t, i18n } = useTranslation();
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +73,8 @@ export default function AssignedServicesScreen() {
       );
 
       Alert.alert(
-        'No fue posible cargar las asignaciones',
-        'Verifica tu conexión e inténtalo nuevamente.'
+        t('operator.errors.loadTitle'),
+        t('operator.errors.loadMessage')
       );
     } finally {
       setLoading(false);
@@ -110,8 +121,8 @@ export default function AssignedServicesScreen() {
       );
 
       Alert.alert(
-        'No se pudo actualizar',
-        'El estado de la asignación no pudo cambiarse.'
+        t('operator.errors.updateTitle'),
+        t('operator.errors.updateMessage')
       );
     } finally {
       setUpdatingId(null);
@@ -125,14 +136,14 @@ export default function AssignedServicesScreen() {
   const actionFor = (assignment: Assignment) => {
     if (assignment.estado === 'asignada') {
       return {
-        label: 'Iniciar servicio',
+        label: t('operator.actions.start'),
         status: 'en_proceso' as const,
       };
     }
 
     if (assignment.estado === 'en_proceso') {
       return {
-        label: 'Finalizar servicio',
+        label: t('operator.actions.finish'),
         status: 'completada' as const,
       };
     }
@@ -147,7 +158,7 @@ export default function AssignedServicesScreen() {
   const formatDate = (date: string) => {
     try {
       return new Date(date).toLocaleDateString(
-        'es-CO',
+        i18n.language,
         {
           day: '2-digit',
           month: 'long',
@@ -182,7 +193,7 @@ export default function AssignedServicesScreen() {
   // =======================================================
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CO', {
+    return new Intl.NumberFormat(i18n.language, {
       style: 'currency',
       currency: 'COP',
       maximumFractionDigits: 0,
@@ -216,7 +227,7 @@ export default function AssignedServicesScreen() {
             },
           ]}
         >
-          Cargando tus servicios...
+          {t('operator.loading')}
         </Text>
       </View>
     );
@@ -248,7 +259,7 @@ export default function AssignedServicesScreen() {
             },
           ]}
         >
-          Mis servicios
+          {t('operator.title')}
         </Text>
 
         <Text
@@ -259,7 +270,7 @@ export default function AssignedServicesScreen() {
             },
           ]}
         >
-          Servicios asignados para atender.
+          {t('operator.subtitle')}
         </Text>
       </View>
 
@@ -298,7 +309,7 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              No tienes servicios asignados
+              {t('operator.empty.title')}
             </Text>
 
             <Text
@@ -309,8 +320,7 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              Cuando un administrador te asigne
-              un servicio, aparecerá aquí.
+              {t('operator.empty.description')}
             </Text>
           </View>
         }
@@ -355,7 +365,7 @@ export default function AssignedServicesScreen() {
                       },
                     ]}
                   >
-                    Reserva #{item.idReserva.slice(0, 8)}
+                    {t('operator.reservation', { id: item.idReserva.slice(0, 8) })}
                   </Text>
                 </View>
 
@@ -375,7 +385,7 @@ export default function AssignedServicesScreen() {
                       },
                     ]}
                   >
-                    {labels[item.estado]}
+                    {t(labelKeys[item.estado])}
                   </Text>
                 </View>
               </View>
@@ -417,7 +427,7 @@ export default function AssignedServicesScreen() {
                     },
                   ]}
                 >
-                  Cliente
+                  {t('operator.fields.client')}
                 </Text>
 
                 <Text
@@ -452,7 +462,7 @@ export default function AssignedServicesScreen() {
                     },
                   ]}
                 >
-                  Vehículo
+                  {t('operator.fields.vehicle')}
                 </Text>
 
                 <View style={styles.infoRow}>
@@ -465,7 +475,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Placa
+                      {t('vehicles.fields.plate')}
                     </Text>
 
                     <Text
@@ -489,7 +499,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Color
+                      {t('vehicles.fields.color')}
                     </Text>
 
                     <Text
@@ -500,7 +510,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      {item.color || 'No especificado'}
+                      {item.color || t('vehicles.fields.unspecified')}
                     </Text>
                   </View>
 
@@ -513,7 +523,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Tipo
+                      {t('vehicles.fields.type')}
                     </Text>
 
                     <Text
@@ -524,7 +534,9 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      {item.tipoVehiculo}
+                      {vehicleTypeKeys[item.tipoVehiculo]
+                        ? t(vehicleTypeKeys[item.tipoVehiculo])
+                        : item.tipoVehiculo}
                     </Text>
                   </View>
                 </View>
@@ -550,7 +562,7 @@ export default function AssignedServicesScreen() {
                     },
                   ]}
                 >
-                  Detalles del servicio
+                  {t('operator.fields.serviceDetails')}
                 </Text>
 
                 <View style={styles.infoRow}>
@@ -563,7 +575,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Duración
+                      {t('operator.fields.duration')}
                     </Text>
 
                     <Text
@@ -574,7 +586,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      {item.duracionMinutos} min
+                      {t('operator.duration', { count: item.duracionMinutos })}
                     </Text>
                   </View>
 
@@ -587,7 +599,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Precio
+                      {t('operator.fields.price')}
                     </Text>
 
                     <Text
@@ -626,7 +638,7 @@ export default function AssignedServicesScreen() {
                     },
                   ]}
                 >
-                  Reserva
+                  {t('operator.fields.reservation')}
                 </Text>
 
                 <View style={styles.infoRow}>
@@ -639,7 +651,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Fecha
+                      {t('operator.fields.date')}
                     </Text>
 
                     <Text
@@ -665,7 +677,7 @@ export default function AssignedServicesScreen() {
                         },
                       ]}
                     >
-                      Hora
+                      {t('operator.fields.time')}
                     </Text>
 
                     <Text
@@ -745,7 +757,7 @@ export default function AssignedServicesScreen() {
                       },
                     ]}
                   >
-                    Servicio completado
+                    {t('operator.completed')}
                   </Text>
                 </View>
               )}
@@ -772,7 +784,7 @@ export default function AssignedServicesScreen() {
                       },
                     ]}
                   >
-                    Servicio cancelado
+                    {t('operator.cancelled')}
                   </Text>
                 </View>
               )}

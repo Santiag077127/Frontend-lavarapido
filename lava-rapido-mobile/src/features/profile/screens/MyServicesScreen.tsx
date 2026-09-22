@@ -3,49 +3,51 @@ import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Te
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api from '../../../services/api';
 import { reservationService } from '../../reservations/services/reservationService';
 import type { ReservationResponse, ReservationStatus } from '../../reservations/types/reservation.types';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface UserProfile { userId: string }
 
-const STATUS_OPTIONS: { value: ReservationStatus; label: string }[] = [
-  { value: 'EN_PROCESO', label: 'En proceso' },
-  { value: 'PENDIENTE', label: 'Pendientes' },
-  { value: 'ASIGNADA', label: 'Asignadas' },
-  { value: 'FINALIZADA', label: 'Terminados' },
-  { value: 'CANCELADA', label: 'Cancelados' },
-];
-
-const statusLabel = (status: ReservationStatus) => STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
 const statusColor = (status: ReservationStatus) => ({ EN_PROCESO: '#F39C12', PENDIENTE: '#3498DB', ASIGNADA: '#8E44AD', FINALIZADA: '#27AE60', CANCELADA: '#E74C3C' }[status]);
-const formatDate = (date: string) => date ? date.split('-').reverse().join('/') : 'No disponible';
-const formatTime = (time: string) => time ? time.substring(0, 5) : 'No disponible';
 
 export default function MyServicesScreen() {
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const { theme, darkMode } = useContext(ThemeContext);
   const [reservations, setReservations] = useState<ReservationResponse[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>('EN_PROCESO');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const statusOptions: { value: ReservationStatus; label: string }[] = [
+    { value: 'EN_PROCESO', label: t('mobile.services.status.inProcess') },
+    { value: 'PENDIENTE', label: t('mobile.services.status.pending') },
+    { value: 'ASIGNADA', label: t('mobile.services.status.assigned') },
+    { value: 'FINALIZADA', label: t('mobile.services.status.finished') },
+    { value: 'CANCELADA', label: t('mobile.services.status.cancelled') },
+  ];
+  const statusLabel = (status: ReservationStatus) => statusOptions.find((option) => option.value === status)?.label ?? t('mobile.services.notAvailable');
+  const formatDate = (date: string) => date ? date.split('-').reverse().join('/') : t('mobile.services.notAvailable');
+  const formatTime = (time: string) => time ? time.substring(0, 5) : t('mobile.services.notAvailable');
 
   const loadReservations = useCallback(async () => {
     try {
       setError('');
       const profileResponse = await api.get<UserProfile>('/api/users/profile');
       const userId = profileResponse.data.userId;
-      if (!userId) throw new Error('No se encontró el ID del usuario autenticado.');
+      if (!userId) throw new Error('missing-user-id');
       setReservations(await reservationService.getByUser(userId));
     } catch (requestError: any) {
       console.error('ERROR CARGANDO MIS SERVICIOS:', requestError?.response?.data || requestError?.message || requestError);
       setReservations([]);
-      setError('No fue posible cargar tus servicios. Intenta nuevamente.');
-      Alert.alert('Error', 'No fue posible cargar tus servicios.');
+      setError(t('mobile.services.error'));
+      Alert.alert(t('mobile.reservation.error'), t('mobile.services.errorAlert'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,22 +64,22 @@ export default function MyServicesScreen() {
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <View style={styles.top}>
         <View style={styles.titleContainer}>
-          <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={2}>{item.nombreServicio || 'Servicio'}</Text>
+          <Text style={[styles.serviceTitle, { color: theme.text }]} numberOfLines={2}>{item.nombreServicio || t('mobile.services.serviceFallback')}</Text>
           <Text style={[styles.vehicleText, { color: theme.textSecondary }]} numberOfLines={1}>{item.placaVehiculo} {' • '} {item.tipoVehiculo}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor(item.estado) }]}><Text style={styles.statusText}>{statusLabel(item.estado)}</Text></View>
       </View>
       <View style={styles.infoRow}><Ionicons name="calendar-outline" size={18} color={theme.primary} /><Text style={[styles.infoText, { color: theme.text }]}>{formatDate(item.fechaReserva)} {' · '} {formatTime(item.horaReserva)}</Text></View>
-      <View style={styles.infoRow}><Ionicons name="cash-outline" size={18} color={theme.primary} /><Text style={[styles.infoText, { color: theme.text }]}>${item.precioServicio.toLocaleString('es-CO')}</Text></View>
+      <View style={styles.infoRow}><Ionicons name="cash-outline" size={18} color={theme.primary} /><Text style={[styles.infoText, { color: theme.text }]}>{formatCurrency(item.precioServicio)}</Text></View>
       <TouchableOpacity style={[styles.detailsButton, { borderColor: theme.primary }]} activeOpacity={0.8} onPress={() => navigation.navigate('ServiceDetails', { reservation: item })}>
-        <Text style={[styles.detailsText, { color: theme.primary }]}>Detalle</Text><Ionicons name="chevron-forward" size={18} color={theme.primary} />
+        <Text style={[styles.detailsText, { color: theme.primary }]}>{t('mobile.services.detail')}</Text><Ionicons name="chevron-forward" size={18} color={theme.primary} />
       </TouchableOpacity>
     </View>
   );
 
-  const emptyMessage = selectedStatus === 'EN_PROCESO' ? 'No tienes servicios en proceso.' : 'No hay servicios en este estado.';
+  const emptyMessage = selectedStatus === 'EN_PROCESO' ? t('mobile.services.emptyInProcess') : t('mobile.services.emptyStatus');
 
-  if (loading) return <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}><ActivityIndicator size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.text }]}>Cargando tus servicios...</Text></View>;
+  if (loading) return <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}><ActivityIndicator size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.text }]}>{t('mobile.services.loading')}</Text></View>;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -88,8 +90,8 @@ export default function MyServicesScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} colors={[theme.primary]} />}
-        ListHeaderComponent={<><View style={styles.header}><Text style={[styles.title, { color: theme.text }]}>Mis servicios</Text><Text style={[styles.subtitle, { color: theme.textSecondary }]}>Consulta el estado de tus reservas</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>{STATUS_OPTIONS.map((option) => <TouchableOpacity key={option.value} onPress={() => setSelectedStatus(option.value)} activeOpacity={0.8} style={[styles.filterButton, { borderColor: theme.border, backgroundColor: theme.card }, selectedStatus === option.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}><Text style={[styles.filterText, { color: theme.textSecondary }, selectedStatus === option.value && styles.filterTextSelected]}>{option.label}</Text></TouchableOpacity>)}</ScrollView></>}
-        ListEmptyComponent={<View style={[styles.emptyContainer, { backgroundColor: error ? theme.errorBackground : theme.card, borderColor: error ? theme.errorBorder : theme.border }]}><Ionicons name={error ? 'alert-circle-outline' : 'car-outline'} size={42} color={error ? theme.errorText : theme.primary} /><Text style={[styles.emptyTitle, { color: error ? theme.errorText : theme.text }]}>{error || emptyMessage}</Text>{error ? <TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>Reintentar</Text></TouchableOpacity> : <Text style={[styles.emptyText, { color: darkMode ? '#BDBDBD' : theme.textSecondary }]}>Cuando tengas una reserva en este estado, aparecerá aquí.</Text>}</View>}
+        ListHeaderComponent={<><View style={styles.header}><Text style={[styles.title, { color: theme.text }]}>{t('mobile.services.title')}</Text><Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('mobile.services.subtitle')}</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>{statusOptions.map((option) => <TouchableOpacity key={option.value} onPress={() => setSelectedStatus(option.value)} activeOpacity={0.8} style={[styles.filterButton, { borderColor: theme.border, backgroundColor: theme.card }, selectedStatus === option.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}><Text style={[styles.filterText, { color: theme.textSecondary }, selectedStatus === option.value && styles.filterTextSelected]}>{option.label}</Text></TouchableOpacity>)}</ScrollView></>}
+        ListEmptyComponent={<View style={[styles.emptyContainer, { backgroundColor: error ? theme.errorBackground : theme.card, borderColor: error ? theme.errorBorder : theme.border }]}><Ionicons name={error ? 'alert-circle-outline' : 'car-outline'} size={42} color={error ? theme.errorText : theme.primary} /><Text style={[styles.emptyTitle, { color: error ? theme.errorText : theme.text }]}>{error || emptyMessage}</Text>{error ? <TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity> : <Text style={[styles.emptyText, { color: darkMode ? '#BDBDBD' : theme.textSecondary }]}>{t('mobile.services.emptyHint')}</Text>}</View>}
       />
     </SafeAreaView>
   );

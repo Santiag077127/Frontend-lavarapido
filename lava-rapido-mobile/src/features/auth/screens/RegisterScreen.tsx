@@ -18,6 +18,7 @@ import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void;
@@ -87,6 +88,7 @@ const InputContainer = ({
 export default function RegisterScreen({ setIsLoggedIn }: Props) {
   const navigation = useNavigation<any>();
   const { theme, darkMode } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   // ESTADOS
   const [email, setEmail] = useState('');
@@ -139,33 +141,33 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
       !password ||
       !confirmPassword
     ) {
-      setError('Por favor completa todos los campos.');
+      setError(t('register.required'));
       return;
     }
 
     if (!emailIsValid) {
-      setError('Ingresa un correo electrónico válido.');
+      setError(t('register.invalidEmail'));
       return;
     }
 
     const cleanPhone = phoneNumber.replace(/\s/g, '');
     if (!/^\d{10}$/.test(cleanPhone)) {
-      setError('El teléfono debe tener 10 números.');
+      setError(t('register.invalidPhone'));
       return;
     }
 
     if (!/^\d+$/.test(documentNumber.trim())) {
-      setError('El número de documento solo debe contener números.');
+      setError(t('register.invalidDocument'));
       return;
     }
 
     if (!passwordIsValid) {
-      setError('La contraseña no cumple todos los requisitos.');
+      setError(t('register.invalidPassword'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError(t('register.passwordMismatch'));
       return;
     }
 
@@ -184,7 +186,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
 
       const response = await authService.register(data);
 
-      setSuccess('Usuario registrado correctamente.');
+      setSuccess(t('register.success'));
 
       setEmail('');
       setFirstName('');
@@ -200,15 +202,14 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
         navigation.navigate('Login');
       }, 1000);
     } catch (err: any) {
-      let message = 'No se pudo completar el registro.';
-
-      if (err?.response?.data) {
-        if (typeof err.response.data === 'string') {
-          message = err.response.data;
-        } else if (err.response.data.message) {
-          message = err.response.data.message;
-        }
-      }
+      const status = err?.response?.status;
+      const message = !err?.response
+        ? t('register.connectionError')
+        : status === 400
+          ? t('register.badRequest')
+          : status === 409
+            ? t('register.conflict')
+            : t('register.genericError');
 
       setError(message);
     } finally {
@@ -255,7 +256,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <MaterialIcons name="email" size={20} color={iconColor} />
               <TextInput
-                placeholder="Correo"
+                placeholder={t('register.email')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
                 value={email}
@@ -278,7 +279,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="user" size={20} color={iconColor} />
               <TextInput
-                placeholder="Nombre"
+                placeholder={t('register.firstName')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
                 value={firstName}
@@ -295,7 +296,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="user" size={20} color={iconColor} />
               <TextInput
-                placeholder="Apellido"
+                placeholder={t('register.lastName')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
                 value={lastName}
@@ -312,7 +313,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="phone" size={20} color={iconColor} />
               <TextInput
-                placeholder="Teléfono"
+                placeholder={t('register.phone')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
                 value={phoneNumber}
@@ -330,7 +331,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
 
             {/* TIPO DE DOCUMENTO */}
             <Text style={[styles.sectionLabel, { color: theme.text }]}>
-              Tipo de documento
+              {t('register.documentType')}
             </Text>
 
             <View style={styles.documentTypes}>
@@ -371,7 +372,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <MaterialIcons name="badge" size={20} color={iconColor} />
               <TextInput
-                placeholder="Número de documento"
+                placeholder={t('register.documentNumber')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
                 value={documentNumber}
@@ -391,7 +392,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Ionicons name="lock-closed" size={20} color={iconColor} />
               <TextInput
-                placeholder="Contraseña"
+                placeholder={t('register.password')}
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showPassword}
                 style={[styles.input, { color: theme.text }]}
@@ -428,26 +429,26 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               ]}
             >
               <Text style={[styles.requirementsTitle, { color: theme.text }]}>
-                La contraseña debe contener:
+                {t('register.passwordRequirements')}
               </Text>
               <PasswordRequirement
                 valid={passwordRequirements.minLength}
-                text="Mínimo 8 caracteres"
+                text={t('register.minLength')}
                 textColor={theme.textSecondary}
               />
               <PasswordRequirement
                 valid={passwordRequirements.uppercase}
-                text="Al menos una letra mayúscula"
+                text={t('register.uppercase')}
                 textColor={theme.textSecondary}
               />
               <PasswordRequirement
                 valid={passwordRequirements.lowercase}
-                text="Al menos una letra minúscula"
+                text={t('register.lowercase')}
                 textColor={theme.textSecondary}
               />
               <PasswordRequirement
                 valid={passwordRequirements.number}
-                text="Al menos un número"
+                text={t('register.number')}
                 textColor={theme.textSecondary}
               />
             </View>
@@ -459,7 +460,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Ionicons name="lock-closed" size={20} color={iconColor} />
               <TextInput
-                placeholder="Confirmar contraseña"
+                placeholder={t('register.confirmPassword')}
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showConfirmPassword}
                 style={[styles.input, { color: theme.text }]}
@@ -502,8 +503,8 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                   ]}
                 >
                   {passwordsMatch
-                    ? '✓ Las contraseñas coinciden'
-                    : '✗ Las contraseñas no coinciden'}
+                    ? `✓ ${t('register.passwordsMatch')}`
+                    : `✗ ${t('register.passwordsDoNotMatch')}`}
                 </Text>
               </View>
             )}
@@ -548,7 +549,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={styles.buttonText}>Registrar</Text>
+                <Text style={styles.buttonText}>{t('register.button')}</Text>
               )}
             </TouchableOpacity>
 
@@ -559,8 +560,8 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               disabled={loading}
             >
               <Text style={[styles.link, { color: theme.text }]}>
-                ¿Ya tienes una cuenta?{' '}
-                <Text style={styles.linkHighlight}>Iniciar Sesión</Text>
+                {t('register.hasAccount')}{' '}
+                <Text style={styles.linkHighlight}>{t('register.signIn')}</Text>
               </Text>
             </TouchableOpacity>
 

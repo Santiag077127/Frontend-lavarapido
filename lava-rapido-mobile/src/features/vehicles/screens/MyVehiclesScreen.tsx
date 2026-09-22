@@ -17,6 +17,7 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import {
@@ -28,23 +29,37 @@ type Props = {
   navigation: any;
 };
 
-const vehicleTypeLabels: Record<string, string> = {
-  CARRO: 'Carro',
-  CAMIONETA: 'Camioneta',
-  MOTO: 'Moto',
-  MOTOCARRO: 'Motocarro',
-  FURGONETA: 'Furgoneta',
-  PESADO: 'Pesado',
+const vehicleTypeKeys: Record<string, string> = {
+  CARRO: 'vehicles.types.car',
+  CAMIONETA: 'vehicles.types.pickup',
+  MOTO: 'vehicles.types.motorcycle',
+  MOTOCARRO: 'vehicles.types.motortricycle',
+  FURGONETA: 'vehicles.types.van',
+  PESADO: 'vehicles.types.heavy',
 };
 
 export default function MyVehiclesScreen({
   navigation,
 }: Props) {
   const { theme, darkMode } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const getRequestError = (error: any) => {
+    switch (error?.response?.status) {
+      case 401:
+        return t('vehicles.errors.unauthorized');
+      case 400:
+        return t('vehicles.errors.badRequest');
+      case 409:
+        return t('vehicles.errors.conflict');
+      default:
+        return t('vehicles.errors.load');
+    }
+  };
 
   const loadVehicles = async () => {
     try {
@@ -54,13 +69,12 @@ export default function MyVehiclesScreen({
     } catch (error: any) {
       console.error(
         'Error cargando vehículos:',
-        error?.response?.data || error,
+        error?.response?.status || error?.message,
       );
 
       Alert.alert(
-        'Error',
-        error?.response?.data ||
-          'No se pudieron cargar tus vehículos.',
+        t('vehicles.errors.title'),
+        getRequestError(error),
       );
     } finally {
       setLoading(false);
@@ -94,18 +108,20 @@ export default function MyVehiclesScreen({
 
     Alert.alert(
       nuevoEstado
-        ? 'Activar vehículo'
-        : 'Desactivar vehículo',
+        ? t('vehicles.status.activateTitle')
+        : t('vehicles.status.deactivateTitle'),
       nuevoEstado
-        ? `¿Quieres activar el vehículo ${vehicle.placa}?`
-        : `¿Quieres desactivar el vehículo ${vehicle.placa}?`,
+        ? t('vehicles.status.activateMessage', { plate: vehicle.placa })
+        : t('vehicles.status.deactivateMessage', { plate: vehicle.placa }),
       [
         {
-          text: 'Cancelar',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: nuevoEstado ? 'Activar' : 'Desactivar',
+          text: nuevoEstado
+            ? t('vehicles.status.activate')
+            : t('vehicles.status.deactivate'),
           style: nuevoEstado ? 'default' : 'destructive',
           onPress: async () => {
             try {
@@ -118,13 +134,12 @@ export default function MyVehiclesScreen({
             } catch (error: any) {
               console.error(
                 'Error cambiando estado:',
-                error?.response?.data || error,
+                error?.response?.status || error?.message,
               );
 
               Alert.alert(
-                'Error',
-                error?.response?.data ||
-                  'No se pudo cambiar el estado del vehículo.',
+                t('vehicles.errors.title'),
+                t('vehicles.errors.status'),
               );
             }
           },
@@ -189,8 +204,9 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              {vehicleTypeLabels[item.tipoVehiculo] ||
-                item.tipoVehiculo}
+              {vehicleTypeKeys[item.tipoVehiculo]
+                ? t(vehicleTypeKeys[item.tipoVehiculo])
+                : item.tipoVehiculo}
             </Text>
           </View>
 
@@ -214,7 +230,9 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              {item.estado ? 'Activo' : 'Inactivo'}
+              {item.estado
+                ? t('vehicles.status.active')
+                : t('vehicles.status.inactive')}
             </Text>
           </View>
         </View>
@@ -245,7 +263,7 @@ export default function MyVehiclesScreen({
                   },
                 ]}
               >
-                Marca
+                {t('vehicles.fields.brand')}
               </Text>
 
               <Text
@@ -277,7 +295,7 @@ export default function MyVehiclesScreen({
                   },
                 ]}
               >
-                Color
+                {t('vehicles.fields.color')}
               </Text>
 
               <Text
@@ -288,7 +306,7 @@ export default function MyVehiclesScreen({
                   },
                 ]}
               >
-                {item.color || 'No especificado'}
+                {item.color || t('vehicles.fields.unspecified')}
               </Text>
             </View>
           </View>
@@ -319,7 +337,7 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              Editar
+              {t('vehicles.actions.edit')}
             </Text>
           </TouchableOpacity>
 
@@ -357,7 +375,9 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              {item.estado ? 'Desactivar' : 'Activar'}
+              {item.estado
+                ? t('vehicles.status.deactivate')
+                : t('vehicles.status.activate')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -388,7 +408,7 @@ export default function MyVehiclesScreen({
             },
           ]}
         >
-          Cargando vehículos...
+          {t('vehicles.loading')}
         </Text>
       </View>
     );
@@ -425,7 +445,7 @@ export default function MyVehiclesScreen({
               },
             ]}
           >
-            Mis vehículos
+            {t('vehicles.title')}
           </Text>
 
           <Text
@@ -436,7 +456,7 @@ export default function MyVehiclesScreen({
               },
             ]}
           >
-            Administra tus vehículos
+            {t('vehicles.subtitle')}
           </Text>
         </View>
       </View>
@@ -483,7 +503,7 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              No tienes vehículos
+              {t('vehicles.empty.title')}
             </Text>
 
             <Text
@@ -494,8 +514,7 @@ export default function MyVehiclesScreen({
                 },
               ]}
             >
-              Agrega tu primer vehículo para
-              poder utilizarlo en tus reservas.
+              {t('vehicles.empty.description')}
             </Text>
 
             <TouchableOpacity
@@ -515,7 +534,7 @@ export default function MyVehiclesScreen({
               />
 
               <Text style={styles.emptyButtonText}>
-                Agregar vehículo
+                {t('vehicles.actions.add')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -540,7 +559,7 @@ export default function MyVehiclesScreen({
           />
 
           <Text style={styles.floatingButtonText}>
-            Agregar
+            {t('vehicles.actions.addShort')}
           </Text>
         </TouchableOpacity>
       )}

@@ -31,6 +31,7 @@ import {
   ThemeContext,
 } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
+import { useTranslation } from 'react-i18next'
 
 import {
   images,
@@ -99,6 +100,8 @@ export default function EditProfileScreen() {
       text: '#000000',
       textSecondary: '#555555',
     }
+
+  const { t } = useTranslation()
 
   const [profile, setProfile] =
     useState<UserProfile | null>(null)
@@ -211,8 +214,14 @@ export default function EditProfileScreen() {
           )
 
           Alert.alert(
-            'Error',
-            'No fue posible cargar tus datos.'
+            t('editProfile.errorTitle'),
+            !error?.response
+              ? t('editProfile.connectionError')
+              : error?.response?.status === 401
+                ? t('editProfile.unauthorized')
+                : error?.response?.status === 404
+                  ? t('editProfile.notFound')
+                  : t('editProfile.loadError')
           )
         } finally {
           setLoading(false)
@@ -279,8 +288,8 @@ export default function EditProfileScreen() {
 
     if (!cleanFirstName) {
       Alert.alert(
-        'Dato requerido',
-        'Ingresa tu nombre.'
+        t('editProfile.requiredTitle'),
+        t('editProfile.firstNameRequired')
       )
 
       return false
@@ -288,8 +297,8 @@ export default function EditProfileScreen() {
 
     if (!cleanLastName) {
       Alert.alert(
-        'Dato requerido',
-        'Ingresa tu apellido.'
+        t('editProfile.requiredTitle'),
+        t('editProfile.lastNameRequired')
       )
 
       return false
@@ -297,8 +306,8 @@ export default function EditProfileScreen() {
 
     if (!cleanPhone) {
       Alert.alert(
-        'Dato requerido',
-        'Ingresa tu número de teléfono.'
+        t('editProfile.requiredTitle'),
+        t('editProfile.phoneRequired')
       )
 
       return false
@@ -308,8 +317,8 @@ export default function EditProfileScreen() {
       cleanPhone.length < 7
     ) {
       Alert.alert(
-        'Teléfono inválido',
-        'Ingresa un número de teléfono válido.'
+        t('editProfile.invalidPhoneTitle'),
+        t('editProfile.invalidPhone')
       )
 
       return false
@@ -353,11 +362,11 @@ export default function EditProfileScreen() {
       )
 
       Alert.alert(
-        'Cambios guardados',
-        'Tu perfil se actualizó correctamente.',
+        t('editProfile.savedTitle'),
+        t('editProfile.savedMessage'),
         [
           {
-            text: 'Aceptar',
+            text: t('editProfile.accept'),
             onPress: () =>
               navigation.goBack(),
           },
@@ -370,24 +379,21 @@ export default function EditProfileScreen() {
           error?.message
       )
 
-      let message =
-        'No fue posible actualizar tu perfil.'
-
-      if (
-        error?.response?.data?.message
-      ) {
-        message =
-          error.response.data.message
-      } else if (
-        typeof error?.response?.data ===
-        'string'
-      ) {
-        message =
-          error.response.data
-      }
+      const status = error?.response?.status
+      const message = !error?.response
+        ? t('editProfile.connectionError')
+        : status === 400
+          ? t('editProfile.badRequest')
+          : status === 401
+            ? t('editProfile.unauthorized')
+            : status === 404
+              ? t('editProfile.notFound')
+              : status === 409
+                ? t('editProfile.conflict')
+                : t('editProfile.saveError')
 
       Alert.alert(
-        'Error',
+        t('editProfile.errorTitle'),
         message
       )
     } finally {
@@ -437,7 +443,7 @@ export default function EditProfileScreen() {
               },
             ]}
           >
-            Cargando perfil
+            {t('editProfile.loadingTitle')}
           </Text>
 
           <Text
@@ -449,7 +455,7 @@ export default function EditProfileScreen() {
               },
             ]}
           >
-            Un momento, por favor
+            {t('editProfile.loadingMessage')}
           </Text>
         </View>
       </View>
@@ -525,7 +531,7 @@ export default function EditProfileScreen() {
                 },
               ]}
             >
-              Editar perfil
+              {t('editProfile.title')}
             </Text>
 
             <Text
@@ -537,7 +543,7 @@ export default function EditProfileScreen() {
                 },
               ]}
             >
-              Actualiza tu información personal
+              {t('editProfile.subtitle')}
             </Text>
           </View>
         </View>
@@ -584,7 +590,7 @@ export default function EditProfileScreen() {
               },
             ]}
           >
-            Foto de perfil
+            {t('editProfile.profilePhoto')}
           </Text>
 
           <Text
@@ -596,7 +602,7 @@ export default function EditProfileScreen() {
               },
             ]}
           >
-            Selecciona uno de los avatares
+            {t('editProfile.chooseAvatar')}
           </Text>
 
           <View
@@ -713,7 +719,7 @@ export default function EditProfileScreen() {
                   },
                 ]}
               >
-                Información personal
+                {t('editProfile.personalInfo')}
               </Text>
 
               <Text
@@ -725,18 +731,18 @@ export default function EditProfileScreen() {
                   },
                 ]}
               >
-                Modifica tus datos
+                {t('editProfile.modifyData')}
               </Text>
             </View>
           </View>
 
           <FormInput
-            label="Nombre"
+            label={t('editProfile.firstName')}
             value={firstName}
             onChangeText={
               setFirstName
             }
-            placeholder="Ingresa tu nombre"
+            placeholder={t('editProfile.firstNamePlaceholder')}
             icon="person-outline"
             theme={theme}
             darkMode={darkMode}
@@ -744,12 +750,12 @@ export default function EditProfileScreen() {
           />
 
           <FormInput
-            label="Apellido"
+            label={t('editProfile.lastName')}
             value={lastName}
             onChangeText={
               setLastName
             }
-            placeholder="Ingresa tu apellido"
+            placeholder={t('editProfile.lastNamePlaceholder')}
             icon="person-outline"
             theme={theme}
             darkMode={darkMode}
@@ -768,7 +774,7 @@ export default function EditProfileScreen() {
                 },
               ]}
             >
-              Correo electrónico
+              {t('editProfile.email')}
             </Text>
 
             <View
@@ -817,8 +823,7 @@ export default function EditProfileScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {profile?.email ||
-                  'Sin correo'}
+                {profile?.email || t('editProfile.noEmail')}
               </Text>
 
               <Ionicons
@@ -839,17 +844,17 @@ export default function EditProfileScreen() {
                 },
               ]}
             >
-              El correo no puede modificarse desde aquí.
+              {t('editProfile.emailReadOnly')}
             </Text>
           </View>
 
           <FormInput
-            label="Teléfono"
+            label={t('editProfile.phone')}
             value={phoneNumber}
             onChangeText={
               setPhoneNumber
             }
-            placeholder="Ingresa tu teléfono"
+            placeholder={t('editProfile.phonePlaceholder')}
             icon="call-outline"
             theme={theme}
             darkMode={darkMode}
@@ -900,7 +905,7 @@ export default function EditProfileScreen() {
                 },
               ]}
             >
-              Cancelar
+              {t('editProfile.cancel')}
             </Text>
           </TouchableOpacity>
 
@@ -935,8 +940,8 @@ export default function EditProfileScreen() {
               style={styles.saveText}
             >
               {saving
-                ? 'Guardando...'
-                : 'Guardar cambios'}
+                ? t('editProfile.saving')
+                : t('editProfile.save')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -961,7 +966,7 @@ export default function EditProfileScreen() {
               },
             ]}
           >
-            Tus datos se mantienen protegidos.
+            {t('editProfile.securityInfo')}
           </Text>
         </View>
 

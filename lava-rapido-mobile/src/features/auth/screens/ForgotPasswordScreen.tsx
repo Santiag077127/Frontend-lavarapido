@@ -14,13 +14,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
+import { useTranslation } from 'react-i18next'
 
 export default function ForgotPasswordScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const handleSendCode = () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Ingrese un correo electrónico')
+      Alert.alert(t('forgotPassword.errorTitle'), t('forgotPassword.emailRequired'))
       return
     }
     navigation.navigate('VerifyCode', { email })
@@ -32,14 +34,14 @@ export default function ForgotPasswordScreen({ navigation }: any) {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             <Image source={images.logo} style={styles.logo} resizeMode="contain" />
-            <Text style={[styles.title, { color: theme.text }]}>Recuperar contraseña</Text>
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Ingresa tu correo electrónico para recibir un código de verificación.</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{t('forgotPassword.title')}</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('forgotPassword.subtitle')}</Text>
             <View style={styles.field}>
-              <Text style={[styles.label, { color: theme.text }]}>Correo electrónico</Text>
-              <TextInput placeholder="Correo electrónico" placeholderTextColor={theme.placeholder} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" returnKeyType="done" onSubmitEditing={handleSendCode} style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} />
+              <Text style={[styles.label, { color: theme.text }]}>{t('forgotPassword.email')}</Text>
+              <TextInput placeholder={t('forgotPassword.email')} placeholderTextColor={theme.placeholder} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" returnKeyType="done" onSubmitEditing={handleSendCode} style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} />
             </View>
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} activeOpacity={0.8}><Text style={styles.buttonText}>Enviar código</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}><Text style={[styles.backText, { color: theme.primary }]}>Volver al inicio de sesión</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} activeOpacity={0.8}><Text style={styles.buttonText}>{t('forgotPassword.sendCode')}</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}><Text style={[styles.backText, { color: theme.primary }]}>{t('forgotPassword.backToLogin')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

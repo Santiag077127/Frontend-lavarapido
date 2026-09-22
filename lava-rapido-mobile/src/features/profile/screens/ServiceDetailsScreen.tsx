@@ -13,6 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import { useTranslation } from 'react-i18next'
+import { formatCurrency } from '../../../utils/formatters'
 
 import type { RootStackParamList } from '../../../navigation/types'
 
@@ -29,6 +31,7 @@ export default function ServiceDetailsScreen({
 }: Props) {
 
   const { theme, darkMode } = useContext(ThemeContext)
+  const { t } = useTranslation()
 
   const { reservation } = route.params
 
@@ -66,29 +69,29 @@ export default function ServiceDetailsScreen({
     switch (status) {
 
       case 'EN_PROCESO':
-        return 'En proceso'
+        return t('mobile.reservationDetail.status.inProcess')
 
       case 'PENDIENTE':
-        return 'Pendiente'
+        return t('mobile.reservationDetail.status.pending')
 
       case 'ASIGNADA':
-        return 'Asignada'
+        return t('mobile.reservationDetail.status.assigned')
 
       case 'FINALIZADA':
-        return 'Finalizado'
+        return t('mobile.reservationDetail.status.finished')
 
       case 'CANCELADA':
-        return 'Cancelado'
+        return t('mobile.reservationDetail.status.cancelled')
 
       default:
-        return status
+        return t('mobile.reservationDetail.status.unknown')
     }
   }
 
   const formatDate = (date: string) => {
 
     if (!date) {
-      return 'No disponible'
+      return t('mobile.services.notAvailable')
     }
 
     const [year, month, day] = date.split('-')
@@ -99,15 +102,10 @@ export default function ServiceDetailsScreen({
   const formatTime = (time: string) => {
 
     if (!time) {
-      return 'No disponible'
+      return t('mobile.services.notAvailable')
     }
 
     return time.substring(0, 5)
-  }
-
-  const formatPrice = (price: number) => {
-
-    return `$${price.toLocaleString('es-CO')} COP`
   }
 
   const isInProcess =
@@ -158,7 +156,7 @@ export default function ServiceDetailsScreen({
             },
           ]}
         >
-          {reservation.nombreServicio || 'Servicio'}
+          {reservation.nombreServicio || t('mobile.services.serviceFallback')}
         </Text>
 
         <View
@@ -198,7 +196,7 @@ export default function ServiceDetailsScreen({
             },
           ]}
         >
-          Información del servicio
+          {t('mobile.reservationDetail.serviceInfo')}
         </Text>
 
         <Text
@@ -211,7 +209,7 @@ export default function ServiceDetailsScreen({
             },
           ]}
         >
-          Reserva #{reservation.idReserva}
+          {t('mobile.reservationDetail.reservation')} #{reservation.idReserva}
         </Text>
 
         {!!reservation.descripcionServicio && (
@@ -249,7 +247,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Fecha
+              {t('mobile.reservationDetail.date')}
             </Text>
 
             <Text
@@ -289,7 +287,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Hora
+              {t('mobile.reservationDetail.time')}
             </Text>
 
             <Text
@@ -329,7 +327,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Vehículo
+              {t('mobile.reservationDetail.vehicle')}
             </Text>
 
             <Text
@@ -369,7 +367,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Placa
+              {t('mobile.reservationDetail.plate')}
             </Text>
 
             <Text
@@ -409,7 +407,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Precio
+              {t('mobile.reservationDetail.price')}
             </Text>
 
             <Text
@@ -420,7 +418,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              {formatPrice(reservation.precioServicio)}
+              {formatCurrency(reservation.precioServicio)}
             </Text>
 
           </View>
@@ -449,7 +447,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Duración
+              {t('mobile.reservationDetail.duration')}
             </Text>
 
             <Text
@@ -460,7 +458,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              {reservation.duracionServicio} minutos
+              {reservation.duracionServicio} {t('mobile.reservationDetail.minutes')}
             </Text>
 
           </View>
@@ -488,7 +486,7 @@ export default function ServiceDetailsScreen({
             },
           ]}
         >
-          Estado del proceso
+          {t('mobile.reservationDetail.processStatus')}
         </Text>
 
         <View style={styles.timeline}>
@@ -507,7 +505,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Reserva confirmada
+              {t('mobile.reservationDetail.confirmed')}
             </Text>
 
           </View>
@@ -538,7 +536,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Vehículo en servicio
+              {t('mobile.reservationDetail.inService')}
             </Text>
 
           </View>
@@ -569,7 +567,7 @@ export default function ServiceDetailsScreen({
                 },
               ]}
             >
-              Servicio finalizado
+              {t('mobile.reservationDetail.finished')}
             </Text>
 
           </View>
