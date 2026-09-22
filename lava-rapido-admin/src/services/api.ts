@@ -1,6 +1,7 @@
 // Librería para peticiones HTTP
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
+import { guardarDestinoTrasLogin } from "@/services/authRedirect";
 // Instancia global de Axios
 export const api = axios.create({
   // URL base del backend
@@ -30,6 +31,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      guardarDestinoTrasLogin(`${window.location.pathname}${window.location.search}${window.location.hash}`);
       useAuthStore.getState().logout();
       if (window.location.pathname !== "/login") window.location.assign("/login");
     }
