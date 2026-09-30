@@ -6,6 +6,7 @@ import { ThemeProvider } from "./theme/theme";
 // Estilos globales — siempre primero variables, luego global
 import "./styles/variables.css";
 import "./styles/global.css";
+import "./styles/dark-mode.css";
 
 createRoot(
   document.getElementById("root")!

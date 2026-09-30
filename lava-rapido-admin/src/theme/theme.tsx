@@ -1,13 +1,10 @@
 import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-export type AccentColor = "blue" | "cyan" | "indigo" | "emerald";
 export type LanguageOption = "es" | "en" | "fr" | "pt";
 
 interface ThemeContextValue {
   darkMode: boolean;
   setDarkMode: (value: boolean) => void;
-  accentColor: AccentColor;
-  setAccentColor: (value: AccentColor) => void;
   language: LanguageOption;
   setLanguage: (value: LanguageOption) => void;
   t: (key: string) => string;
@@ -730,10 +727,6 @@ const translations: Record<LanguageOption, Record<string, string>> = {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(() => getStoredBoolean("lava-dark-mode"));
-  const [accentColor, setAccentColor] = useState<AccentColor>(() => {
-    const stored = localStorage.getItem("lava-accent-color");
-    return stored === "cyan" || stored === "indigo" || stored === "emerald" ? stored : "blue";
-  });
   const [language, setLanguage] = useState<LanguageOption>(() => {
     const stored = localStorage.getItem("lava-language");
     return stored === "en" || stored === "fr" || stored === "pt" ? stored : "es";
@@ -745,9 +738,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [darkMode]);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accentColor;
-    localStorage.setItem("lava-accent-color", accentColor);
-  }, [accentColor]);
+    document.documentElement.dataset.accent = "blue";
+    localStorage.removeItem("lava-accent-color");
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -758,13 +751,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     () => ({
       darkMode,
       setDarkMode,
-      accentColor,
-      setAccentColor,
       language,
       setLanguage,
       t: (key: string) => translations[language][key] || translations.es[key] || key,
     }),
-    [accentColor, darkMode, language]
+    [darkMode, language]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

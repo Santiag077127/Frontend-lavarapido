@@ -53,14 +53,11 @@ export const ServiciosTable = ({
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
                 {t("common.edit")}
               </button>
-              <button
-                className={
-                  servicio.estado ? "btn-desactivar" : "btn-activar"
-                }
-                onClick={() => onCambiarEstado(servicio)}
-              >
-                {servicio.estado ? t("common.deactivate") : t("common.activate")}
-              </button>
+              {!servicio.estado && (
+                <button className="btn-activar" onClick={() => onCambiarEstado(servicio)}>
+                  {t("common.activate")}
+                </button>
+              )}
             </td>
           </tr>
         ))}

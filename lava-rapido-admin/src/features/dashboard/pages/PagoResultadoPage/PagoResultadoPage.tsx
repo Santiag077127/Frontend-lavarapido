@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { guardarDestinoTrasLogin } from "@/services/authRedirect";
 import { CobrarReservaButton } from "../../components/CobrarReservaButton/CobrarReservaButton";
 import { obtenerContextoPago } from "../../services/pagoContext";
+import { verificarTransaccion } from "../../services/pagoService";
 import "./PagoResultadoPage.css";
 
 export const PagoResultadoPage = () => {
@@ -11,10 +12,21 @@ export const PagoResultadoPage = () => {
   const location = useLocation();
   const [mensaje, setMensaje] = useState<string | null>(null);
   const contexto = obtenerContextoPago();
+  const idReserva = contexto?.idReserva;
+  const referencia = contexto?.referencia;
+  const transactionId = new URLSearchParams(location.search).get("id");
+  const verificadoRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) guardarDestinoTrasLogin(`${location.pathname}${location.search}${location.hash}`);
   }, [location.hash, location.pathname, location.search, token]);
+
+  useEffect(() => {
+    if (!token || !idReserva || !referencia || !transactionId || verificadoRef.current === transactionId) return;
+    verificadoRef.current = transactionId;
+    void verificarTransaccion(idReserva, referencia, transactionId)
+      .catch(() => setMensaje("No se pudo verificar la transacción con Wompi. Consulta el estado del pago más tarde."));
+  }, [idReserva, referencia, token, transactionId]);
 
   if (!token) return <Navigate to="/login" replace />;
 

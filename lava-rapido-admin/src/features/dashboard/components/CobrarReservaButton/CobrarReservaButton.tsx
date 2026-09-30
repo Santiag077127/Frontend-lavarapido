@@ -5,6 +5,7 @@ import {
   consultarPago,
   iniciarPago,
   reconciliarPago,
+  verificarTransaccion,
   type Pago,
   type PagoIntento,
 } from "../../services/pagoService";
@@ -217,9 +218,17 @@ export const CobrarReservaButton = ({
       if (!Checkout) throw new Error("Wompi no está disponible.");
       guardarContextoPago({ idReserva, referencia: config.referencia });
       const checkout = new Checkout(crearConfiguracionWidget(config));
-      checkout.open(() => {
+      checkout.open((result) => {
         liberarFlujoWompi(idReserva);
-        iniciarVerificacion();
+        const transactionId = result?.transaction?.id;
+        if (!transactionId) {
+          iniciarVerificacion();
+          return;
+        }
+        void verificarTransaccion(idReserva, config.referencia, transactionId)
+          .then(guardarPago)
+          .catch((error) => onErrorRef.current(mensajePagoError(error, "consultar")))
+          .finally(iniciarVerificacion);
       });
     } catch (error) {
       liberarFlujoWompi(idReserva);

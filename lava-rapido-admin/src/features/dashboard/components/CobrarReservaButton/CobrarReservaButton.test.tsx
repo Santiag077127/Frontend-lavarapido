@@ -5,13 +5,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "@/store/authStore";
 import type { Pago, PagoIntento, PagoWidgetResponse } from "../../services/pagoService";
 
-const pagosMock = vi.hoisted(() => ({ consultar: vi.fn(), iniciar: vi.fn(), reconciliar: vi.fn() }));
+const pagosMock = vi.hoisted(() => ({ consultar: vi.fn(), iniciar: vi.fn(), reconciliar: vi.fn(), verificar: vi.fn() }));
 const widgetMock = vi.hoisted(() => ({ reservar: vi.fn(() => true), liberar: vi.fn() }));
 
 vi.mock("../../services/pagoService", () => ({
   consultarPago: pagosMock.consultar,
   iniciarPago: pagosMock.iniciar,
   reconciliarPago: pagosMock.reconciliar,
+  verificarTransaccion: pagosMock.verificar,
 }));
 
 vi.mock("../../hooks/useWompiWidget", () => ({
@@ -84,6 +85,7 @@ describe("CobrarReservaButton", () => {
     } as typeof window.WidgetCheckout;
     pagosMock.iniciar.mockResolvedValue(inicio);
     pagosMock.reconciliar.mockResolvedValue(pago());
+    pagosMock.verificar.mockResolvedValue(pago());
     useAuthStore.setState({ token: "jwt", user: { userId: "admin-1", firstName: "Ada", email: "ada@example.com", role: "ADMIN" } });
   });
 
@@ -99,6 +101,7 @@ describe("CobrarReservaButton", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Continuar en Wompi" }));
     expect(pagosMock.iniciar).toHaveBeenCalledTimes(1);
     act(() => callbackWidget?.({ transaction: { id: "tx-no-confiable" } }));
+    await waitFor(() => expect(pagosMock.verificar).toHaveBeenCalledWith("reserva-1", "PAGO-1", "tx-no-confiable"));
     await waitFor(() => expect(pagosMock.consultar).toHaveBeenCalledTimes(2));
     expect(onAprobado).not.toHaveBeenCalled();
   });
@@ -180,6 +183,7 @@ describe("CobrarReservaButton", () => {
     render(<MemoryRouter initialEntries={["/pagos/resultado?id=tx-wompi"]}><PagoResultadoPage /></MemoryRouter>);
     expect(await screen.findByText(/La confirmación que ves aquí proviene del backend/)).toBeInTheDocument();
     await waitFor(() => expect(pagosMock.consultar).toHaveBeenCalledWith("reserva-contexto", expect.any(AbortSignal)));
+    await waitFor(() => expect(pagosMock.verificar).toHaveBeenCalledWith("reserva-contexto", "PAGO-CONTEXTO", "tx-wompi"));
     expect(pagosMock.consultar).not.toHaveBeenCalledWith("tx-wompi", expect.anything());
   });
 });

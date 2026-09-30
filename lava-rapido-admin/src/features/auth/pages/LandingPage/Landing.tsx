@@ -84,13 +84,13 @@ const LandingPage = () => {
             </label>
           )}
           <button
-            className="nav-pill"
+            className="nav-pill nav-mode"
             type="button"
             aria-label="Cambiar modo de color"
             onClick={() => theme?.setDarkMode(!theme.darkMode)}
           >
             {theme?.darkMode ? <Moon size={16} /> : <Sun size={16} />}
-            {theme?.darkMode ? "Oscuro" : "Claro"}
+            <span>{theme?.darkMode ? "Oscuro" : "Claro"}</span>
           </button>
           <button className="admin-access" type="button" onClick={() => navigate("/login")}>
             <LockKeyhole size={16} />

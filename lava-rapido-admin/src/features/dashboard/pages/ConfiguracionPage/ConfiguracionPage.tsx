@@ -6,22 +6,14 @@ import {
   LockKeyhole,
   LogOut,
   Moon,
-  Palette,
   Settings,
   Sun,
   UserRound,
 } from "lucide-react";
-import { ThemeContext, type AccentColor, type LanguageOption } from "@/theme/theme";
+import { ThemeContext, type LanguageOption } from "@/theme/theme";
 import { useAuthStore } from "@/store/authStore";
 import { LogoutModal } from "../../components/LogoutModal";
 import "./ConfiguracionPage.css";
-
-const accentOptions: Array<{ value: AccentColor; labelKey: string }> = [
-  { value: "blue", labelKey: "color.blue" },
-  { value: "cyan", labelKey: "color.cyan" },
-  { value: "indigo", labelKey: "color.indigo" },
-  { value: "emerald", labelKey: "color.emerald" },
-];
 
 const languageOptions: Array<{ value: LanguageOption; labelKey: string }> = [
   { value: "es", labelKey: "language.es" },
@@ -95,28 +87,6 @@ export const ConfiguracionPage = () => {
             {theme.darkMode ? <Moon size={18} /> : <Sun size={18} />}
             {theme.darkMode ? t("settings.mode.dark") : t("settings.mode.light")}
           </button>
-        </article>
-
-        <article className="config-card">
-          <Palette size={24} />
-          <div>
-            <h3>{t("settings.color.title")}</h3>
-            <p>{t("settings.color.desc")}</p>
-          </div>
-          <div className="accent-options" aria-label="Color de interfaz">
-            {accentOptions.map((option) => (
-              <button
-                className={`accent-option accent-option--${option.value}`}
-                type="button"
-                key={option.value}
-                onClick={() => theme.setAccentColor(option.value)}
-                aria-pressed={theme.accentColor === option.value}
-              >
-                <span />
-                {t(option.labelKey)}
-              </button>
-            ))}
-          </div>
         </article>
 
         <article className="config-card">

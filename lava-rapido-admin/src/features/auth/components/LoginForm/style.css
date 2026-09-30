@@ -72,6 +72,12 @@
   box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
 }
 
+.lf-input--error,
+.lf-input--error:focus { border-color: var(--error-texto); }
+.lf-input--valid,
+.lf-input--valid:focus { border-color: #16a34a; }
+.lf-field-error { color: var(--error-texto); font-size: 0.78rem; line-height: 1.35; }
+
 /* ── Botón ───────────────────────────────────────────────────── */
 .lf-btn {
   display: flex;
@@ -91,6 +97,7 @@
   transition: transform var(--transicion), opacity var(--transicion);
   box-shadow: 0 4px 14px rgba(13, 27, 62, 0.3);
 }
+.lf-btn:disabled { opacity: 0.65; cursor: not-allowed; }
 /* ── Spinner ─────────────────────────────────────────────────── */
 .lf-spinner {
   width: 17px;

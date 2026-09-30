@@ -72,7 +72,7 @@ export const ServiciosPage = () => {
   const handleCambiarEstado = async (servicio: Servicio) => {
     setError(null);
     try {
-      await cambiarEstadoServicio(servicio.idServicio, !servicio.estado);
+      await cambiarEstadoServicio(servicio.idServicio, true);
       await cargarServicios();
     } catch {
       setError("No se pudo cambiar el estado del servicio.");

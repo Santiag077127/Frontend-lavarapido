@@ -239,3 +239,66 @@
     padding: 0.35rem 0.55rem;
   }
 }
+
+.marca-btn-nueva,
+.marca-modal-acciones button[type="submit"] {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.marca-btn-nueva:hover,
+.marca-modal-acciones button[type="submit"]:hover {
+  background: var(--accent-strong);
+}
+
+.marca-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 12, 28, 0.68);
+}
+
+.marca-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: min(100%, 420px);
+  padding: 1.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--page-text);
+  box-shadow: var(--surface-shadow);
+}
+
+.marca-modal h2 { color: var(--page-title); }
+.marca-modal p { color: var(--page-muted); }
+.marca-modal label { font-weight: 600; }
+.marca-modal input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--page-title);
+}
+.marca-modal input.marca-input--error { border-color: var(--error-texto); }
+.marca-modal input.marca-input--valid { border-color: #16a34a; }
+.marca-modal input.marca-input--error:focus { outline: 2px solid color-mix(in srgb, var(--error-texto) 30%, transparent); }
+.marca-modal input.marca-input--valid:focus { outline: 2px solid rgba(22, 163, 74, 0.25); }
+.marca-modal .marca-modal-ayuda { font-size: 0.8rem; color: var(--page-muted); }
+.marca-modal .marca-modal-similares { font-size: 0.85rem; color: var(--page-text); }
+.marca-modal-acciones { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem; }
+.marca-modal-acciones button { min-height: 42px; padding: 0.6rem 0.9rem; border-radius: 8px; cursor: pointer; }
+.marca-modal-acciones button[type="button"] { border: 1px solid var(--surface-border); background: var(--surface-soft); color: var(--page-text); }
+.marca-modal-acciones button:disabled { opacity: 0.6; cursor: wait; }
+.page-exito { padding: 0.8rem 1rem; border-radius: var(--radio); background: #dcfce7; color: #166534; }
+:root[data-theme="dark"] .page-exito { background: #123728; color: #86efac; }

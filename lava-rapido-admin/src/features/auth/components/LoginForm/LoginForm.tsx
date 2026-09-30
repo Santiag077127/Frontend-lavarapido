@@ -16,32 +16,27 @@ export const LoginForm = () => {
   const [password, setPassword]   = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState("");
+  const [emailTocado, setEmailTocado] = useState(false);
+  const [passwordTocada, setPasswordTocada] = useState(false);
 
   const navigate = useNavigate();
   const setAuth  = useAuthStore((state: AuthState) => state.setAuth);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "Ingresa un correo electrónico válido.";
+  const passwordError = password.trim() ? "" : "Ingresa tu contraseña.";
+  const puedeEnviar = !emailError && !passwordError && !isLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!validateEmail(email)) {
-      setError("Por favor ingresa un correo electrónico válido");
-      return;
-    }
-    if (!password.trim()) {
-      setError("Por favor ingresa tu contraseña");
-      return;
-    }
+    setEmailTocado(true);
+    setPasswordTocada(true);
+    if (!puedeEnviar) return;
 
     setIsLoading(true);
 
     try {
-      const data = await login(email, password);
+      const data = await login(email.trim(), password);
       setAuth(data.token, data.user);
 
       const destinoPendiente = consumirDestinoTrasLogin();
@@ -90,11 +85,15 @@ export const LoginForm = () => {
             type="email"
             placeholder="ejemplo@correo.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="lf-input"
+            onChange={(e) => { setEmail(e.target.value); setEmailTocado(true); setError(""); }}
+            onBlur={() => setEmailTocado(true)}
+            className={`lf-input ${emailTocado && email ? emailError ? "lf-input--error" : "lf-input--valid" : ""}`}
             autoComplete="email"
             aria-required="true"
+            aria-invalid={emailTocado && Boolean(emailError)}
+            aria-describedby={emailTocado && emailError ? "lf-email-error" : undefined}
           />
+          {emailTocado && emailError && <p className="lf-field-error" id="lf-email-error">{emailError}</p>}
         </div>
 
         <div className="lf-field">
@@ -107,17 +106,21 @@ export const LoginForm = () => {
             type="password"
             placeholder="••••••••"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="lf-input"
+            onChange={(e) => { setPassword(e.target.value); setPasswordTocada(true); setError(""); }}
+            onBlur={() => setPasswordTocada(true)}
+            className={`lf-input ${passwordTocada && password ? passwordError ? "lf-input--error" : "lf-input--valid" : ""}`}
             autoComplete="current-password"
             aria-required="true"
+            aria-invalid={passwordTocada && Boolean(passwordError)}
+            aria-describedby={passwordTocada && passwordError ? "lf-password-error" : undefined}
           />
+          {passwordTocada && passwordError && <p className="lf-field-error" id="lf-password-error">{passwordError}</p>}
         </div>
 
         <button
           className="lf-btn"
           type="submit"
-          disabled={isLoading}
+          disabled={!puedeEnviar}
           aria-busy={isLoading}
         >
           {isLoading && (
