@@ -10,7 +10,8 @@ describe("integración del Widget Wompi", () => {
 
   it("usa solo los datos firmados por backend y no fuerza NEQUI ni otro método", () => {
     const config = crearConfiguracionWidget({ moneda: "COP", montoEnCentavos: 3500000, referencia: "PAGO-1", publicKey: "pub_test", firmaIntegridad: "hash", redirectUrl: "https://app.test/pagos/resultado" });
-    expect(config).toEqual({ currency: "COP", amountInCents: 3500000, reference: "PAGO-1", publicKey: "pub_test", signature: { integrity: "hash" }, redirectUrl: "https://app.test/pagos/resultado" });
+    expect(config.bootstrapTransport).toBe("postmessage");
+    expect(config).toEqual({ bootstrapTransport: "postmessage", currency: "COP", amountInCents: 3500000, reference: "PAGO-1", publicKey: "pub_test", signature: { integrity: "hash" }, redirectUrl: "https://app.test/pagos/resultado" });
     expect(config).not.toHaveProperty("paymentMethod");
   });
 

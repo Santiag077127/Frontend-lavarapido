@@ -20,27 +20,22 @@ export const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState("");
   const [success, setSuccess]     = useState(false);
+  const [emailTocado, setEmailTocado] = useState(false);
   const vieneDelDashboard = Boolean(
     (location.state as { fromDashboard?: boolean } | null)?.fromDashboard || token
   );
 
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value);
-  };
+  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "Ingresa un correo electrónico válido.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!validateEmail(email)) {
-      setError("Ingresa un correo electrónico válido.");
-      return;
-    }
+    setEmailTocado(true);
+    if (emailError || isLoading) return;
 
     setIsLoading(true);
     try {
-      await forgotPassword(email);
+      await forgotPassword(email.trim());
       // El backend siempre responde 200, exista o no el correo
       // (por seguridad, no revela qué correos están registrados).
       setSuccess(true);
@@ -103,18 +98,22 @@ export const ForgotPasswordPage = () => {
               type="email"
               placeholder="ejemplo@correo.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="fpp-input"
+              onChange={(e) => { setEmail(e.target.value); setEmailTocado(true); setError(""); }}
+              onBlur={() => setEmailTocado(true)}
+              className={`fpp-input ${emailTocado && email ? emailError ? "fpp-input--error" : "fpp-input--valid" : ""}`}
               autoComplete="email"
               aria-required="true"
+              aria-invalid={emailTocado && Boolean(emailError)}
+              aria-describedby={emailTocado && emailError ? "fpp-email-error" : undefined}
               autoFocus
             />
+            {emailTocado && emailError && <p className="fpp-field-error" id="fpp-email-error">{emailError}</p>}
           </div>
 
           <button
             className="fpp-btn"
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || Boolean(emailError)}
             aria-busy={isLoading}
           >
             {isLoading && (

@@ -101,40 +101,9 @@
 }
 
 .config-toggle {
-  min-width: 150px;
+  width: 170px;
 }
 
-.accent-options {
-  grid-column: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: auto;
-}
-
-.accent-option span {
-  width: 0.9rem;
-  height: 0.9rem;
-  border-radius: 999px;
-}
-
-.accent-option--blue span {
-  background: #1565c0;
-}
-
-.accent-option--cyan span {
-  background: #0891b2;
-}
-
-.accent-option--indigo span {
-  background: #4f46e5;
-}
-
-.accent-option--emerald span {
-  background: #059669;
-}
-
-.accent-option[aria-pressed="true"],
 .config-toggle[aria-pressed="true"] {
   color: #fff;
   background: var(--accent);
@@ -143,7 +112,8 @@
 .config-select {
   grid-column: 2;
   justify-self: start;
-  min-width: 210px;
+  width: 230px;
+  max-width: 100%;
   margin-top: auto;
   padding: 0 0.8rem;
   border: 1px solid var(--surface-border);
@@ -179,13 +149,10 @@
 
   .config-card a,
   .config-card button,
-  .accent-options,
   .config-select {
     grid-column: 1;
     justify-self: stretch;
+    width: 100%;
   }
 
-  .accent-option {
-    flex: 1 1 130px;
-  }
 }

@@ -17,6 +17,7 @@ declare global {
 }
 
 export interface WompiWidgetConfig {
+  bootstrapTransport: "postmessage";
   currency: string;
   amountInCents: number;
   reference: string;
@@ -36,6 +37,7 @@ export const crearConfiguracionWidget = (pago: {
   firmaIntegridad: string;
   redirectUrl: string;
 }): WompiWidgetConfig => ({
+  bootstrapTransport: "postmessage",
   currency: pago.moneda,
   amountInCents: pago.montoEnCentavos,
   reference: pago.referencia,

@@ -54,6 +54,7 @@
 }
 
 :root[data-theme="dark"] {
+  --azul-oscuro: #f8fafc;
   --gris-fondo: #0f172a;
   --gris-borde: #263244;
   --texto-oscuro: #f8fafc;

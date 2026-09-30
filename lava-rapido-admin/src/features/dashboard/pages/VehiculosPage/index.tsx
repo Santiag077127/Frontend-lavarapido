@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from "react";
-import { getVehiculos, cambiarEstadoVehiculo } from "@/features/dashboard/services/vehiculoService";
+import { getVehiculos } from "@/features/dashboard/services/vehiculoService";
 import { ThemeContext } from "@/theme/theme";
 import type { Vehiculo } from "@/features/dashboard/types";
 import "./VehiculosPage.css";
@@ -62,15 +62,6 @@ export const VehiculosPage = () => {
     inactivos: vehiculos.filter((v) => !v.estado).length,
     total: vehiculos.length,
   }), [vehiculos]);
-
-  const handleCambiarEstado = async (vehiculo: Vehiculo) => {
-    try {
-      await cambiarEstadoVehiculo(vehiculo.idVehiculo, !vehiculo.estado);
-      await cargarVehiculos();
-    } catch {
-      setError("No se pudo actualizar el estado del vehículo.");
-    }
-  };
 
   return (
     <div className="page-vehiculos">
@@ -135,7 +126,6 @@ export const VehiculosPage = () => {
                 <th>Email</th>
                 <th>Color</th>
                 <th>{t("common.status")}</th>
-                <th>{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -158,11 +148,6 @@ export const VehiculosPage = () => {
                     <span className={`badge ${vehiculo.estado ? "badge--activo" : "badge--inactivo"}`}>
                       {vehiculo.estado ? t("common.active") : t("common.inactive")}
                     </span>
-                  </td>
-                  <td>
-                    <button className="btn-toggle" onClick={() => handleCambiarEstado(vehiculo)}>
-                      {vehiculo.estado ? t("common.deactivate") : t("common.activate")}
-                    </button>
                   </td>
                 </tr>
               ))}

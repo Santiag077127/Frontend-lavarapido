@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const apiMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 vi.mock("@/services/api", () => ({ api: apiMock }));
 
-import { consultarPago, iniciarPago, reconciliarPago } from "./pagoService";
+import { consultarPago, iniciarPago, reconciliarPago, verificarTransaccion } from "./pagoService";
 
 const inicio = (reutilizado: boolean) => ({
   idPago: "pago-1",
@@ -40,5 +40,14 @@ describe("pagoService", () => {
     apiMock.post.mockResolvedValueOnce({ data: { estado: "pendiente" } });
     await reconciliarPago("reserva-1");
     expect(apiMock.post).toHaveBeenCalledWith("/pagos/reserva/reserva-1/reconciliar");
+  });
+
+  it("envía el ID al backend para verificar la transacción", async () => {
+    apiMock.post.mockResolvedValueOnce({ data: { estado: "aprobado" } });
+    await verificarTransaccion("reserva-1", "PAGO-ABIERTA", "tx-1");
+    expect(apiMock.post).toHaveBeenCalledWith("/pagos/reserva/reserva-1/verificar", {
+      referencia: "PAGO-ABIERTA",
+      transactionId: "tx-1",
+    });
   });
 });

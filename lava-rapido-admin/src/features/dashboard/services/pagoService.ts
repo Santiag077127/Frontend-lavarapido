@@ -47,3 +47,12 @@ export const consultarPago = async (idReserva: string, signal?: AbortSignal): Pr
 
 export const reconciliarPago = async (idReserva: string): Promise<Pago> =>
   (await api.post<Pago>(`/pagos/reserva/${idReserva}/reconciliar`)).data;
+
+export const verificarTransaccion = async (
+  idReserva: string,
+  referencia: string,
+  transactionId: string,
+): Promise<Pago> => (await api.post<Pago>(`/pagos/reserva/${idReserva}/verificar`, {
+  referencia,
+  transactionId,
+})).data;

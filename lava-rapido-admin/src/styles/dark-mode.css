@@ -1,0 +1,125 @@
+/* Ajustes compartidos para las pantallas y diálogos del panel. */
+:root[data-theme="dark"] .dashboard-content :is(
+  .stat-card, .tabla-wrapper, .servicios-table-container,
+  .gt-stat-card, .gt-filtro-btn, .gt-tabla-wrapper,
+  .op-stat, .op-tabla-wrapper, .maps-card, .perfil-card,
+  .pago-resumen > div, .pago-btn-secundario
+) {
+  background: var(--surface) !important;
+  border-color: var(--surface-border) !important;
+  color: var(--page-text) !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-stat-numero, .op-stat__valor, .op-col-nombre,
+  .maps-card__nombre, .pago-valor, .pago-detalle code
+) { color: var(--page-title) !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-header h1, .op-titulo, .maps-titulo, .page-header h1
+) { color: var(--page-title) !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-stat-label, .op-stat__label, .maps-card__dato,
+  .maps-panel-label, .pago-label, .pago-detalle,
+  .pago-ayuda, .pago-historial, .pago-historial li span
+) { color: var(--page-muted) !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .maps-card--active, .gt-filtro-btn:hover, .filtro-btn:hover
+) { background: #1d3048 !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-tabla, .op-tabla, .tabla, .tabla-servicios, .turnos-tabla
+) thead tr { background: #233249 !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-tabla, .op-tabla, .tabla, .tabla-servicios, .turnos-tabla
+) th { background: #233249 !important; color: #dbeafe !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-tabla, .op-tabla, .tabla, .tabla-servicios, .turnos-tabla
+) tbody tr:hover { background: #1d3048 !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .badge--activo, .op-badge--activo, .btn-activar, .op-btn-toggle--activar,
+  .pago-aprobado, .op-success, .page-exito,
+  .gt-badge-finalizada, .badge--finalizado
+) { background: #123728 !important; color: #86efac !important; border-color: #28634b !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .badge--inactivo, .op-badge--inactivo, .btn-desactivar,
+  .op-btn-toggle--desactivar, .pago-rechazado, .op-btn-desactivar-todos,
+  .gt-badge-cancelada, .badge--cancelada
+) { background: #401c25 !important; color: #fda4af !important; border-color: #713b47 !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .badge--pendiente, .pago-pendiente, .pago-aviso, .gt-badge-pendiente
+) { background: #46351a !important; color: #fcd34d !important; border-color: #735529 !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .gt-badge-asignada, .gt-badge-en_proceso, .badge--en-proceso
+) { background: #192d4b !important; color: #93c5fd !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .btn-editar, .gt-btn-ver, .pago-btn-secundario, .perfil-back-link,
+  .config-card a, .config-card button:not([aria-pressed="true"])
+) { color: #93c5fd !important; border-color: #3b5f8b !important; }
+
+:root[data-theme="dark"] .dashboard-content :is(.btn-editar, .gt-btn-ver) {
+  background: #192d4b !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(.config-card a:hover, .config-card button:hover, .perfil-back-link:hover) {
+  color: #fff !important;
+}
+
+:root[data-theme="dark"] .dashboard-content :is(
+  .filtro-btn:not(.filtro-activo), .gt-filtro-btn:not(.gt-filtro-activo)
+) { color: #bfdbfe !important; background: var(--surface) !important; }
+
+:root[data-theme="dark"] .dashboard-content .page-error,
+:root[data-theme="dark"] .dashboard-content .marca-modal .page-error {
+  color: var(--error-texto) !important;
+  background: var(--error-bg) !important;
+  border-color: var(--error-borde) !important;
+}
+
+:root[data-theme="dark"] :is(
+  .confirm-card, .tdm-card, .modal-card, .om-card, .logout-card
+) { background: var(--surface) !important; border: 1px solid var(--surface-border); color: var(--page-text); }
+
+:root[data-theme="dark"] :is(
+  .confirm-titulo, .tdm-header h2, .tdm-seccion p,
+  .om-titulo, .modal-title, .logout-title
+) { color: var(--page-title) !important; }
+
+:root[data-theme="dark"] :is(
+  .confirm-mensaje, .tdm-seccion h3, .tdm-secundario,
+  .om-subtitulo, .om-label, .logout-desc
+) { color: var(--page-muted) !important; }
+
+:root[data-theme="dark"] :is(
+  .confirm-btn-volver, .tdm-btn-cerrar, .om-btn-cancelar
+) { background: var(--surface-soft) !important; border-color: var(--surface-border) !important; color: var(--page-text) !important; }
+
+:root[data-theme="dark"] :is(
+  .tdm-card input, .tdm-card select, .om-input, .modal-field input, .modal-field textarea
+) { background: var(--surface-soft) !important; border-color: var(--surface-border) !important; color: var(--page-title) !important; }
+
+:root[data-theme="dark"] .pago-incidencia,
+:root[data-theme="dark"] .om-error { background: var(--error-bg); border-color: var(--error-borde); color: var(--error-texto); }
+
+:root[data-theme="dark"] .resultado-pago-page { background: var(--page-bg); }
+:root[data-theme="dark"] .resultado-pago-card { background: var(--surface); border: 1px solid var(--surface-border); }
+:root[data-theme="dark"] .resultado-pago-card h1 { color: var(--page-title); }
+:root[data-theme="dark"] .resultado-pago-intro,
+:root[data-theme="dark"] .resultado-pago-referencia,
+:root[data-theme="dark"] .resultado-pago-sin-contexto p { color: var(--page-muted); }
+:root[data-theme="dark"] .resultado-pago-sin-contexto { background: #46351a; border-color: #735529; }
+:root[data-theme="dark"] .resultado-pago-sin-contexto h2 { color: #fcd34d; }
+:root[data-theme="dark"] .resultado-pago-volver { color: #93c5fd; }
+
+:root[data-theme="dark"] :is(.lf-input--error, .fpp-input--error) { border-color: var(--error-texto) !important; }
+:root[data-theme="dark"] :is(.lf-input--valid, .fpp-input--valid) { border-color: #4ade80 !important; }
+:root[data-theme="dark"] :is(.lf-field-error, .fpp-field-error) { color: var(--error-texto); }
