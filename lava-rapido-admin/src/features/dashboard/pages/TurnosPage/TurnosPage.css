@@ -251,6 +251,10 @@
     padding: 16px;
   }
 
+  .tdm-card.gt-form {
+    max-height: calc(100dvh - 24px);
+  }
+
   .gt-tabla {
     min-width: 100%;
   }
