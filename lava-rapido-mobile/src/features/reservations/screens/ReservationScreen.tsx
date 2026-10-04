@@ -730,20 +730,9 @@ export default function ReservationScreen() {
           '====================================',
         );
 
-        Alert.alert(
-          t('mobile.reservation.createdTitle'),
-          t('mobile.reservation.createdMessage'),
-          [
-            {
-              text: t('mobile.reservation.accept'),
-              onPress: () => {
-                navigation.navigate(
-                  'MainTabs',
-                );
-              },
-            },
-          ],
-        );
+        navigation.navigate('ReservationPayment', {
+          reservation: response,
+        });
       } catch (
         error: any
       ) {

@@ -10,6 +10,7 @@ import OperatorNavigator from './OperatorNavigator';
 
 import ServiceDetailScreen from '../features/services/screens/ServiceDetailScreen';
 import ReservationScreen from '../features/reservations/screens/ReservationScreen';
+import ReservationPaymentScreen from '../features/reservations/screens/ReservationPaymentScreen';
 
 import LoginScreen from '../features/auth/screens/LoginScreen';
 import RegisterScreen from '../features/auth/screens/RegisterScreen';
@@ -122,6 +123,11 @@ export default function AppNavigator({
               <Stack.Screen
                 name="Reservation"
                 component={ReservationScreen}
+              />
+
+              <Stack.Screen
+                name="ReservationPayment"
+                component={ReservationPaymentScreen}
               />
 
               <Stack.Screen

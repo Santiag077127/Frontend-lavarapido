@@ -2,7 +2,6 @@
 import React, {
   useCallback,
   useContext,
-  useEffect,
   useState,
 } from 'react';
 
@@ -18,7 +17,7 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -192,9 +191,11 @@ export default function MyReservationsScreen() {
    * CARGA INICIAL
    * ============================================================
    */
-  useEffect(() => {
-    loadReservations();
-  }, [loadReservations]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadReservations();
+    }, [loadReservations]),
+  );
 
   /**
    * ============================================================

@@ -24,9 +24,10 @@ import {
   ThemeContext,
 } from '../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
+import type { MainTabParamList } from './types'
 
 const Tab =
-  createBottomTabNavigator()
+  createBottomTabNavigator<MainTabParamList>()
 
 type Props = {
   isLoggedIn: boolean
