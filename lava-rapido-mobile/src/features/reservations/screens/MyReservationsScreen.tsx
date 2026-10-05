@@ -795,6 +795,17 @@ export default function MyReservationsScreen() {
             </Pressable>
           )}
         </View>
+
+        <Pressable
+          style={[styles.detailButton, { borderColor: primaryColor }]}
+          onPress={() => navigation.navigate('ServiceDetails', { reservation: item })}
+          accessibilityRole="button"
+        >
+          <Ionicons name="information-circle-outline" size={18} color={primaryColor} />
+          <Text style={[styles.detailButtonText, { color: primaryColor }]}>
+            {t('mobile.services.detail')}
+          </Text>
+        </Pressable>
       </View>
     );
   };
@@ -1374,6 +1385,23 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  detailButton: {
+    minHeight: 40,
+    borderWidth: 1,
+    borderRadius: 11,
+    paddingHorizontal: 13,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 12,
+  },
+
+  detailButtonText: {
     fontSize: 13,
     fontWeight: '700',
   },
