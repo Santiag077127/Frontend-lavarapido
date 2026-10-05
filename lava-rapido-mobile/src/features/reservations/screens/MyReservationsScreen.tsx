@@ -21,6 +21,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import BackButton from '../../../components/common/BackButton';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api from '../../../services/api';
 
@@ -531,7 +532,7 @@ export default function MyReservationsScreen() {
         )}
 
         {/* INFORMACIÓN */}
-        <View style={styles.infoGrid}>
+        <View style={[styles.infoGrid, { backgroundColor: `${primaryColor}0A` }]}>
           {/* FECHA */}
           <View style={styles.infoItem}>
             <Ionicons
@@ -716,16 +717,16 @@ export default function MyReservationsScreen() {
         </View>
 
         {/* FOOTER */}
-        <View
-          style={[
-            styles.cardFooter,
-            {
-              borderTopColor:
-                borderColor,
-            },
-          ]}
-        >
-          <View>
+          <View
+            style={[
+              styles.cardFooter,
+              {
+                borderTopColor:
+                  borderColor,
+              },
+            ]}
+          >
+          <View style={[styles.priceBlock, { backgroundColor: `${primaryColor}12` }]}>
             <Text
               style={[
                 styles.priceLabel,
@@ -761,6 +762,7 @@ export default function MyReservationsScreen() {
                 styles.cancelButton,
                 {
                   borderColor: SAFE_RED,
+                  backgroundColor: `${SAFE_RED}10`,
                   opacity: cancelling
                     ? 0.6
                     : 1,
@@ -797,12 +799,12 @@ export default function MyReservationsScreen() {
         </View>
 
         <Pressable
-          style={[styles.detailButton, { borderColor: primaryColor }]}
+          style={[styles.detailButton, { backgroundColor: primaryColor }]}
           onPress={() => navigation.navigate('ServiceDetails', { reservation: item })}
           accessibilityRole="button"
         >
-          <Ionicons name="information-circle-outline" size={18} color={primaryColor} />
-          <Text style={[styles.detailButtonText, { color: primaryColor }]}>
+          <Ionicons name="information-circle-outline" size={18} color={SAFE_WHITE} />
+          <Text style={[styles.detailButtonText, { color: SAFE_WHITE }]}>
             {t('mobile.services.detail')}
           </Text>
         </Pressable>
@@ -1037,19 +1039,10 @@ export default function MyReservationsScreen() {
           },
         ]}
       >
-        <Pressable
-          onPress={() =>
-            navigation.goBack()
-          }
-          style={styles.backButton}
-          hitSlop={10}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={textColor}
-          />
-        </Pressable>
+        <BackButton
+          accessibilityLabel={t('mobile.reservations.back')}
+          onPress={() => navigation.goBack()}
+        />
 
         <View
           style={styles.headerTextContainer}
@@ -1207,14 +1200,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   headerTextContainer: {
     flex: 1,
     marginLeft: 4,
@@ -1250,10 +1235,10 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 18,
+    borderRadius: 22,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 14,
+    padding: 18,
+    marginBottom: 16,
 
     shadowColor: '#000',
     shadowOffset: {
@@ -1270,7 +1255,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
   },
 
   serviceTitleContainer: {
@@ -1281,9 +1266,9 @@ const styles = StyleSheet.create({
   },
 
   serviceIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 11,
@@ -1295,7 +1280,7 @@ const styles = StyleSheet.create({
   },
 
   serviceTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
     lineHeight: 21,
   },
@@ -1308,9 +1293,9 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 14,
     gap: 4,
   },
 
@@ -1329,19 +1314,23 @@ const styles = StyleSheet.create({
     marginTop: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    rowGap: 14,
+    gap: 9,
+    padding: 10,
+    borderRadius: 18,
   },
 
   infoItem: {
-    width: '50%',
+    width: '46%',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 8,
+    paddingVertical: 8,
+    paddingRight: 4,
   },
 
   infoContent: {
     marginLeft: 8,
     flex: 1,
+    minWidth: 0,
   },
 
   infoLabel: {
@@ -1352,15 +1341,23 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     fontWeight: '700',
+    flexShrink: 1,
   },
 
   cardFooter: {
-    marginTop: 16,
-    paddingTop: 14,
+    marginTop: 18,
+    paddingTop: 16,
     borderTopWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 10,
+  },
+
+  priceBlock: {
+    borderRadius: 15,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
   },
 
   priceLabel: {
@@ -1374,10 +1371,10 @@ const styles = StyleSheet.create({
   },
 
   cancelButton: {
-    minHeight: 40,
+    minHeight: 44,
     borderWidth: 1,
-    borderRadius: 11,
-    paddingHorizontal: 13,
+    borderRadius: 13,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1390,15 +1387,14 @@ const styles = StyleSheet.create({
   },
 
   detailButton: {
-    minHeight: 40,
-    borderWidth: 1,
-    borderRadius: 11,
+    minHeight: 48,
+    borderRadius: 14,
     paddingHorizontal: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    marginTop: 12,
+    marginTop: 14,
   },
 
   detailButtonText: {

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import BackButton from '../../../components/common/BackButton';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/types';
 import { paymentService, type ReservationPayment, type WompiCheckoutData } from '../../../services/paymentService';
@@ -35,7 +36,7 @@ type HttpFailure = {
   response?: { status?: number; data?: { error?: unknown } };
 };
 
-function makeWidgetHtml(checkout: WompiCheckoutData): string {
+function makeWidgetHtml(checkout: WompiCheckoutData, loadingText: string): string {
   const config = JSON.stringify({
     currency: checkout.moneda,
     amountInCents: checkout.montoEnCentavos,
@@ -44,7 +45,7 @@ function makeWidgetHtml(checkout: WompiCheckoutData): string {
     signature: { integrity: checkout.firmaIntegridad },
   }).replace(/</g, '\\u003c');
 
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;min-height:100%;background:transparent}body{overflow:auto}</style></head><body><p id="status">Preparando checkout seguro...</p><script>
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;min-height:100%;background:transparent}body{overflow:auto}</style></head><body><p id="status">${loadingText}</p><script>
     function notifyApp(event, details) {
       var payload = Object.assign({ event: event }, details || {});
       window.ReactNativeWebView.postMessage(JSON.stringify(payload));
@@ -355,25 +356,31 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Pressable
+        <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <BackButton
+            accessibilityLabel={t('mobile.serviceDetail.back')}
             onPress={() => navigation.goBack()}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Volver"
-            hitSlop={8}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </Pressable>
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>Pago</Text>
+          />
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
+            {t('mobile.paymentFlow.title')}
+          </Text>
+        </View>
+
+        <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
         </View>
 
         {checkout && !isFinal ? (
-          <View style={styles.webViewContainer}>
+          <View
+            style={[
+              styles.webViewContainer,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
             <WebView
               key={widgetReloadKey}
               style={styles.webview}
-              source={{ html: makeWidgetHtml(checkout) }}
+              source={{ html: makeWidgetHtml(checkout, t('mobile.paymentFlow.processing')) }}
               onLoadEnd={() => console.info('[Wompi] WebView document loaded', {
                 reservationId: reservation.idReserva,
                 attemptId: checkout.idIntento,
@@ -402,7 +409,19 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             />
           </View>
         ) : (
-          <View style={styles.checkoutPlaceholder}>
+          <View
+            style={[
+              styles.checkoutPlaceholder,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
+            <View style={[styles.checkoutGlyph, { backgroundColor: `${theme.primary}16` }]}>
+              <Ionicons
+                name={loading || checking ? 'shield-checkmark-outline' : 'card-outline'}
+                size={28}
+                color={theme.primary}
+              />
+            </View>
             {loading || checking ? (
               <>
                 <ActivityIndicator color={theme.primary} size="large" />
@@ -416,7 +435,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           </View>
         )}
 
-        {(!checkout || widgetError) && <View style={styles.footer}>
+        {(!checkout || widgetError) && <View style={[styles.footer, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {widgetError && <Text style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>}
           {error && <Text style={[styles.error, { color: theme.errorText }]}>{startError || t('mobile.paymentFlow.error')}</Text>}
           {payment?.intentoActual?.estado === 'aprobado_duplicado' && (
@@ -474,18 +493,20 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: { flex: 1 },
-  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 12 },
-  backButton: { width: 40, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
-  title: { flex: 1, fontSize: 20, fontWeight: '700' },
-  webViewContainer: { flex: 1, minHeight: 0 },
+  header: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 18, marginTop: 8, marginBottom: 14, borderWidth: 1, borderRadius: 18 },
+  paymentIntro: { borderWidth: 1, borderRadius: 20, padding: 16, marginHorizontal: 16, marginBottom: 14, elevation: 1, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+  title: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
+  paymentStatus: { fontSize: 13, lineHeight: 19, marginTop: 4 },
+  webViewContainer: { flex: 1, minHeight: 0, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderRadius: 20, overflow: 'hidden', elevation: 2 },
   webview: { flex: 1 },
-  checkoutPlaceholder: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 16 },
-  placeholderText: { fontSize: 14, textAlign: 'center', paddingHorizontal: 16 },
-  footer: { gap: 7 },
+  checkoutPlaceholder: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 14, marginHorizontal: 16, marginBottom: 16, paddingHorizontal: 22, borderWidth: 1, borderRadius: 20, elevation: 1 },
+  checkoutGlyph: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  placeholderText: { fontSize: 15, lineHeight: 22, textAlign: 'center', paddingHorizontal: 16, fontWeight: '600' },
+  footer: { gap: 9, padding: 14, marginHorizontal: 16, marginBottom: 10, borderWidth: 1, borderRadius: 20, elevation: 1 },
   error: { fontSize: 13, textAlign: 'center' },
   hint: { fontSize: 12, textAlign: 'center' },
-  button: { minHeight: 46, borderRadius: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
+  button: { minHeight: 52, borderRadius: 16, paddingHorizontal: 18, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', elevation: 2 },
   buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-  secondaryButton: { minHeight: 42, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
+  secondaryButton: { minHeight: 48, borderWidth: 1, borderRadius: 15, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   secondaryButtonText: { fontWeight: '700', fontSize: 14 },
 });

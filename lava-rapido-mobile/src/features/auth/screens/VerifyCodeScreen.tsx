@@ -6,6 +6,7 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 import { useTranslation } from 'react-i18next'
+import BackButton from '../../../components/common/BackButton'
 
 export default function VerifyCodeScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
@@ -23,8 +24,11 @@ export default function VerifyCodeScreen({ navigation }: any) {
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
+            <View style={styles.header}>
+              <BackButton accessibilityLabel={t('mobile.serviceDetail.back')} onPress={() => navigation.goBack()} />
+              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('verifyCode.title')}</Text>
+            </View>
             <Image source={images.logo} style={styles.logo} resizeMode="contain" />
-            <Text style={[styles.title, { color: theme.text }]}>{t('verifyCode.title')}</Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('verifyCode.subtitle')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
               <Ionicons name="shield-checkmark-outline" size={22} color={theme.primary} />
@@ -39,9 +43,10 @@ export default function VerifyCodeScreen({ navigation }: any) {
 }
 const styles = StyleSheet.create({
   safeArea: { flex: 1 }, keyboard: { flex: 1 }, scrollContent: { flexGrow: 1 },
-  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 24 },
+  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 16 },
+  header: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  headerTitle: { flex: 1, minWidth: 0, fontSize: 22, fontWeight: '700' },
   logo: { width: '62%', maxWidth: 220, height: 150, alignSelf: 'center', marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 24 },
   inputContainer: { minHeight: 52, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, marginBottom: 24 },
   input: { flex: 1, paddingHorizontal: 12, fontSize: 20, textAlign: 'center', fontWeight: '600', letterSpacing: 4 },

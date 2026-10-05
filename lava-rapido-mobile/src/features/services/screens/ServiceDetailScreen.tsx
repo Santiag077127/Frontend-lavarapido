@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import {
   Animated,
   Image,
@@ -9,52 +8,41 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   NavigationProp,
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import type { RootStackParamList } from '../../../navigation/types';
-import { useTranslation } from 'react-i18next';
+import { ThemeContext } from '../../../theme/ThemeContext';
+import BackButton from '../../../components/common/BackButton';
 import { formatCurrency } from '../../../utils/formatters';
-
 import { images } from '../../../assets/images';
 
-type ServiceDetailRouteProp = RouteProp<
-  RootStackParamList,
-  'ServiceDetail'
->;
-
-type ServiceDetailNavigationProp =
-  NavigationProp<RootStackParamList>;
+type ServiceDetailRouteProp = RouteProp<RootStackParamList, 'ServiceDetail'>;
+type ServiceDetailNavigationProp = NavigationProp<RootStackParamList>;
 
 export default function ServiceDetailScreen() {
-  const navigation =
-    useNavigation<ServiceDetailNavigationProp>();
-
+  const navigation = useNavigation<ServiceDetailNavigationProp>();
   const route = useRoute<ServiceDetailRouteProp>();
   const { t } = useTranslation();
-
+  const { theme } = useContext(ThemeContext);
   const { service } = route.params;
-
-  const fadeAnim = useRef(
-    new Animated.Value(0)
-  ).current;
-
-  const scaleAnim = useRef(
-    new Animated.Value(0.95)
-  ).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.98)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 350,
         useNativeDriver: true,
       }),
-
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 8,
@@ -64,250 +52,157 @@ export default function ServiceDetailScreen() {
     ]).start();
   }, [fadeAnim, scaleAnim]);
 
-  const handleReservation = () => {
-    navigation.navigate('Reservation', {
-      service,
-    });
-  };
+  const handleReservation = () => navigation.navigate('Reservation', { service });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      edges={['top', 'bottom']}
+      style={[styles.safeArea, { backgroundColor: theme.background }]}
+    >
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.header}>
+          <BackButton
+            accessibilityLabel={t('mobile.serviceDetail.back')}
+            onPress={() => navigation.goBack()}
+          />
+          <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+            {t('mobile.serviceDetail.title')}
+          </Text>
+        </View>
+
         <Animated.View
           style={[
-            styles.card,
+            styles.detailContent,
             {
               opacity: fadeAnim,
-              transform: [
-                {
-                  scale: scaleAnim,
-                },
-              ],
+              transform: [{ scale: scaleAnim }],
             },
           ]}
         >
-          {/* Imagen local de presentación */}
-          <View style={styles.imageContainer}>
+          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Image
               source={images.ServicioBasico}
-              style={styles.image}
+              style={[styles.image, { backgroundColor: theme.border }]}
               resizeMode="cover"
+              accessibilityIgnoresInvertColors
+            />
+
+            <View style={styles.cardContent}>
+              <Text style={[styles.serviceName, { color: theme.text }]}>
+                {service.nombre}
+              </Text>
+              <Text style={[styles.description, { color: theme.textSecondary }]}>
+                {service.descripcion || t('mobile.serviceDetail.descriptionUnavailable')}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.infoGrid}>
+            <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={[styles.metricIcon, { backgroundColor: `${theme.primary}18` }]}>
+                <Ionicons name="time-outline" size={20} color={theme.primary} />
+              </View>
+              <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                {t('mobile.serviceDetail.duration')}
+              </Text>
+              <Text style={[styles.infoValue, { color: theme.text }]} adjustsFontSizeToFit numberOfLines={1}>
+                {service.duracionMinutos} {t('mobile.serviceDetail.minutes')}
+              </Text>
+            </View>
+
+            <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <View style={[styles.metricIcon, { backgroundColor: `${theme.primary}18` }]}>
+                <Ionicons name="cash-outline" size={20} color={theme.primary} />
+              </View>
+              <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                {t('mobile.serviceDetail.price')}
+              </Text>
+              <Text style={[styles.infoValue, styles.price, { color: theme.primary }]} adjustsFontSizeToFit numberOfLines={1}>
+                {formatCurrency(service.precio)}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.statusCard,
+              {
+                backgroundColor: service.estado ? `${theme.primary}12` : theme.errorBackground,
+                borderColor: service.estado ? `${theme.primary}35` : theme.errorBorder,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.statusIndicator,
+                { backgroundColor: service.estado ? '#16a34a' : theme.errorText },
+              ]}
+            />
+            <Text style={[styles.statusText, { color: theme.text }]}>
+              {service.estado
+                ? t('mobile.serviceDetail.available')
+                : t('mobile.serviceDetail.unavailable')}
+            </Text>
+            <Ionicons
+              name={service.estado ? 'checkmark-circle-outline' : 'close-circle-outline'}
+              size={20}
+              color={service.estado ? '#16a34a' : theme.errorText}
             />
           </View>
 
-          {/* Información del servicio */}
-          <View style={styles.content}>
-            <Text style={styles.title}>
-              {service.nombre}
-            </Text>
-
-            <Text style={styles.description}>
-              {service.descripcion ||
-                t('mobile.serviceDetail.descriptionUnavailable')}
-            </Text>
-
-            {/* Información principal */}
-            <View style={styles.infoRow}>
-              {/* Precio */}
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('mobile.serviceDetail.price')}
-                </Text>
-
-                <Text style={styles.price}>
-                  {formatCurrency(service.precio)}
-                </Text>
-              </View>
-
-              {/* Duración */}
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>
-                  {t('mobile.serviceDetail.duration')}
-                </Text>
-
-                <Text style={styles.duration}>
-                  {service.duracionMinutos} {t('mobile.serviceDetail.minutes')}
-                </Text>
-              </View>
-            </View>
-
-            {/* Estado */}
-            <View style={styles.statusContainer}>
-              <View
-                style={[
-                  styles.statusIndicator,
-                  service.estado
-                    ? styles.statusActive
-                    : styles.statusInactive,
-                ]}
-              />
-
-              <Text style={styles.statusText}>
-                {service.estado
-                  ? t('mobile.serviceDetail.available')
-                  : t('mobile.serviceDetail.unavailable')}
-              </Text>
-            </View>
-
-            {/* Reservar */}
-            <TouchableOpacity
+          <TouchableOpacity
+            accessibilityRole="button"
+            activeOpacity={0.82}
+            disabled={!service.estado}
+            onPress={handleReservation}
+            style={[
+              styles.reserveButton,
+              { backgroundColor: service.estado ? theme.primary : theme.border },
+            ]}
+          >
+            <Text
               style={[
-                styles.reserveButton,
-                !service.estado &&
-                  styles.reserveButtonDisabled,
+                styles.reserveButtonText,
+                { color: service.estado ? '#FFFFFF' : theme.textSecondary },
               ]}
-              activeOpacity={0.8}
-              disabled={!service.estado}
-              onPress={handleReservation}
             >
-              <Text style={styles.reserveButtonText}>
-                {service.estado
-                  ? t('mobile.serviceDetail.reserve')
-                  : t('mobile.serviceDetail.unavailable')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              {service.estado
+                ? t('mobile.serviceDetail.reserve')
+                : t('mobile.serviceDetail.unavailable')}
+            </Text>
+            {service.estado && <Ionicons name="arrow-forward" size={19} color="#FFFFFF" />}
+          </TouchableOpacity>
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    overflow: 'hidden',
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-
-    elevation: 5,
-  },
-
-  imageContainer: {
-    width: '100%',
-    height: 230,
-    backgroundColor: '#E5E7EB',
-  },
-
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-
-  content: {
-    padding: 22,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#6B7280',
-    marginBottom: 24,
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-    gap: 15,
-  },
-
-  infoItem: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 16,
-  },
-
-  infoLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginBottom: 6,
-  },
-
-  price: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
-
-  duration: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-
-  statusIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-
-  statusActive: {
-    backgroundColor: '#22C55E',
-  },
-
-  statusInactive: {
-    backgroundColor: '#EF4444',
-  },
-
-  statusText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-
-  reserveButton: {
-    width: '100%',
-    backgroundColor: '#2563EB',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  reserveButtonDisabled: {
-    backgroundColor: '#9CA3AF',
-  },
-
-  reserveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
+  safeArea: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 28, gap: 16 },
+  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerTitle: { flex: 1, minWidth: 0, fontSize: 20, fontWeight: '800' },
+  detailContent: { gap: 14 },
+  card: { borderWidth: 1, borderRadius: 24, overflow: 'hidden', elevation: 3, shadowColor: '#000000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.09, shadowRadius: 8 },
+  image: { width: '100%', aspectRatio: 1.7 },
+  cardContent: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 20, gap: 8 },
+  serviceName: { fontSize: 25, lineHeight: 31, fontWeight: '800' },
+  description: { fontSize: 15, lineHeight: 23 },
+  infoGrid: { flexDirection: 'row', gap: 12 },
+  infoCard: { flex: 1, minWidth: 0, minHeight: 132, justifyContent: 'center', alignItems: 'flex-start', gap: 7, borderWidth: 1, borderRadius: 20, padding: 15, elevation: 1 },
+  metricIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  infoLabel: { flexShrink: 1, fontSize: 12, fontWeight: '600' },
+  infoValue: { fontSize: 17, fontWeight: '800' },
+  price: { fontSize: 21 },
+  statusCard: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 17, paddingHorizontal: 16 },
+  statusIndicator: { width: 9, height: 9, borderRadius: 5 },
+  statusText: { flex: 1, fontSize: 14, fontWeight: '700' },
+  reserveButton: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, borderRadius: 17, paddingHorizontal: 18, elevation: 3, shadowColor: '#000000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 5 },
+  reserveButtonText: { flexShrink: 1, textAlign: 'center', fontSize: 16, fontWeight: '800' },
 });
