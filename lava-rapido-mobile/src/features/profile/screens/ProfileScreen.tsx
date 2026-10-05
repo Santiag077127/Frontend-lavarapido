@@ -555,63 +555,59 @@ export default function ProfileScreen({
           />
         </View>
 
-        <Text
-          style={[
-            styles.name,
-            {
-              color:
-                theme.text,
-              fontSize:
-                isSmallScreen
-                  ? 21
-                  : 24,
-            },
-          ]}
-          numberOfLines={2}
-        >
-          {fullName || t('profile.defaultUser')}
-        </Text>
-
-        <Text
-          style={[
-            styles.email,
-            {
-              color:
-                theme.textSecondary,
-            },
-          ]}
-          numberOfLines={1}
-        >
-          {profile.email || t('profile.noEmail')}
-        </Text>
-
-        <View
-          style={[
-            styles.profileBadge,
-            {
-              backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
-            },
-          ]}
-        >
-          <Ionicons
-            name="person-circle-outline"
-            size={15}
-            color={PRIMARY_COLOR}
-          />
-
-          <Text
+        <View style={styles.profileIdentity}>
+          <View
             style={[
-              styles.profileBadgeText,
+              styles.profileBadge,
               {
-                color:
-                  PRIMARY_COLOR,
+                backgroundColor:
+                  darkMode
+                    ? '#263241'
+                    : '#EEF4FF',
               },
             ]}
           >
-            {t('profile.title')}
+            <Ionicons
+              name="person-circle-outline"
+              size={15}
+              color={PRIMARY_COLOR}
+            />
+
+            <Text
+              style={[
+                styles.profileBadgeText,
+                {
+                  color: theme.primary,
+                },
+              ]}
+            >
+              {t('profile.title')}
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              styles.name,
+              {
+                color: theme.text,
+                fontSize: isSmallScreen ? 20 : 23,
+              },
+            ]}
+            numberOfLines={2}
+          >
+            {fullName || t('profile.defaultUser')}
+          </Text>
+
+          <Text
+            style={[
+              styles.email,
+              {
+                color: theme.textSecondary,
+              },
+            ]}
+            numberOfLines={2}
+          >
+            {profile.email || t('profile.noEmail')}
           </Text>
         </View>
       </View>
@@ -1269,11 +1265,13 @@ const styles = StyleSheet.create({
   },
 
   headerCard: {
+    flexDirection: 'row',
+    gap: 16,
     borderRadius: 24,
     borderWidth: 1,
     alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
@@ -1287,7 +1285,7 @@ const styles = StyleSheet.create({
 
   avatarBorder: {
     borderWidth: 3,
-    borderRadius: 65,
+    borderRadius: 57,
     padding: 3,
     position: 'relative',
     elevation: 4,
@@ -1316,16 +1314,22 @@ const styles = StyleSheet.create({
 
   name: {
     fontWeight: '800',
-    textAlign: 'center',
-    marginTop: 14,
-    letterSpacing: -0.2,
+    textAlign: 'left',
+    marginTop: 7,
   },
 
   email: {
     fontSize: 13,
-    marginTop: 5,
-    maxWidth: '90%',
-    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: 4,
+    textAlign: 'left',
+    flexShrink: 1,
+  },
+
+  profileIdentity: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-start',
   },
 
   profileBadge: {
@@ -1334,7 +1338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 20,
-    marginTop: 12,
+    marginTop: 0,
   },
 
   profileBadgeText: {
@@ -1344,7 +1348,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 22,
+    borderRadius: 20,
     borderWidth: 1,
     paddingHorizontal: 18,
     paddingVertical: 17,
@@ -1379,7 +1383,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
   },
 
@@ -1427,8 +1431,10 @@ const styles = StyleSheet.create({
 
   avatarGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
     alignItems: 'center',
+    gap: 8,
     borderRadius: 18,
     borderWidth: 1,
     paddingVertical: 10,
@@ -1468,7 +1474,7 @@ const styles = StyleSheet.create({
   },
 
   menuItem: {
-    minHeight: 72,
+    minHeight: 76,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -1503,6 +1509,7 @@ const styles = StyleSheet.create({
 
   menuDescription: {
     fontSize: 11.5,
+    lineHeight: 16,
     marginTop: 3,
   },
 

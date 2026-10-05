@@ -32,6 +32,7 @@ import {
 } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { useTranslation } from 'react-i18next'
+import BackButton from '../../../components/common/BackButton'
 
 import {
   images,
@@ -499,25 +500,10 @@ export default function EditProfileScreen() {
             },
           ]}
         >
-          <TouchableOpacity
-            activeOpacity={0.75}
+          <BackButton
+            accessibilityLabel={t('mobile.serviceDetail.back')}
             onPress={handleCancel}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#F1F5F9',
-              },
-            ]}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={21}
-              color={theme.text}
-            />
-          </TouchableOpacity>
+          />
 
           <View
             style={styles.headerText}
@@ -1112,14 +1098,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 16,
     marginBottom: 16,
-  },
-
-  backButton: {
-    width: 43,
-    height: 43,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   headerText: {

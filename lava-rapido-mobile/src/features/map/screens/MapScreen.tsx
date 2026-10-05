@@ -5,6 +5,22 @@ import MapView, { Marker } from 'react-native-maps'
 import { locations } from '../data/locations'
 import LocationCard from '../components/LocationCard'
 
+const initialRegion = (() => {
+  const latitudes = locations.map(({ latitude }) => latitude)
+  const longitudes = locations.map(({ longitude }) => longitude)
+  const minLatitude = Math.min(...latitudes)
+  const maxLatitude = Math.max(...latitudes)
+  const minLongitude = Math.min(...longitudes)
+  const maxLongitude = Math.max(...longitudes)
+
+  return {
+    latitude: (minLatitude + maxLatitude) / 2,
+    longitude: (minLongitude + maxLongitude) / 2,
+    latitudeDelta: Math.max((maxLatitude - minLatitude) * 1.4, 0.05),
+    longitudeDelta: Math.max((maxLongitude - minLongitude) * 1.4, 0.05),
+  }
+})()
+
 export default function MapScreen() {
 
   const [selected, setSelected] = useState<any>(null)
@@ -14,12 +30,7 @@ export default function MapScreen() {
 
       <MapView
         style={styles.map}
-        initialRegion={{
-          latitude: 2.9273,
-          longitude: -75.2819,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
+        initialRegion={initialRegion}
       >
         {locations.map(loc => (
           <Marker

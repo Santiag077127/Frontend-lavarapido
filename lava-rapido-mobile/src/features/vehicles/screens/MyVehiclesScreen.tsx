@@ -16,9 +16,11 @@ import {
 } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
+import BackButton from '../../../components/common/BackButton';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import {
   vehicleService,
@@ -160,7 +162,6 @@ export default function MyVehiclesScreen({
           {
             backgroundColor: theme.card,
             borderColor: theme.border,
-            opacity: item.estado ? 1 : 0.65,
           },
         ]}
       >
@@ -169,7 +170,7 @@ export default function MyVehiclesScreen({
             style={[
               styles.vehicleIcon,
               {
-                backgroundColor: theme.primary,
+                backgroundColor: `${theme.primary}18`,
               },
             ]}
           >
@@ -180,33 +181,31 @@ export default function MyVehiclesScreen({
                   : 'car-sport-outline'
               }
               size={25}
-              color="#fff"
+              color={theme.primary}
             />
           </View>
 
           <View style={styles.headerInfo}>
             <Text
               style={[
-                styles.plate,
+                styles.brandName,
                 {
                   color: theme.text,
                 },
               ]}
             >
-              {item.placa}
+              {item.nombreMarca}
             </Text>
 
             <Text
               style={[
-                styles.vehicleType,
+                styles.plate,
                 {
                   color: theme.textSecondary,
                 },
               ]}
             >
-              {vehicleTypeKeys[item.tipoVehiculo]
-                ? t(vehicleTypeKeys[item.tipoVehiculo])
-                : item.tipoVehiculo}
+              {item.placa}
             </Text>
           </View>
 
@@ -215,8 +214,10 @@ export default function MyVehiclesScreen({
               styles.statusBadge,
               {
                 backgroundColor: item.estado
-                  ? '#E8F5E9'
-                  : '#FDECEC',
+                  ? `${theme.primary}18`
+                  : theme.errorBackground,
+                borderColor: item.estado ? `${theme.primary}35` : theme.errorBorder,
+                borderWidth: 1,
               },
             ]}
           >
@@ -224,9 +225,7 @@ export default function MyVehiclesScreen({
               style={[
                 styles.statusText,
                 {
-                  color: item.estado
-                    ? '#2E7D32'
-                    : '#C62828',
+                  color: item.estado ? theme.primary : theme.errorText,
                 },
               ]}
             >
@@ -247,14 +246,14 @@ export default function MyVehiclesScreen({
         />
 
         <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
+          <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
             <Ionicons
-              name="pricetag-outline"
+              name="car-outline"
               size={18}
               color={theme.primary}
             />
 
-            <View>
+            <View style={styles.infoText}>
               <Text
                 style={[
                   styles.label,
@@ -263,7 +262,7 @@ export default function MyVehiclesScreen({
                   },
                 ]}
               >
-                {t('vehicles.fields.brand')}
+                {t('vehicles.fields.type')}
               </Text>
 
               <Text
@@ -274,19 +273,21 @@ export default function MyVehiclesScreen({
                   },
                 ]}
               >
-                {item.nombreMarca}
+                {vehicleTypeKeys[item.tipoVehiculo]
+                  ? t(vehicleTypeKeys[item.tipoVehiculo])
+                  : item.tipoVehiculo}
               </Text>
             </View>
           </View>
 
-          <View style={styles.infoItem}>
+          <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
             <Ionicons
               name="color-palette-outline"
               size={18}
               color={theme.primary}
             />
 
-            <View>
+            <View style={styles.infoText}>
               <Text
                 style={[
                   styles.label,
@@ -317,7 +318,7 @@ export default function MyVehiclesScreen({
             style={[
               styles.actionButton,
               {
-                backgroundColor: theme.primary + '15',
+                backgroundColor: theme.primary,
               },
             ]}
             onPress={() => handleEditVehicle(item)}
@@ -326,14 +327,14 @@ export default function MyVehiclesScreen({
             <Ionicons
               name="create-outline"
               size={19}
-              color={theme.primary}
+              color="#FFFFFF"
             />
 
             <Text
               style={[
                 styles.actionText,
                 {
-                  color: theme.primary,
+                  color: '#FFFFFF',
                 },
               ]}
             >
@@ -346,8 +347,12 @@ export default function MyVehiclesScreen({
               styles.actionButton,
               {
                 backgroundColor: item.estado
-                  ? '#C6282815'
-                  : '#2E7D3215',
+                  ? theme.errorBackground
+                  : `${theme.primary}15`,
+                borderWidth: 1,
+                borderColor: item.estado
+                  ? theme.errorBorder
+                  : `${theme.primary}40`,
               },
             ]}
             onPress={() => handleChangeStatus(item)}
@@ -360,18 +365,14 @@ export default function MyVehiclesScreen({
                   : 'eye-outline'
               }
               size={19}
-              color={
-                item.estado ? '#C62828' : '#2E7D32'
-              }
+              color={item.estado ? theme.errorText : theme.primary}
             />
 
             <Text
               style={[
                 styles.actionText,
                 {
-                  color: item.estado
-                    ? '#C62828'
-                    : '#2E7D32',
+                  color: item.estado ? theme.errorText : theme.primary,
                 },
               ]}
             >
@@ -387,7 +388,8 @@ export default function MyVehiclesScreen({
 
   if (loading) {
     return (
-      <View
+      <SafeAreaView
+        edges={['top', 'bottom']}
         style={[
           styles.loadingContainer,
           {
@@ -410,12 +412,13 @@ export default function MyVehiclesScreen({
         >
           {t('vehicles.loading')}
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View
+    <SafeAreaView
+      edges={['top', 'bottom']}
       style={[
         styles.container,
         {
@@ -423,39 +426,16 @@ export default function MyVehiclesScreen({
         },
       ]}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+      <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <BackButton
+          accessibilityLabel={t('mobile.serviceDetail.back')}
           onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={theme.text}
-          />
-        </TouchableOpacity>
-
-        <View style={styles.headerTitleContainer}>
-          <Text
-            style={[
-              styles.title,
-              {
-                color: theme.text,
-              },
-            ]}
-          >
+        />
+        <View style={styles.headerText}>
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
             {t('vehicles.title')}
           </Text>
-
-          <Text
-            style={[
-              styles.subtitle,
-              {
-                color: theme.textSecondary,
-              },
-            ]}
-          >
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
             {t('vehicles.subtitle')}
           </Text>
         </View>
@@ -563,7 +543,7 @@ export default function MyVehiclesScreen({
           </Text>
         </TouchableOpacity>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -584,28 +564,28 @@ const styles = StyleSheet.create({
   },
 
   header: {
+    minHeight: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginHorizontal: 18,
+    marginTop: 8,
+    marginBottom: 14,
+    borderRadius: 18,
+    borderWidth: 1,
   },
 
-  backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  headerTitleContainer: {
-    marginLeft: 8,
+  headerText: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 12,
   },
 
   title: {
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: '800',
+    lineHeight: 28,
   },
 
   subtitle: {
@@ -614,7 +594,7 @@ const styles = StyleSheet.create({
   },
 
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingBottom: 110,
   },
 
@@ -624,10 +604,15 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
 
   cardHeader: {
@@ -636,27 +621,30 @@ const styles = StyleSheet.create({
   },
 
   vehicleIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   headerInfo: {
     flex: 1,
-    marginLeft: 13,
+    minWidth: 0,
+    marginLeft: 14,
+  },
+
+  brandName: {
+    fontSize: 17,
+    fontWeight: '800',
+    flexShrink: 1,
   },
 
   plate: {
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-
-  vehicleType: {
-    marginTop: 3,
     fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    marginTop: 4,
   },
 
   statusBadge: {
@@ -677,14 +665,25 @@ const styles = StyleSheet.create({
 
   infoRow: {
     flexDirection: 'row',
-    gap: 20,
+    flexWrap: 'wrap',
+    gap: 10,
   },
 
   infoItem: {
-    flex: 1,
+    width: '48%',
+    minWidth: 125,
+    flexGrow: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 15,
+  },
+
+  infoText: {
+    flex: 1,
+    minWidth: 0,
   },
 
   label: {
@@ -695,18 +694,22 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 14,
     fontWeight: '600',
+    flexShrink: 1,
   },
 
   actions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
+    flexWrap: 'wrap',
+    gap: 9,
+    marginTop: 14,
   },
 
   actionButton: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: 12,
+    flexGrow: 1,
+    flexBasis: '48%',
+    minWidth: 125,
+    minHeight: 50,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -714,6 +717,8 @@ const styles = StyleSheet.create({
   },
 
   actionText: {
+    flexShrink: 1,
+    textAlign: 'center',
     fontSize: 13,
     fontWeight: '700',
   },

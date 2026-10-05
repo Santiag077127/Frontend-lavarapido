@@ -165,6 +165,7 @@ export default function TabNavigator({
         component={
           MyReservationsScreen
         }
+        options={{ tabBarButton: () => null }}
       />
 
       <Tab.Screen

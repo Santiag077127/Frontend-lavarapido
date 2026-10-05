@@ -20,8 +20,10 @@ import {
 } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
+import BackButton from '../../../components/common/BackButton';
 import { ThemeContext } from '../../../theme/ThemeContext';
 
 import {
@@ -287,57 +289,23 @@ export default function AddVehicleScreen({
     );
 
   return (
-    <KeyboardAvoidingView
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.background,
-        },
-      ]}
-      behavior={
-        Platform.OS === 'ios'
-          ? 'padding'
-          : undefined
-      }
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+      <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <BackButton
+          accessibilityLabel={t('mobile.serviceDetail.back')}
           onPress={() => navigation.goBack()}
           disabled={saving}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={theme.text}
-          />
-        </TouchableOpacity>
-
-        <View>
-          <Text
-            style={[
-              styles.title,
-              {
-                color: theme.text,
-              },
-            ]}
-          >
-            {isEditing
-              ? t('vehicles.form.editTitle')
-              : t('vehicles.form.addTitle')}
+        />
+        <View style={styles.headerText}>
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
+            {isEditing ? t('vehicles.form.editTitle') : t('vehicles.form.addTitle')}
           </Text>
-
-          <Text
-            style={[
-              styles.subtitle,
-              {
-                color: theme.textSecondary,
-              },
-            ]}
-          >
-            {isEditing
-              ? t('vehicles.form.editSubtitle')
-              : t('vehicles.form.addSubtitle')}
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
+            {isEditing ? t('vehicles.form.editSubtitle') : t('vehicles.form.addSubtitle')}
           </Text>
         </View>
       </View>
@@ -351,8 +319,8 @@ export default function AddVehicleScreen({
           style={[
             styles.introCard,
             {
-              backgroundColor:
-                theme.primary + '12',
+              backgroundColor: theme.card,
+              borderColor: theme.border,
             },
           ]}
         >
@@ -396,6 +364,7 @@ export default function AddVehicleScreen({
           </View>
         </View>
 
+        <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -648,7 +617,6 @@ export default function AddVehicleScreen({
         >
           {t('vehicles.form.colorHelper')}
         </Text>
-
         <TouchableOpacity
           style={[
             styles.saveButton,
@@ -710,6 +678,7 @@ export default function AddVehicleScreen({
             {t('common.cancel')}
           </Text>
         </TouchableOpacity>
+        </View>
       </ScrollView>
 
       <Modal
@@ -903,11 +872,13 @@ export default function AddVehicleScreen({
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1 },
   container: {
     flex: 1,
   },
@@ -915,28 +886,21 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 18,
-    paddingBottom: 14,
+    minHeight: 60,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginHorizontal: 18,
+    marginTop: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderRadius: 18,
   },
 
-  backButton: {
-    width: 42,
-    height: 42,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
+  headerText: { flex: 1, minWidth: 0, marginLeft: 12 },
 
-  title: {
-    fontSize: 25,
-    fontWeight: '800',
-  },
+  title: { fontSize: 22, lineHeight: 28, fontWeight: '800' },
 
-  subtitle: {
-    fontSize: 14,
-    marginTop: 3,
-  },
+  subtitle: { fontSize: 13, lineHeight: 18, marginTop: 3 },
 
   content: {
     paddingHorizontal: 16,
@@ -944,11 +908,25 @@ const styles = StyleSheet.create({
   },
 
   introCard: {
-    borderRadius: 17,
-    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 18,
+  },
+
+  formCard: {
+    borderWidth: 1,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 18,
+    elevation: 1,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
   },
 
   introIcon: {
@@ -977,14 +955,14 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
     marginBottom: 9,
-    marginTop: 6,
+    marginTop: 14,
   },
 
   inputContainer: {
-    minHeight: 54,
-    borderRadius: 14,
+    minHeight: 58,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 15,
     flexDirection: 'row',
@@ -1005,8 +983,8 @@ const styles = StyleSheet.create({
   },
 
   selectContainer: {
-    minHeight: 54,
-    borderRadius: 14,
+    minHeight: 58,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 15,
     flexDirection: 'row',
@@ -1021,6 +999,8 @@ const styles = StyleSheet.create({
   },
 
   selectText: {
+    flex: 1,
+    minWidth: 0,
     fontSize: 15,
     marginLeft: 11,
   },
@@ -1146,9 +1126,11 @@ const styles = StyleSheet.create({
   },
 
   typeCard: {
-    width: '31.5%',
-    minHeight: 92,
-    borderRadius: 14,
+    width: '47%',
+    minWidth: 112,
+    flexGrow: 1,
+    minHeight: 82,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1175,8 +1157,8 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    height: 54,
-    borderRadius: 15,
+    minHeight: 58,
+    borderRadius: 17,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -15,6 +15,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -32,6 +34,7 @@ import type {
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import BackButton from '../../../components/common/BackButton';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 
 import { vehicleService } from '../../vehicles/services/vehicleService';
@@ -82,7 +85,7 @@ export default function ReservationScreen() {
   const route =
     useRoute<ReservationRouteProp>();
 
-  const { darkMode } =
+  const { darkMode, theme } =
     useContext(ThemeContext);
   const { t } = useTranslation();
 
@@ -165,37 +168,18 @@ export default function ReservationScreen() {
 
   const colors = useMemo(
     () => ({
-      background: darkMode
-        ? '#121212'
-        : '#F5F7FA',
-
-      card: darkMode
-        ? '#1E1E1E'
-        : '#FFFFFF',
-
-      text: darkMode
-        ? '#FFFFFF'
-        : '#1F2937',
-
-      secondaryText: darkMode
-        ? '#BDBDBD'
-        : '#6B7280',
-
-      border: darkMode
-        ? '#333333'
-        : '#E5E7EB',
-
-      primary: '#2563EB',
-
-      inputBackground: darkMode
-        ? '#2A2A2A'
-        : '#FFFFFF',
-
-      danger: '#DC2626',
+      background: theme.background,
+      card: theme.card,
+      text: theme.text,
+      secondaryText: theme.textSecondary,
+      border: theme.border,
+      primary: theme.primary,
+      inputBackground: theme.inputBackground,
+      danger: theme.errorText,
 
       success: '#16A34A',
     }),
-    [darkMode],
+    [darkMode, theme],
   );
 
   // ==========================================================
@@ -959,7 +943,7 @@ export default function ReservationScreen() {
   // ==========================================================
 
   return (
-    <View
+    <SafeAreaView
       style={[
         styles.container,
         {
@@ -976,51 +960,14 @@ export default function ReservationScreen() {
           false
         }
       >
-        {/* HEADER */}
-
-        <View
-          style={
-            styles.header
-          }
-        >
-          <Pressable
-            onPress={() =>
-              navigation.goBack()
-            }
-            style={
-              styles.backButton
-            }
-          >
-            <Text
-              style={[
-                styles.backText,
-                {
-                  color:
-                    colors.primary,
-                },
-              ]}
-            >
-              ←
-            </Text>
-          </Pressable>
-
-          <Text
-            style={[
-              styles.headerTitle,
-              {
-                color:
-                  colors.text,
-              },
-            ]}
-          >
+        <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <BackButton
+            accessibilityLabel={t('mobile.reservation.back')}
+            onPress={() => navigation.goBack()}
+          />
+          <Text style={[styles.pageTitle, { color: colors.text }]} numberOfLines={2}>
             {t('mobile.reservation.newTitle')}
           </Text>
-
-          <View
-            style={
-              styles.headerSpacer
-            }
-          />
         </View>
 
         {/* SERVICIO */}
@@ -1029,10 +976,9 @@ export default function ReservationScreen() {
           style={[
             styles.card,
             {
-              backgroundColor:
-                colors.card,
-              borderColor:
-                colors.border,
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+              borderLeftColor: colors.primary,
             },
           ]}
         >
@@ -1080,9 +1026,7 @@ export default function ReservationScreen() {
             }
           >
             <View
-              style={
-                styles.infoItem
-              }
+              style={[styles.infoItem, { backgroundColor: `${colors.primary}10` }]}
             >
               <Text
                 style={[
@@ -1110,9 +1054,7 @@ export default function ReservationScreen() {
             </View>
 
             <View
-              style={
-                styles.infoItem
-              }
+              style={[styles.infoItem, { backgroundColor: `${colors.primary}10` }]}
             >
               <Text
                 style={[
@@ -1147,15 +1089,14 @@ export default function ReservationScreen() {
         {/* VEHÍCULO */}
 
         <View
-          style={[
-            styles.card,
-            {
-              backgroundColor:
-                colors.card,
-              borderColor:
-                colors.border,
-            },
-          ]}
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderLeftColor: colors.primary,
+              },
+            ]}
         >
           <Text
             style={[
@@ -1266,15 +1207,14 @@ export default function ReservationScreen() {
         {/* FECHA */}
 
         <View
-          style={[
-            styles.card,
-            {
-              backgroundColor:
-                colors.card,
-              borderColor:
-                colors.border,
-            },
-          ]}
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderLeftColor: colors.primary,
+              },
+            ]}
         >
           <Text
             style={[
@@ -1304,6 +1244,7 @@ export default function ReservationScreen() {
               )
             }
           >
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
             <Text
               style={[
                 styles.selectorText,
@@ -1327,6 +1268,7 @@ export default function ReservationScreen() {
                 },
               )}
             </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.secondaryText} />
           </Pressable>
 
           {showDatePicker && (
@@ -1392,6 +1334,7 @@ export default function ReservationScreen() {
               )
             }
           >
+            <Ionicons name="time-outline" size={20} color={colors.primary} />
             <Text
               style={[
                 styles.selectorText,
@@ -1411,6 +1354,7 @@ export default function ReservationScreen() {
                 },
               )}
             </Text>
+            <Ionicons name="chevron-down" size={18} color={colors.secondaryText} />
           </Pressable>
 
           {showTimePicker && (
@@ -1454,6 +1398,7 @@ export default function ReservationScreen() {
                 colors.card,
               borderColor:
                 colors.border,
+              borderTopColor: colors.primary,
             },
           ]}
         >
@@ -1631,13 +1576,16 @@ export default function ReservationScreen() {
               color="#FFFFFF"
             />
           ) : (
-            <Text
-              style={
-                styles.createButtonText
-              }
-            >
-              {t('mobile.reservation.confirm')}
-            </Text>
+            <>
+              <Ionicons name="checkmark-circle-outline" size={21} color="#FFFFFF" />
+              <Text
+                style={
+                  styles.createButtonText
+                }
+              >
+                {t('mobile.reservation.confirm')}
+              </Text>
+            </>
           )}
         </Pressable>
 
@@ -1650,9 +1598,7 @@ export default function ReservationScreen() {
           onPress={() =>
             navigation.goBack()
           }
-          style={
-            styles.cancelButton
-          }
+          style={[styles.cancelButton, { borderColor: colors.border, backgroundColor: colors.card }]}
         >
           <Text
             style={[
@@ -1667,7 +1613,7 @@ export default function ReservationScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -1682,8 +1628,9 @@ const styles =
     },
 
     scrollContent: {
-      padding: 20,
-      paddingBottom: 40,
+      paddingHorizontal: 18,
+      paddingTop: 8,
+      paddingBottom: 32,
     },
 
     loadingContainer: {
@@ -1701,45 +1648,34 @@ const styles =
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 20,
+      gap: 12,
+      minHeight: 60,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginHorizontal: 0,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderRadius: 18,
     },
 
-    backButton: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      alignItems: 'center',
-      justifyContent:
-        'center',
-    },
-
-    backText: {
-      fontSize: 32,
-      fontWeight: '500',
-    },
-
-    headerTitle: {
-      flex: 1,
-      fontSize: 24,
-      fontWeight: '700',
-      marginLeft: 4,
-    },
-
-    headerSpacer: {
-      width: 42,
-    },
+    pageTitle: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
 
     card: {
       borderWidth: 1,
-      borderRadius: 16,
-      padding: 18,
-      marginBottom: 16,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 14,
+      elevation: 2,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 5,
     },
 
     sectionTitle: {
       fontSize: 17,
-      fontWeight: '700',
-      marginBottom: 12,
+      fontWeight: '800',
+      marginBottom: 14,
     },
 
     serviceName: {
@@ -1756,11 +1692,16 @@ const styles =
 
     serviceInfoRow: {
       flexDirection: 'row',
-      gap: 30,
+      flexWrap: 'wrap',
+      gap: 10,
     },
 
     infoItem: {
-      flex: 1,
+      flexBasis: '48%',
+      flexGrow: 1,
+      minWidth: 125,
+      borderRadius: 15,
+      padding: 13,
     },
 
     infoLabel: {
@@ -1775,7 +1716,7 @@ const styles =
 
     pickerContainer: {
       borderWidth: 1,
-      borderRadius: 12,
+      borderRadius: 15,
       overflow: 'hidden',
     },
 
@@ -1804,13 +1745,20 @@ const styles =
 
     selector: {
       borderWidth: 1,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 15,
+      borderRadius: 15,
+      paddingHorizontal: 14,
+      paddingVertical: 16,
+      minHeight: 58,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 11,
     },
 
     selectorText: {
-      fontSize: 16,
+      flex: 1,
+      minWidth: 0,
+      fontSize: 15,
+      fontWeight: '600',
     },
 
     scheduleHint: {
@@ -1820,9 +1768,10 @@ const styles =
 
     summaryCard: {
       borderWidth: 1,
-      borderRadius: 16,
-      padding: 18,
+      borderRadius: 20,
+      padding: 20,
       marginBottom: 20,
+      elevation: 2,
     },
 
     summaryRow: {
@@ -1830,10 +1779,12 @@ const styles =
       alignItems: 'center',
       justifyContent:
         'space-between',
-      paddingVertical: 8,
+      paddingVertical: 10,
+      gap: 12,
     },
 
     summaryLabel: {
+      flexShrink: 1,
       fontSize: 14,
     },
 
@@ -1851,8 +1802,8 @@ const styles =
     },
 
     createButton: {
-      minHeight: 54,
-      borderRadius: 14,
+      minHeight: 58,
+      borderRadius: 17,
       alignItems: 'center',
       justifyContent:
         'center',
@@ -1866,10 +1817,13 @@ const styles =
     },
 
     cancelButton: {
+      minHeight: 48,
+      borderWidth: 1,
+      borderRadius: 14,
       alignItems: 'center',
-      justifyContent:
-        'center',
-      paddingVertical: 16,
+      justifyContent: 'center',
+      paddingVertical: 12,
+      marginTop: 10,
     },
 
     cancelButtonText: {

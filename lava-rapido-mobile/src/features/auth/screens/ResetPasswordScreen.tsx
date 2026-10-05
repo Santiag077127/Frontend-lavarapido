@@ -6,6 +6,7 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 import { useTranslation } from 'react-i18next'
+import BackButton from '../../../components/common/BackButton'
 
 export default function ResetPasswordScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
@@ -38,8 +39,11 @@ export default function ResetPasswordScreen({ navigation }: any) {
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
+            <View style={styles.header}>
+              <BackButton accessibilityLabel={t('mobile.serviceDetail.back')} onPress={() => navigation.goBack()} />
+              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('resetPassword.title')}</Text>
+            </View>
             <Image source={images.logo} style={styles.logo} resizeMode="contain" />
-            <Text style={[styles.title, { color: theme.text }]}>{t('resetPassword.title')}</Text>
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('resetPassword.subtitle')}</Text>
             {passwordField(t('resetPassword.newPassword'), password, setPassword, showPassword, () => setShowPassword(!showPassword), 'lock-closed-outline')}
             {passwordField(t('resetPassword.confirmPassword'), confirmPassword, setConfirmPassword, showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), 'shield-checkmark-outline')}
@@ -52,9 +56,10 @@ export default function ResetPasswordScreen({ navigation }: any) {
 }
 const styles = StyleSheet.create({
   safeArea: { flex: 1 }, keyboard: { flex: 1 }, scrollContent: { flexGrow: 1 },
-  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 24 },
+  content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 16 },
+  header: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  headerTitle: { flex: 1, minWidth: 0, fontSize: 22, fontWeight: '700' },
   logo: { width: '62%', maxWidth: 220, height: 150, alignSelf: 'center', marginBottom: 16 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
   subtitle: { fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 24 },
   inputContainer: { minHeight: 52, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, marginBottom: 16 },
   input: { flex: 1, minHeight: 50, marginHorizontal: 12, fontSize: 16 },
