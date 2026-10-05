@@ -3,10 +3,10 @@ import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from '
 import { useFocusEffect } from '@react-navigation/native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { ThemeContext } from '../../../theme/ThemeContext';
-import { formatCurrency } from '../../../utils/formatters';
 import type { RootStackParamList } from '../../../navigation/types';
 import { paymentService, type ReservationPayment, type WompiCheckoutData } from '../../../services/paymentService';
 
@@ -44,7 +44,7 @@ function makeWidgetHtml(checkout: WompiCheckoutData): string {
     signature: { integrity: checkout.firmaIntegridad },
   }).replace(/</g, '\\u003c');
 
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta charset="utf-8"><style>html,body{margin:0;width:100%;min-height:100%;background:transparent}</style></head><body><p id="status">Preparando checkout seguro...</p><script>
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta charset="utf-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;min-height:100%;background:transparent}body{overflow:auto}</style></head><body><p id="status">Preparando checkout seguro...</p><script>
     function notifyApp(event, details) {
       var payload = Object.assign({ event: event }, details || {});
       window.ReactNativeWebView.postMessage(JSON.stringify(payload));
@@ -358,36 +358,18 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         <View style={styles.header}>
           <Pressable
             onPress={() => navigation.goBack()}
-            style={[styles.backButton, { borderColor: theme.border, backgroundColor: theme.card }]}
+            style={styles.backButton}
             accessibilityRole="button"
             accessibilityLabel="Volver"
             hitSlop={8}
           >
-            <Text style={[styles.backText, { color: theme.text }]}>‹</Text>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </Pressable>
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>{t('mobile.paymentFlow.title')}</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <View style={[styles.summary, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={styles.summaryTop}>
-            <Text style={[styles.service, { color: theme.text }]} numberOfLines={1}>
-              {reservation.nombreServicio || t('mobile.paymentFlow.service')}
-            </Text>
-            <Text style={[styles.amount, { color: theme.primary }]} numberOfLines={1}>
-              {formatCurrency(reservation.precioServicio)}
-            </Text>
-          </View>
-          <Text style={[styles.summaryDetail, { color: theme.textSecondary }]} numberOfLines={1}>
-            {reservation.placaVehiculo} · {reservation.tipoVehiculo} · {reservation.fechaReserva} · {reservation.horaReserva.slice(0, 5)}
-          </Text>
-          <Text style={[styles.paymentStatus, { color: isFinal && payment?.estado === 'aprobado' ? theme.primary : theme.textSecondary }]} numberOfLines={1}>
-            {stateLabel}
-          </Text>
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>Pago</Text>
         </View>
 
         {checkout && !isFinal ? (
-          <View style={[styles.checkout, { borderColor: theme.border }]}>
+          <View style={styles.webViewContainer}>
             <WebView
               key={widgetReloadKey}
               style={styles.webview}
@@ -420,7 +402,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             />
           </View>
         ) : (
-          <View style={[styles.checkoutPlaceholder, { borderColor: theme.border, backgroundColor: theme.card }]}>
+          <View style={styles.checkoutPlaceholder}>
             {loading || checking ? (
               <>
                 <ActivityIndicator color={theme.primary} size="large" />
@@ -434,7 +416,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           </View>
         )}
 
-        <View style={styles.footer}>
+        {(!checkout || widgetError) && <View style={styles.footer}>
           {widgetError && <Text style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>}
           {error && <Text style={[styles.error, { color: theme.errorText }]}>{startError || t('mobile.paymentFlow.error')}</Text>}
           {payment?.intentoActual?.estado === 'aprobado_duplicado' && (
@@ -483,7 +465,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               <Text style={styles.buttonText}>{t('mobile.paymentFlow.myReservations')}</Text>
             </Pressable>
           )}
-        </View>
+        </View>}
       </View>
     </SafeAreaView>
   );
@@ -491,21 +473,13 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: 12, paddingTop: 6, paddingBottom: 8, gap: 8 },
-  header: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  backButton: { width: 40, height: 40, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 32, lineHeight: 36, marginTop: -4 },
+  content: { flex: 1 },
+  header: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 12 },
+  backButton: { width: 40, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
   title: { flex: 1, fontSize: 20, fontWeight: '700' },
-  headerSpacer: { width: 8 },
-  summary: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 9, gap: 4 },
-  summaryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  service: { flex: 1, fontSize: 15, fontWeight: '700' },
-  amount: { fontSize: 16, fontWeight: '800' },
-  summaryDetail: { fontSize: 12 },
-  paymentStatus: { fontSize: 12, fontWeight: '600' },
-  checkout: { flex: 1, minHeight: 0, borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
+  webViewContainer: { flex: 1, minHeight: 0 },
   webview: { flex: 1 },
-  checkoutPlaceholder: { flex: 1, minHeight: 0, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  checkoutPlaceholder: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 16 },
   placeholderText: { fontSize: 14, textAlign: 'center', paddingHorizontal: 16 },
   footer: { gap: 7 },
   error: { fontSize: 13, textAlign: 'center' },

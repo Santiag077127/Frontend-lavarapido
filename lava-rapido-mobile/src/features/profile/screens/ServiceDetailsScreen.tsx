@@ -1,12 +1,19 @@
 
-import React, { useContext } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { useFocusEffect } from '@react-navigation/native'
 
 import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
   View,
   Text,
   StyleSheet,
   ScrollView,
+  TextInput,
   TouchableOpacity,
 } from 'react-native'
 
@@ -15,6 +22,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '../../../utils/formatters'
+import { reservationService } from '../../reservations/services/reservationService'
+import { ratingService, type RatingResponse } from '../../../services/ratingService'
 
 import type { RootStackParamList } from '../../../navigation/types'
 
@@ -33,7 +42,105 @@ export default function ServiceDetailsScreen({
   const { theme, darkMode } = useContext(ThemeContext)
   const { t } = useTranslation()
 
-  const { reservation } = route.params
+  const [reservation, setReservation] = useState(route.params.reservation)
+  const [rating, setRating] = useState<RatingResponse | null>(null)
+  const [ratingLoading, setRatingLoading] = useState(true)
+  const [ratingLoadError, setRatingLoadError] = useState(false)
+  const [ratingModalVisible, setRatingModalVisible] = useState(false)
+  const [selectedRating, setSelectedRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [ratingError, setRatingError] = useState<string | null>(null)
+  const [ratingSuccess, setRatingSuccess] = useState(false)
+  const submitLock = useRef(false)
+
+  const loadRatingState = useCallback(async (isActive: () => boolean) => {
+    setRatingLoading(true)
+    setRatingLoadError(false)
+    try {
+      const latestReservation = await reservationService.getById(reservation.idReserva)
+      if (!isActive()) return
+      setReservation(latestReservation)
+
+      if (latestReservation.estado !== 'FINALIZADA') {
+        setRating(null)
+        setRatingSuccess(false)
+        return
+      }
+
+      try {
+        const existingRating = await ratingService.getByReservation(latestReservation.idReserva)
+        if (isActive()) {
+          setRating(existingRating)
+          setRatingSuccess(false)
+        }
+      } catch (error) {
+        if ((error as { response?: { status?: number } }).response?.status === 404) {
+          if (isActive()) {
+            setRating(null)
+            setRatingSuccess(false)
+          }
+        } else {
+          throw error
+        }
+      }
+    } catch {
+      if (isActive()) setRatingLoadError(true)
+    } finally {
+      if (isActive()) setRatingLoading(false)
+    }
+  }, [reservation.idReserva])
+
+  useFocusEffect(useCallback(() => {
+    let active = true
+    void loadRatingState(() => active)
+    return () => { active = false }
+  }, [loadRatingState]))
+
+  const canRate = reservation.estado === 'FINALIZADA' && !rating && !ratingLoading && !ratingLoadError
+
+  const submitRating = async () => {
+    if (submitLock.current || selectedRating < 1 || selectedRating > 5 || !canRate) {
+      if (selectedRating < 1 || selectedRating > 5) setRatingError('selectRating')
+      return
+    }
+
+    submitLock.current = true
+    setSubmitting(true)
+    setRatingError(null)
+    try {
+      const created = await ratingService.submit({
+        reservaId: reservation.idReserva,
+        puntuacion: selectedRating,
+        comentario: comment.trim() || null,
+      })
+      setRating(created)
+      setRatingSuccess(true)
+      setRatingModalVisible(false)
+      setComment('')
+    } catch (error) {
+      const failure = error as { response?: { status?: number; data?: { error?: unknown } } }
+      const status = failure.response?.status
+      const message = failure.response?.data?.error
+      if (typeof message === 'string' && message.toLowerCase().includes('finalizadas')) {
+        setRatingError('notFinished')
+      } else if (typeof message === 'string' && message.toLowerCase().includes('ya tiene una calificacion')) {
+        setRatingModalVisible(false)
+        void loadRatingState(() => true)
+      } else if (status === 401 || status === 403) {
+        setRatingError('unauthorized')
+      } else if (status === 404) {
+        setRatingError('notFound')
+      } else if (!status) {
+        setRatingError('connectionError')
+      } else {
+        setRatingError('genericError')
+      }
+    } finally {
+      submitLock.current = false
+      setSubmitting(false)
+    }
+  }
 
   const renderStatusColor = (
     status: ReservationResponse['estado']
@@ -116,7 +223,7 @@ export default function ServiceDetailsScreen({
     reservation.estado === 'FINALIZADA'
 
   return (
-
+    <>
     <ScrollView
       style={[
         styles.container,
@@ -576,7 +683,155 @@ export default function ServiceDetailsScreen({
 
       </View>
 
+      {reservation.estado === 'FINALIZADA' && (
+        <View style={[styles.ratingCard, { backgroundColor: theme.card }]}>
+          {ratingLoading ? (
+            <ActivityIndicator color={theme.primary} />
+          ) : ratingLoadError ? (
+            <>
+              <Text style={[styles.ratingMessage, { color: theme.textSecondary }]}>
+                {t('ratingFlow.loadError')}
+              </Text>
+              <TouchableOpacity
+                style={[styles.ratingButton, { backgroundColor: theme.primary }]}
+                onPress={() => { void loadRatingState(() => true) }}
+              >
+                <Text style={styles.ratingButtonText}>{t('mobile.services.retry')}</Text>
+              </TouchableOpacity>
+            </>
+          ) : rating ? (
+            <>
+              <Text style={[styles.ratingMessage, { color: theme.text }]}>
+                {ratingSuccess ? t('ratingFlow.success') : t('ratingFlow.alreadyRatedLabel')}
+              </Text>
+              <View style={styles.ratingStars}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name={star <= rating.puntuacion ? 'star' : 'star-outline'}
+                    size={25}
+                    color="#F5A623"
+                  />
+                ))}
+                <Text style={[styles.ratingValue, { color: theme.text }]}>{rating.puntuacion}/5</Text>
+              </View>
+              {!!rating.comentario && (
+                <Text style={[styles.ratingComment, { color: theme.textSecondary }]}>{rating.comentario}</Text>
+              )}
+            </>
+          ) : canRate ? (
+            <TouchableOpacity
+              style={[styles.ratingButton, { backgroundColor: theme.primary }]}
+              onPress={() => {
+                setSelectedRating(0)
+                setComment('')
+                setRatingError(null)
+                setRatingModalVisible(true)
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="star-outline" size={19} color="#FFFFFF" />
+              <Text style={styles.ratingButtonText}>{t('ratingFlow.rateService')}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      )}
+
     </ScrollView>
+
+      <Modal
+        visible={ratingModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !submitting && setRatingModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.ratingModal, { backgroundColor: theme.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t('ratingFlow.title')}</Text>
+              <Pressable
+                onPress={() => !submitting && setRatingModalVisible(false)}
+                disabled={submitting}
+                accessibilityRole="button"
+                accessibilityLabel={t('ratingFlow.close')}
+                hitSlop={8}
+              >
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Text style={[styles.modalService, { color: theme.text }]}>
+                {reservation.nombreServicio || t('mobile.services.serviceFallback')}
+              </Text>
+              <Text style={[styles.ratingQuestion, { color: theme.textSecondary }]}>
+                {t('ratingFlow.question')}
+              </Text>
+
+              <View style={styles.starSelector}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Pressable
+                    key={star}
+                    onPress={() => {
+                      setSelectedRating(star)
+                      setRatingError(null)
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('ratingFlow.stars', { count: star })}
+                    accessibilityState={{ selected: selectedRating === star }}
+                    hitSlop={5}
+                  >
+                    <Ionicons
+                      name={star <= selectedRating ? 'star' : 'star-outline'}
+                      size={38}
+                      color="#F5A623"
+                    />
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[styles.inputLabel, { color: theme.text }]}>{t('ratingFlow.comment')}</Text>
+              <TextInput
+                value={comment}
+                onChangeText={setComment}
+                maxLength={300}
+                multiline
+                editable={!submitting}
+                placeholder={t('ratingFlow.commentPlaceholder')}
+                placeholderTextColor={theme.placeholder}
+                textAlignVertical="top"
+                style={[styles.commentInput, {
+                  color: theme.text,
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.border,
+                }]}
+              />
+              <Text style={[styles.characterCount, { color: theme.textSecondary }]}>{comment.length}/300</Text>
+
+              {!!ratingError && (
+                <Text style={[styles.formError, { color: theme.errorText }]}>
+                  {t(`ratingFlow.${ratingError}`)}
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={[styles.ratingButton, styles.submitButton, { backgroundColor: theme.primary, opacity: submitting ? 0.65 : 1 }]}
+                onPress={() => { void submitRating() }}
+                disabled={submitting}
+                activeOpacity={0.85}
+              >
+                {submitting ? <ActivityIndicator color="#FFFFFF" /> : (
+                  <Text style={styles.ratingButtonText}>{t('ratingFlow.submit')}</Text>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </>
   )
 }
 
@@ -714,6 +969,131 @@ const styles = StyleSheet.create({
   stepText: {
     marginLeft: 15,
     fontSize: 15,
+  },
+
+  ratingCard: {
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 20,
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  ratingButton: {
+    minHeight: 48,
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+
+  ratingButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  ratingMessage: {
+    fontSize: 15,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  ratingStars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+
+  ratingValue: {
+    marginLeft: 7,
+    fontWeight: '700',
+  },
+
+  ratingComment: {
+    fontSize: 14,
+    alignSelf: 'stretch',
+  },
+
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+
+  ratingModal: {
+    maxHeight: '90%',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+
+  modalService: {
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  ratingQuestion: {
+    textAlign: 'center',
+    marginTop: 8,
+    fontSize: 15,
+  },
+
+  starSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginVertical: 18,
+  },
+
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+
+  commentInput: {
+    minHeight: 100,
+    maxHeight: 180,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+  },
+
+  characterCount: {
+    textAlign: 'right',
+    fontSize: 12,
+    marginTop: 5,
+  },
+
+  formError: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 10,
+  },
+
+  submitButton: {
+    marginTop: 16,
+    marginBottom: 8,
   },
 
 })
