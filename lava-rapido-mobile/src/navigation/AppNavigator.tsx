@@ -15,7 +15,6 @@ import ReservationPaymentScreen from '../features/reservations/screens/Reservati
 import LoginScreen from '../features/auth/screens/LoginScreen';
 import RegisterScreen from '../features/auth/screens/RegisterScreen';
 import ForgotPasswordScreen from '../features/auth/screens/ForgotPasswordScreen';
-import VerifyCodeScreen from '../features/auth/screens/VerifyCodeScreen';
 import ResetPasswordScreen from '../features/auth/screens/ResetPasswordScreen';
 import EditProfileScreen from '../features/auth/screens/EditProfileScreen';
 
@@ -84,10 +83,6 @@ export default function AppNavigator({
             component={ForgotPasswordScreen}
           />
 
-          <Stack.Screen
-            name="VerifyCode"
-            component={VerifyCodeScreen}
-          />
 
           <Stack.Screen
             name="ResetPassword"

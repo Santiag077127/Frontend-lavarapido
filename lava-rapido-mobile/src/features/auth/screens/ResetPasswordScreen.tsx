@@ -7,16 +7,19 @@ import { appAlert as Alert } from '../../../components/notifications/Notificatio
 import { images } from '../../../assets/images'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
+import { authService } from '../../../services/authService'
 
 export default function ResetPasswordScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
   const { t } = useTranslation()
   const [password, setPassword] = useState('')
+  const [token, setToken] = useState('')
+  const [saving, setSaving] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const handleReset = () => {
-    if (!password || !confirmPassword) {
+  const handleReset = async () => {
+    if (!token.trim() || !password || !confirmPassword) {
       Alert.alert(t('resetPassword.incompleteTitle'), t('resetPassword.incompleteMessage'))
       return
     }
@@ -24,14 +27,26 @@ export default function ResetPasswordScreen({ navigation }: any) {
       Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.mismatch'))
       return
     }
-    Alert.alert(t('resetPassword.successTitle'), t('resetPassword.successMessage'))
-    navigation.navigate('Login')
+    if (password.length < 8) {
+      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.passwordRequirements', { defaultValue: 'La contraseña debe tener al menos 8 caracteres.' }))
+      return
+    }
+    setSaving(true)
+    try {
+      await authService.resetPassword(token.trim(), password)
+      Alert.alert(t('resetPassword.successTitle'), t('resetPassword.successMessage'))
+      navigation.navigate('Login')
+    } catch {
+      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.resetError', { defaultValue: 'Token inválido o vencido, o contraseña no válida. Solicita un nuevo enlace e inténtalo otra vez.' }))
+    } finally {
+      setSaving(false)
+    }
   }
   const passwordField = (placeholder: string, value: string, onChangeText: (text: string) => void, visible: boolean, toggle: () => void, icon: 'lock-closed-outline' | 'shield-checkmark-outline') => (
     <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
       <Ionicons name={icon} size={22} color={theme.primary} />
       <TextInput placeholder={placeholder} placeholderTextColor={theme.placeholder} secureTextEntry={!visible} value={value} onChangeText={onChangeText} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
-      <TouchableOpacity onPress={toggle} hitSlop={8}><Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} /></TouchableOpacity>
+      <TouchableOpacity onPress={toggle} hitSlop={8} accessibilityRole="button" accessibilityLabel={visible ? t('resetPassword.hidePassword', { defaultValue: 'Ocultar contraseña' }) : t('resetPassword.showPassword', { defaultValue: 'Mostrar contraseña' })} accessibilityState={{ expanded: visible }}><Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} /></TouchableOpacity>
     </View>
   )
   return (
@@ -45,9 +60,13 @@ export default function ResetPasswordScreen({ navigation }: any) {
             </View>
             <Image source={images.logo} style={styles.logo} resizeMode="contain" />
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('resetPassword.subtitle')}</Text>
+            <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
+              <Ionicons name="key-outline" size={22} color={theme.primary} />
+              <TextInput placeholder={t('resetPassword.token', { defaultValue: 'Token recibido por correo' })} accessibilityLabel={t('resetPassword.token', { defaultValue: 'Token recibido por correo' })} placeholderTextColor={theme.placeholder} value={token} onChangeText={setToken} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
+            </View>
             {passwordField(t('resetPassword.newPassword'), password, setPassword, showPassword, () => setShowPassword(!showPassword), 'lock-closed-outline')}
             {passwordField(t('resetPassword.confirmPassword'), confirmPassword, setConfirmPassword, showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), 'shield-checkmark-outline')}
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleReset} activeOpacity={0.8}><Text style={styles.buttonText}>{t('resetPassword.save')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleReset} disabled={saving} accessibilityRole="button" accessibilityState={{ disabled: saving }} activeOpacity={0.8}><Text style={styles.buttonText}>{t('resetPassword.save')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

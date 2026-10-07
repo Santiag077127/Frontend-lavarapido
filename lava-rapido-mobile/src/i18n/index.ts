@@ -11,9 +11,19 @@ import es from './locales/es.json';
 import en from './locales/en.json';
 import fr from './locales/fr.json';
 import pt from './locales/pt.json';
+import { recoveryCopy } from './recoveryCopy';
+
+const withRecovery = <T extends { forgotPassword: Record<string, string>; resetPassword: Record<string, string> }>(
+  base: T,
+  copy: typeof recoveryCopy.es | typeof recoveryCopy.en | typeof recoveryCopy.fr | typeof recoveryCopy.pt,
+) => ({
+  ...base,
+  forgotPassword: { ...base.forgotPassword, ...copy.forgotPassword },
+  resetPassword: { ...base.resetPassword, ...copy.resetPassword },
+});
 
 i18n.use(initReactI18next).init({
-  resources: { es: { translation: es }, en: { translation: en }, fr: { translation: fr }, pt: { translation: pt } },
+  resources: { es: { translation: withRecovery(es, recoveryCopy.es) }, en: { translation: withRecovery(en, recoveryCopy.en) }, fr: { translation: withRecovery(fr, recoveryCopy.fr) }, pt: { translation: withRecovery(pt, recoveryCopy.pt) } },
   lng: 'es',
   fallbackLng: 'es',
   interpolation: { escapeValue: false },
