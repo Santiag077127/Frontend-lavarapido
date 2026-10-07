@@ -16,17 +16,28 @@ import { appAlert as Alert } from '../../../components/notifications/Notificatio
 import { images } from '../../../assets/images'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
+import { authService } from '../../../services/authService'
 
 export default function ForgotPasswordScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
-  const handleSendCode = () => {
+  const [sending, setSending] = useState(false)
+  const handleSendCode = async () => {
     if (!email.trim()) {
       Alert.alert(t('forgotPassword.errorTitle'), t('forgotPassword.emailRequired'))
       return
     }
-    navigation.navigate('VerifyCode', { email })
+    setSending(true)
+    try {
+      await authService.requestPasswordReset(email.trim())
+      Alert.alert(t('forgotPassword.sentTitle', { defaultValue: 'Solicitud recibida' }), t('forgotPassword.sentMessage', { defaultValue: 'Si el correo está registrado, recibirás un enlace y un token de un solo uso. Copia el token en la siguiente pantalla.' }))
+      navigation.navigate('ResetPassword')
+    } catch {
+      Alert.alert(t('forgotPassword.errorTitle'), t('forgotPassword.sendError', { defaultValue: 'No se pudo solicitar la recuperación. Inténtalo de nuevo.' }))
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -44,7 +55,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
               <Text style={[styles.label, { color: theme.text }]}>{t('forgotPassword.email')}</Text>
               <TextInput placeholder={t('forgotPassword.email')} placeholderTextColor={theme.placeholder} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" returnKeyType="done" onSubmitEditing={handleSendCode} style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} />
             </View>
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} activeOpacity={0.8}><Text style={styles.buttonText}>{t('forgotPassword.sendCode')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} disabled={sending} accessibilityRole="button" accessibilityState={{ disabled: sending }} activeOpacity={0.8}><Text style={styles.buttonText}>{t('forgotPassword.sendCode')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
