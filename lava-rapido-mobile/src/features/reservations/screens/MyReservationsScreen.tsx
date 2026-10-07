@@ -115,10 +115,7 @@ export default function MyReservationsScreen() {
         const userId =
           profileResponse.data?.userId;
 
-        console.log(
-          'USUARIO RESERVAS:',
-          userId
-        );
+
 
         if (!userId) {
           throw new Error(
@@ -134,10 +131,7 @@ export default function MyReservationsScreen() {
             userId
           );
 
-        console.log(
-          'RESERVAS RECIBIDAS:',
-          JSON.stringify(data, null, 2)
-        );
+
 
         /**
          * Aseguramos que siempre trabajemos con
@@ -170,12 +164,7 @@ export default function MyReservationsScreen() {
           sortedReservations
         );
       } catch (err: any) {
-        console.log(
-          'ERROR CARGANDO RESERVAS:',
-          err?.response?.data ||
-            err?.message ||
-            err
-        );
+
 
         setReservations([]);
         setError(true);
@@ -236,20 +225,14 @@ export default function MyReservationsScreen() {
                 reservation.idReserva
               );
 
-              console.log(
-                'CANCELANDO RESERVA:',
-                reservation.idReserva
-              );
+
 
               const updated =
                 await reservationService.cancel(
                   reservation.idReserva
                 );
 
-              console.log(
-                'RESERVA CANCELADA:',
-                updated
-              );
+
 
               /**
                * Actualizar únicamente la reserva
@@ -269,12 +252,7 @@ export default function MyReservationsScreen() {
                 t('mobile.reservations.cancelledMessage')
               );
             } catch (err: any) {
-              console.log(
-                'ERROR CANCELANDO RESERVA:',
-                err?.response?.data ||
-                  err?.message ||
-                  err
-              );
+
 
               const responseData =
                 err?.response?.data;

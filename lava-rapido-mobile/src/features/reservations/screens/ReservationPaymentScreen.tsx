@@ -15,7 +15,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ReservationPayment'>;
 
 type WidgetTransactionDiagnostic = {
   id?: unknown;
-  status?: unknown;
   reference?: unknown;
 };
 
@@ -28,7 +27,6 @@ type WidgetEventMessage = {
 
 type TransactionDiagnostic = {
   transactionId?: string;
-  transactionStatus?: string;
   reference?: string;
 };
 
@@ -74,7 +72,6 @@ function makeWidgetHtml(checkout: WompiCheckoutData, loadingText: string): strin
           if (transaction && typeof transaction === 'object') {
             safeTransaction = {};
             if (typeof transaction.id === 'string') safeTransaction.id = transaction.id;
-            if (typeof transaction.status === 'string') safeTransaction.status = transaction.status;
             if (typeof transaction.reference === 'string') safeTransaction.reference = transaction.reference;
           }
           notifyApp('checkout_callback', { resultType: typeof result, transaction: safeTransaction });
@@ -124,11 +121,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setWidgetOpened(false);
     setWidgetError(false);
     setError(false);
-    console.info('[Wompi] Checkout prepared', {
-      reservationId: data.idReserva,
-      attemptId: data.idIntento,
-      reused: data.reutilizado,
-    });
+
   }, [reservation.idReserva]);
 
   // First read the existing backend state. Only an absent payment starts a new one.
@@ -236,19 +229,23 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setChecking(true);
     setError(false);
     try {
+      if (diagnostic?.transactionId && diagnostic.reference) {
+        try {
+          const verified = await paymentService.verify(
+            reservation.idReserva,
+            diagnostic.reference,
+            diagnostic.transactionId,
+          );
+          setPayment(verified);
+          if (verified.estado === 'aprobado' || verified.estado === 'rechazado') return;
+        } catch {
+          // The webhook can still update the backend; continue reading its state.
+        }
+      }
       for (let attempt = 0; attempt < 8; attempt += 1) {
         try {
           const data = await paymentService.getByReservation(reservation.idReserva);
-          console.info('[Wompi] Backend payment status', {
-            reservationId: reservation.idReserva,
-            paymentId: data.idPago,
-            paymentStatus: data.estado,
-            attemptId: data.intentoActual?.idIntento,
-            attemptStatus: data.intentoActual?.estado,
-            transactionId: diagnostic?.transactionId,
-            transactionStatus: diagnostic?.transactionStatus,
-            reference: diagnostic?.reference,
-          });
+
           setPayment(data);
           if (data.estado === 'aprobado' || data.estado === 'rechazado') return;
         } catch {
@@ -296,27 +293,17 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     const transaction = message.transaction;
     const diagnostic: TransactionDiagnostic = {
       transactionId: typeof transaction?.id === 'string' ? transaction.id : undefined,
-      transactionStatus: typeof transaction?.status === 'string' ? transaction.status : undefined,
       reference: typeof transaction?.reference === 'string' ? transaction.reference : undefined,
     };
 
     switch (message.event) {
       case 'checkout_script_loaded':
       case 'checkout_open_called':
-        console.info('[Wompi] Widget event', {
-          event: message.event,
-          reservationId: reservation.idReserva,
-          attemptId: checkout?.idIntento,
-        });
+
         if (message.event === 'checkout_open_called') setWidgetOpened(true);
         return;
       case 'checkout_callback':
-        console.info('[Wompi] Checkout callback', {
-          reservationId: reservation.idReserva,
-          attemptId: checkout?.idIntento,
-          resultType: message.resultType,
-          ...diagnostic,
-        });
+
         void verifyAfterCheckout(diagnostic);
         return;
       case 'checkout_closed':
@@ -326,20 +313,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       case 'checkout_script_timeout':
       case 'checkout_init_error':
       case 'javascript_error':
-        console.error('[Wompi] Widget error', {
-          event: message.event,
-          reservationId: reservation.idReserva,
-          attemptId: checkout?.idIntento,
-        });
+
         setWidgetError(true);
         setWidgetOpened(false);
         return;
       default:
-        console.warn('[Wompi] Unknown widget event', {
-          event: /^[a-z_]{1,64}$/.test(message.event) ? message.event : 'invalid_event_name',
-          reservationId: reservation.idReserva,
-          attemptId: checkout?.idIntento,
-        });
+
     }
   };
 
@@ -381,26 +360,11 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               key={widgetReloadKey}
               style={styles.webview}
               source={{ html: makeWidgetHtml(checkout, t('mobile.paymentFlow.processing')) }}
-              onLoadEnd={() => console.info('[Wompi] WebView document loaded', {
-                reservationId: reservation.idReserva,
-                attemptId: checkout.idIntento,
-              })}
               onMessage={handleWidgetMessage}
-              onError={(event) => {
-                console.error('[Wompi] WebView load error', {
-                  reservationId: reservation.idReserva,
-                  attemptId: checkout.idIntento,
-                  code: event.nativeEvent.code,
-                  description: event.nativeEvent.description,
-                });
+              onError={() => {
                 setWidgetError(true);
               }}
-              onHttpError={(event) => {
-                console.error('[Wompi] WebView HTTP error', {
-                  reservationId: reservation.idReserva,
-                  attemptId: checkout.idIntento,
-                  statusCode: event.nativeEvent.statusCode,
-                });
+              onHttpError={() => {
                 setWidgetError(true);
               }}
               javaScriptEnabled

@@ -46,7 +46,7 @@ export default function LoginScreen({
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // Estado para controlar el mensaje de error estético
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -94,10 +94,7 @@ export default function LoginScreen({
       setIsLoggedIn(true);
 
     } catch (error: any) {
-      console.log(
-        'ERROR LOGIN:',
-        error?.response?.data || error?.message || error
-      );
+
 
       let message =
         t('login.genericError');

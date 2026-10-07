@@ -7,7 +7,12 @@ export function resolveApiUrl(value: string | undefined, isDevelopment: boolean)
   } catch {
     throw new Error('EXPO_PUBLIC_API_URL debe ser una URL absoluta.');
   }
-  const local = ['localhost', '127.0.0.1', '10.0.2.2'].includes(url.hostname);
+  const local = [
+  'localhost',
+  '127.0.0.1',
+  '10.0.2.2',
+  '192.168.100.199',
+].includes(url.hostname);
   if (url.protocol !== 'https:' && !(isDevelopment && local && url.protocol === 'http:')) {
     throw new Error('EXPO_PUBLIC_API_URL debe usar HTTPS (HTTP local solo en desarrollo).');
   }

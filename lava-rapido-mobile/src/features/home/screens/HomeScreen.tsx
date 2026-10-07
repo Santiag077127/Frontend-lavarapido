@@ -71,7 +71,7 @@ const HomeScreen = () => {
       setServices(Array.isArray(servicesResponse.data) ? servicesResponse.data : []);
       setUser(profileResponse.data);
     } catch (err: any) {
-      console.error('ERROR HOME:', err?.response?.data || err);
+
       setError(t('mobile.home.error'));
     } finally {
       setLoading(false);
@@ -105,11 +105,12 @@ const HomeScreen = () => {
   const getUserName = () => user?.firstName || user?.nombre || t('mobile.home.defaultUser');
 
   const handleServicePress = (service: Service) => {
+    if (service.estado !== true) return;
     navigation.navigate('Reservation', { service });
   };
 
   const renderService = ({ item }: { item: Service }) => (
-    <TouchableOpacity activeOpacity={0.88} style={styles.serviceCard} onPress={() => handleServicePress(item)}>
+    <TouchableOpacity activeOpacity={0.88} style={[styles.serviceCard, item.estado !== true && styles.inactiveService]} disabled={item.estado !== true} onPress={() => handleServicePress(item)}>
       <Image source={getServiceImage(item.nombre)} style={styles.serviceImage} resizeMode="cover" />
       <View style={styles.serviceContent}>
         <View style={styles.serviceTitleRow}>
@@ -117,6 +118,11 @@ const HomeScreen = () => {
           {item.estado && (
             <View style={styles.availableBadge}>
               <Text style={styles.availableBadgeText}>{t('mobile.home.availableBadge')}</Text>
+            </View>
+          )}
+          {item.estado !== true && (
+            <View style={styles.unavailableBadge}>
+              <Text style={styles.unavailableBadgeText}>{t('mobile.serviceDetail.unavailable')}</Text>
             </View>
           )}
         </View>
@@ -257,12 +263,15 @@ const styles = StyleSheet.create({
   filterButtonText: { color: '#475569', fontSize: 14, fontWeight: '700' },
   filterButtonTextSelected: { color: '#FFFFFF' },
   serviceCard: { marginHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 16, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E8EDF3', shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 5, elevation: 2 },
+  inactiveService: { opacity: 0.58 },
   serviceImage: { width: '100%', height: 165 },
   serviceContent: { padding: 16 },
   serviceTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   serviceName: { flex: 1, minWidth: 0, fontSize: 17, fontWeight: '800', color: '#111827' },
   availableBadge: { backgroundColor: '#E8F5E9', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
   availableBadgeText: { color: '#2E7D32', fontSize: 11, fontWeight: '700' },
+  unavailableBadge: { backgroundColor: '#FEE2E2', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  unavailableBadgeText: { color: '#991B1B', fontSize: 11, fontWeight: '700' },
   serviceDescription: { fontSize: 13, lineHeight: 18, color: '#6B7280', marginBottom: 12 },
   serviceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
