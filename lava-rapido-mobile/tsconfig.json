@@ -5,6 +5,7 @@
     "ignoreDeprecations": "6.0",
     "types": ["node"],
     "allowImportingTsExtensions": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@components/*": ["src/components/*"],

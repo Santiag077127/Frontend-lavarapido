@@ -11,7 +11,7 @@ export const recoveryCopy = {
     resetPassword: {
       subtitle: 'Pega el token recibido por correo y elige una nueva contraseña.',
       token: 'Token recibido por correo',
-      passwordRequirements: 'La contraseña debe tener al menos 8 caracteres.',
+      passwordRequirements: 'La contraseña debe tener al menos 8 unidades y un máximo de 72 bytes UTF-8.',
       resetError: 'Token inválido o vencido, o contraseña no válida. Solicita un nuevo enlace.',
       showPassword: 'Mostrar contraseña',
       hidePassword: 'Ocultar contraseña',
@@ -28,7 +28,7 @@ export const recoveryCopy = {
     resetPassword: {
       subtitle: 'Paste the token from the email and choose a new password.',
       token: 'Token from email',
-      passwordRequirements: 'The password must have at least 8 characters.',
+      passwordRequirements: 'The password must have at least 8 units and no more than 72 UTF-8 bytes.',
       resetError: 'Invalid or expired token, or invalid password. Request a new link.',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
@@ -45,7 +45,7 @@ export const recoveryCopy = {
     resetPassword: {
       subtitle: 'Cole o token recebido por e-mail e escolha uma nova senha.',
       token: 'Token recebido por e-mail',
-      passwordRequirements: 'A senha deve ter pelo menos 8 caracteres.',
+      passwordRequirements: 'A senha deve ter pelo menos 8 unidades e no máximo 72 bytes UTF-8.',
       resetError: 'Token inválido ou expirado, ou senha inválida. Solicite um novo link.',
       showPassword: 'Mostrar senha',
       hidePassword: 'Ocultar senha',
@@ -62,7 +62,7 @@ export const recoveryCopy = {
     resetPassword: {
       subtitle: 'Collez le jeton reçu par e-mail et choisissez un nouveau mot de passe.',
       token: 'Jeton reçu par e-mail',
-      passwordRequirements: 'Le mot de passe doit comporter au moins 8 caractères.',
+      passwordRequirements: 'Le mot de passe doit comporter au moins 8 unités et au maximum 72 octets UTF-8.',
       resetError: 'Jeton invalide ou expiré, ou mot de passe invalide. Demandez un nouveau lien.',
       showPassword: 'Afficher le mot de passe',
       hidePassword: 'Masquer le mot de passe',
