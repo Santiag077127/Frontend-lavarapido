@@ -8,6 +8,7 @@ import { images } from '../../../assets/images'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
 import { authService } from '../../../services/authService'
+import { isValidPassword, passwordsMatch } from '../../../services/passwordPolicy'
 
 export default function ResetPasswordScreen({ navigation }: any) {
   const { theme } = useContext(ThemeContext)
@@ -23,12 +24,12 @@ export default function ResetPasswordScreen({ navigation }: any) {
       Alert.alert(t('resetPassword.incompleteTitle'), t('resetPassword.incompleteMessage'))
       return
     }
-    if (password !== confirmPassword) {
+    if (!passwordsMatch(password, confirmPassword)) {
       Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.mismatch'))
       return
     }
-    if (password.length < 8) {
-      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.passwordRequirements', { defaultValue: 'La contraseña debe tener al menos 8 caracteres.' }))
+    if (!isValidPassword(password)) {
+      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.passwordRequirements', { defaultValue: 'La contraseña debe tener al menos 8 unidades y un máximo de 72 bytes UTF-8.' }))
       return
     }
     setSaving(true)

@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
+import { getPasswordUtf8ByteLength, isValidPassword, passwordsMatch } from '../../../services/passwordPolicy';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
@@ -106,24 +107,9 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
   const [loading, setLoading] = useState(false);
 
   // VALIDACIONES
-  const passwordRequirements = useMemo(
-    () => ({
-      minLength: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /\d/.test(password),
-    }),
-    [password]
-  );
-
-  const passwordIsValid =
-    passwordRequirements.minLength &&
-    passwordRequirements.uppercase &&
-    passwordRequirements.lowercase &&
-    passwordRequirements.number;
-
-  const passwordsMatch =
-    confirmPassword.length > 0 && password === confirmPassword;
+  const passwordBytes = getPasswordUtf8ByteLength(password);
+  const passwordIsValid = isValidPassword(password);
+  const confirmationMatches = passwordsMatch(password, confirmPassword);
 
   const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -166,7 +152,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (!confirmationMatches) {
       setError(t('register.passwordMismatch'));
       return;
     }
@@ -432,23 +418,13 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 {t('register.passwordRequirements')}
               </Text>
               <PasswordRequirement
-                valid={passwordRequirements.minLength}
+                valid={password.length >= 8}
                 text={t('register.minLength')}
                 textColor={theme.textSecondary}
               />
               <PasswordRequirement
-                valid={passwordRequirements.uppercase}
-                text={t('register.uppercase')}
-                textColor={theme.textSecondary}
-              />
-              <PasswordRequirement
-                valid={passwordRequirements.lowercase}
-                text={t('register.lowercase')}
-                textColor={theme.textSecondary}
-              />
-              <PasswordRequirement
-                valid={passwordRequirements.number}
-                text={t('register.number')}
+                valid={passwordBytes <= 72}
+                text={t('register.maxUtf8Bytes', { count: passwordBytes })}
                 textColor={theme.textSecondary}
               />
             </View>
@@ -499,10 +475,10 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 <Text
                   style={[
                     styles.passwordMatchText,
-                    { color: passwordsMatch ? '#2EAD62' : '#E05252' },
+                    { color: confirmationMatches ? '#2EAD62' : '#E05252' },
                   ]}
                 >
-                  {passwordsMatch
+                  {confirmationMatches
                     ? `✓ ${t('register.passwordsMatch')}`
                     : `✗ ${t('register.passwordsDoNotMatch')}`}
                 </Text>
