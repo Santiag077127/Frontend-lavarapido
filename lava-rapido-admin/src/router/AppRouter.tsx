@@ -15,17 +15,23 @@ import { MarcasPage } from "@/features/dashboard/pages/MarcasPage";
 import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
 import { ConfiguracionPage } from "@/features/dashboard/pages/ConfiguracionPage/ConfiguracionPage";
 import { PagoResultadoPage } from "@/features/dashboard/pages/PagoResultadoPage/PagoResultadoPage";
+import { RequireAdmin } from "./RequireAdmin";
+import { AuthNavigation } from "./AuthNavigation";
+import { AccessDeniedPage } from "./AccessDeniedPage";
 
 export const AppRouter = () => {
   return (
     <BrowserRouter>
+      <AuthNavigation />
       <Routes>
         <Route path="/"                element={<LandingPage />} />
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/register"        element={<RegisterPage />} />        {/* ← nuevo */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />  {/* ← nuevo */}
         <Route path="/reset-password"  element={<ResetPasswordPage />} />   {/* ← nuevo */}
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
 
+        <Route element={<RequireAdmin />}>
         <Route path="/pagos/resultado" element={<PagoResultadoPage />} />
 
         <Route path="/dashboard" element={<DashboardPage />}>
@@ -39,6 +45,7 @@ export const AppRouter = () => {
           <Route path="operadores" element={<OperadoresPage />} />
           <Route path="perfil" element={<PerfilPage />} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
+        </Route>
         </Route>
       </Routes>
     </BrowserRouter>

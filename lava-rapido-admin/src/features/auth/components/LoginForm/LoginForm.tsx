@@ -40,13 +40,15 @@ export const LoginForm = () => {
       setAuth(data.token, data.user);
 
       const destinoPendiente = consumirDestinoTrasLogin();
-      if (destinoPendiente) {
+      if (data.user.role === "ADMIN" && destinoPendiente) {
         navigate(destinoPendiente, { replace: true });
         return;
       }
 
       if (data.user.role === "ADMIN") {
         navigate("/dashboard");
+      } else if (destinoPendiente?.startsWith("/dashboard") || destinoPendiente === "/pagos/resultado") {
+        navigate("/access-denied", { replace: true });
       } else {
         navigate("/");
       }
