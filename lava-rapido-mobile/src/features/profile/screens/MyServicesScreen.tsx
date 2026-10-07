@@ -6,8 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
-import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
-import api from '../../../services/api';
+import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import { reservationService } from '../../reservations/services/reservationService';
 import type { ReservationResponse, ReservationStatus } from '../../reservations/types/reservation.types';
 import { formatCurrency } from '../../../utils/formatters';
@@ -24,7 +23,7 @@ export default function MyServicesScreen() {
   const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>('EN_PROCESO');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<ApiErrorKind | null>(null);
   const statusOptions: { value: ReservationStatus; label: string }[] = [
     { value: 'EN_PROCESO', label: t('mobile.services.status.inProcess') },
     { value: 'PENDIENTE', label: t('mobile.services.status.pending') },
@@ -38,16 +37,16 @@ export default function MyServicesScreen() {
 
   const loadReservations = useCallback(async () => {
     try {
-      setError('');
+      setError(null);
       const profileResponse = await api.get<UserProfile>('/api/users/profile');
       const userId = profileResponse.data.userId;
       if (!userId) throw new Error('missing-user-id');
-      setReservations(await reservationService.getByUser(userId));
+      const data = await reservationService.getByUser(userId);
+      if (!Array.isArray(data)) throw new Error('invalid-services-response');
+      setReservations(data);
     } catch (requestError: any) {
-      console.error('ERROR CARGANDO MIS SERVICIOS:', requestError?.response?.data || requestError?.message || requestError);
-      setReservations([]);
-      setError(t('mobile.services.error'));
-      Alert.alert(t('mobile.reservation.error'), t('mobile.services.errorAlert'));
+      const kind = classifyApiError(requestError);
+      if (kind !== 'unauthorized') setError(kind);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,14 +83,14 @@ export default function MyServicesScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <FlatList
-        data={error ? [] : filteredReservations}
+        data={filteredReservations}
         renderItem={renderItem}
         keyExtractor={(item) => item.idReserva}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.primary} colors={[theme.primary]} />}
-        ListHeaderComponent={<><View style={styles.header}><Text style={[styles.title, { color: theme.text }]}>{t('mobile.services.title')}</Text><Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('mobile.services.subtitle')}</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>{statusOptions.map((option) => <TouchableOpacity key={option.value} onPress={() => setSelectedStatus(option.value)} activeOpacity={0.8} style={[styles.filterButton, { borderColor: theme.border, backgroundColor: theme.card }, selectedStatus === option.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}><Text style={[styles.filterText, { color: theme.textSecondary }, selectedStatus === option.value && styles.filterTextSelected]}>{option.label}</Text></TouchableOpacity>)}</ScrollView></>}
-        ListEmptyComponent={<View style={[styles.emptyContainer, { backgroundColor: error ? theme.errorBackground : theme.card, borderColor: error ? theme.errorBorder : theme.border }]}><Ionicons name={error ? 'alert-circle-outline' : 'car-outline'} size={42} color={error ? theme.errorText : theme.primary} /><Text style={[styles.emptyTitle, { color: error ? theme.errorText : theme.text }]}>{error || emptyMessage}</Text>{error ? <TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity> : <Text style={[styles.emptyText, { color: darkMode ? '#BDBDBD' : theme.textSecondary }]}>{t('mobile.services.emptyHint')}</Text>}</View>}
+        ListHeaderComponent={<><View style={styles.header}><Text style={[styles.title, { color: theme.text }]}>{t('mobile.services.title')}</Text><Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('mobile.services.subtitle')}</Text></View>{!!error && reservations.length > 0 && <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}><Text style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${error}`)} ${t('apiErrors.staleData')}`}</Text><TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity></View>}<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterList}>{statusOptions.map((option) => <TouchableOpacity key={option.value} onPress={() => setSelectedStatus(option.value)} activeOpacity={0.8} style={[styles.filterButton, { borderColor: theme.border, backgroundColor: theme.card }, selectedStatus === option.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}><Text style={[styles.filterText, { color: theme.textSecondary }, selectedStatus === option.value && styles.filterTextSelected]}>{option.label}</Text></TouchableOpacity>)}</ScrollView></>}
+        ListEmptyComponent={<View style={[styles.emptyContainer, { backgroundColor: error && reservations.length === 0 ? theme.errorBackground : theme.card, borderColor: error && reservations.length === 0 ? theme.errorBorder : theme.border }]}><Ionicons name={error && reservations.length === 0 ? 'alert-circle-outline' : 'car-outline'} size={42} color={error && reservations.length === 0 ? theme.errorText : theme.primary} /><Text style={[styles.emptyTitle, { color: error && reservations.length === 0 ? theme.errorText : theme.text }]}>{error && reservations.length === 0 ? t(`apiErrors.${error}`) : emptyMessage}</Text>{error && reservations.length === 0 ? <TouchableOpacity onPress={loadReservations}><Text style={[styles.retryText, { color: theme.primary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity> : <Text style={[styles.emptyText, { color: darkMode ? '#BDBDBD' : theme.textSecondary }]}>{t('mobile.services.emptyHint')}</Text>}</View>}
       />
     </SafeAreaView>
   );
@@ -103,5 +102,5 @@ const styles = StyleSheet.create({
   filterList: { gap: 8, paddingBottom: 24 }, filterButton: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 1, borderRadius: 12 }, filterText: { fontSize: 14, fontWeight: '700' }, filterTextSelected: { color: '#FFFFFF' },
   card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 }, top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }, titleContainer: { flex: 1, minWidth: 0, paddingRight: 8 }, serviceTitle: { fontSize: 18, fontWeight: '800' }, vehicleText: { marginTop: 4, fontSize: 13 }, statusBadge: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 }, statusText: { color: '#fff', fontWeight: '700', fontSize: 11 },
   infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 }, infoText: { marginLeft: 8, fontSize: 14, flex: 1 }, detailsButton: { minHeight: 48, borderWidth: 1, borderRadius: 12, marginTop: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }, detailsText: { fontSize: 14, fontWeight: '700' },
-  emptyContainer: { borderWidth: 1, borderRadius: 16, padding: 24, alignItems: 'center' }, emptyTitle: { marginTop: 12, fontSize: 17, lineHeight: 23, fontWeight: '800', textAlign: 'center' }, emptyText: { marginTop: 8, fontSize: 14, lineHeight: 20, textAlign: 'center' }, retryText: { marginTop: 12, fontSize: 14, fontWeight: '700' },
+  emptyContainer: { borderWidth: 1, borderRadius: 16, padding: 24, alignItems: 'center' }, emptyTitle: { marginTop: 12, fontSize: 17, lineHeight: 23, fontWeight: '800', textAlign: 'center' }, emptyText: { marginTop: 8, fontSize: 14, lineHeight: 20, textAlign: 'center' }, retryText: { marginTop: 12, fontSize: 14, fontWeight: '700' }, errorBanner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

@@ -18,6 +18,7 @@ import {
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import {
   assignmentService,
   Assignment,
@@ -56,6 +57,7 @@ export default function AssignedServicesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<ApiErrorKind | null>(null);
 
   // =======================================================
   // CARGAR ASIGNACIONES
@@ -63,19 +65,13 @@ export default function AssignedServicesScreen() {
 
   const loadAssignments = useCallback(async () => {
     try {
+      setLoadError(null);
       const response = await assignmentService.getMine();
-
+      if (!Array.isArray(response.data)) throw new Error('invalid-assignments-response');
       setAssignments(response.data);
     } catch (error) {
-      console.error(
-        'Error cargando asignaciones:',
-        error
-      );
-
-      Alert.alert(
-        t('operator.errors.loadTitle'),
-        t('operator.errors.loadMessage')
-      );
+      const kind = classifyApiError(error);
+      if (kind !== 'unauthorized') setLoadError(kind);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -299,6 +295,12 @@ export default function AssignedServicesScreen() {
             tintColor={theme.primary}
           />
         }
+        ListHeaderComponent={loadError && assignments.length > 0 ? (
+          <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
+            <Text style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
+            <TouchableOpacity onPress={loadAssignments}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
+          </View>
+        ) : null}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text
@@ -309,7 +311,7 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              {t('operator.empty.title')}
+              {loadError ? t('operator.errors.loadTitle') : t('operator.empty.title')}
             </Text>
 
             <Text
@@ -320,8 +322,9 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              {t('operator.empty.description')}
+              {loadError ? t(`apiErrors.${loadError}`) : t('operator.empty.description')}
             </Text>
+            {loadError && <TouchableOpacity onPress={loadAssignments} style={styles.retryButton}><Text style={{ color: theme.primary, fontWeight: '700' }}>{t('common.retry')}</Text></TouchableOpacity>}
           </View>
         }
         renderItem={({ item }) => {
@@ -858,6 +861,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 8,
   },
+  errorBanner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  errorRetry: { fontSize: 14, fontWeight: '700' },
+  retryButton: { marginTop: 14, minHeight: 44, justifyContent: 'center', paddingHorizontal: 18 },
 
   card: {
     borderWidth: 1,

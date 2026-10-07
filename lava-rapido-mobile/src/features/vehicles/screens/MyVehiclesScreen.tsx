@@ -19,6 +19,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
 import BackButton from '../../../components/common/BackButton';
 import { ThemeContext } from '../../../theme/ThemeContext';
@@ -49,35 +50,17 @@ export default function MyVehiclesScreen({
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const getRequestError = (error: any) => {
-    switch (error?.response?.status) {
-      case 401:
-        return t('vehicles.errors.unauthorized');
-      case 400:
-        return t('vehicles.errors.badRequest');
-      case 409:
-        return t('vehicles.errors.conflict');
-      default:
-        return t('vehicles.errors.load');
-    }
-  };
+  const [loadError, setLoadError] = useState<ApiErrorKind | null>(null);
 
   const loadVehicles = async () => {
     try {
+      setLoadError(null);
       const response = await vehicleService.getMine();
-
+      if (!Array.isArray(response.data)) throw new Error('invalid-vehicles-response');
       setVehicles(response.data);
     } catch (error: any) {
-      console.error(
-        'Error cargando vehículos:',
-        error?.response?.status || error?.message,
-      );
-
-      Alert.alert(
-        t('vehicles.errors.title'),
-        getRequestError(error),
-      );
+      const kind = classifyApiError(error);
+      if (kind !== 'unauthorized') setLoadError(kind);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -458,8 +441,18 @@ export default function MyVehiclesScreen({
             tintColor={theme.primary}
           />
         }
+        ListHeaderComponent={loadError && vehicles.length > 0 ? (
+          <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
+            <Text style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
+            <TouchableOpacity onPress={loadVehicles}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
+          </View>
+        ) : null}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          loadError ? <View style={styles.emptyContainer}>
+            <View style={[styles.emptyIcon, { backgroundColor: theme.errorBackground }]}><Ionicons name="cloud-offline-outline" size={48} color={theme.errorText} /></View>
+            <Text style={[styles.emptyTitle, { color: theme.errorText }]}>{t(`apiErrors.${loadError}`)}</Text>
+            <TouchableOpacity style={[styles.emptyButton, { backgroundColor: theme.primary }]} onPress={loadVehicles} activeOpacity={0.85}><Text style={styles.emptyButtonText}>{t('common.retry')}</Text></TouchableOpacity>
+          </View> : <View style={styles.emptyContainer}>
             <View
               style={[
                 styles.emptyIcon,
@@ -727,6 +720,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 30,
   },
+  errorBanner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  errorRetry: { fontSize: 14, fontWeight: '700' },
 
   emptyIcon: {
     width: 95,
