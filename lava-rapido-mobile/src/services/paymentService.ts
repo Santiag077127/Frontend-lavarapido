@@ -46,23 +46,6 @@ export const paymentService = {
     );
     const data = response.data as WompiCheckoutData | null;
     const record = (data ?? {}) as unknown as Record<string, unknown>;
-    const propertyTypes = Object.fromEntries(
-      Object.entries(record).map(([key, value]) => [
-        key,
-        value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
-      ]),
-    );
-    // Temporary safe diagnostics: metadata only, never checkout secrets or tokens.
-    console.info('[Wompi] Start response', {
-      status: response.status,
-      reservationId,
-      keys: Object.keys(record),
-      propertyTypes,
-      paymentId: record.idPago,
-      attemptId: record.idIntento,
-      reference: record.referencia,
-      redirectUrl: record.redirectUrl,
-    });
 
     const requiredFields: Array<keyof WompiCheckoutData> = [
       'idPago',
@@ -80,10 +63,6 @@ export const paymentService = {
       (key) => record[key] === undefined || record[key] === null,
     );
     if (missingFields.length > 0) {
-      console.error('[Wompi] Start response missing fields', {
-        reservationId,
-        missingFields,
-      });
       throw new Error('Respuesta de inicio de pago incompleta');
     }
 
@@ -93,6 +72,14 @@ export const paymentService = {
   getByReservation: async (reservationId: string): Promise<ReservationPayment> => {
     const response = await api.get<ReservationPayment>(
       `/api/pagos/reserva/${reservationId}`,
+    );
+    return response.data;
+  },
+
+  verify: async (reservationId: string, referencia: string, transactionId: string): Promise<ReservationPayment> => {
+    const response = await api.post<ReservationPayment>(
+      `/api/pagos/reserva/${reservationId}/verificar`,
+      { referencia, transactionId },
     );
     return response.data;
   },

@@ -41,6 +41,7 @@ import { vehicleService } from '../../vehicles/services/vehicleService';
 import type { Vehicle } from '../../vehicles/types/vehicle.types';
 
 import { reservationService } from '../services/reservationService';
+import { serviceService } from '../../../services/serviceService';
 
 import type {
   CreateReservationData,
@@ -121,6 +122,7 @@ export default function ReservationScreen() {
 
   const [vehicles, setVehicles] =
     useState<Vehicle[]>([]);
+  const activeVehicles = useMemo(() => vehicles.filter((vehicle) => vehicle.estado === true), [vehicles]);
 
   const [
     selectedVehicleId,
@@ -257,25 +259,15 @@ export default function ReservationScreen() {
             true,
           );
 
-          console.log(
-            '========== CARGANDO VEHÍCULOS ==========',
-          );
-
           const response =
             await vehicleService.getMyVehicles();
-
-          console.log(
-            'VEHÍCULOS OBTENIDOS:',
-            response,
-          );
-
           setVehicles(response);
 
           if (
-            response.length > 0
+            response.some((vehicle) => vehicle.estado === true)
           ) {
             setSelectedVehicleId(
-              response[0]
+              response.find((vehicle) => vehicle.estado === true)!
                 .idVehiculo,
             );
           } else {
@@ -301,31 +293,7 @@ export default function ReservationScreen() {
         } catch (
           error: any
         ) {
-          console.error(
-            '========== ERROR CARGANDO VEHÍCULOS ==========',
-          );
-
-          console.error(
-            'ERROR:',
-            error,
-          );
-
-          console.error(
-            'STATUS:',
-            error?.response
-              ?.status,
-          );
-
-          console.error(
-            'DATA:',
-            error?.response
-              ?.data,
-          );
-
-          console.error(
-            'MESSAGE:',
-            error?.message,
-          );
+          void error;
 
           Alert.alert(
             t('mobile.reservation.error'),
@@ -337,7 +305,7 @@ export default function ReservationScreen() {
           );
         }
       },
-      [navigation],
+      [navigation, t],
     );
 
   // ==========================================================
@@ -472,53 +440,23 @@ export default function ReservationScreen() {
         return;
       }
 
-      console.log(
-        '========== INICIANDO CREACIÓN DE RESERVA ==========',
-      );
 
-      console.log(
-        'SERVICE OBJECT:',
-        service,
-      );
 
-      console.log(
-        'SERVICE ID:',
-        serviceId,
-      );
 
-      console.log(
-        'SERVICE NAME:',
-        serviceName,
-      );
 
-      console.log(
-        'SERVICE PRICE:',
-        servicePrice,
-      );
 
-      console.log(
-        'SERVICE DURATION:',
-        serviceDuration,
-      );
 
-      console.log(
-        'SELECTED VEHICLE:',
-        selectedVehicleId,
-      );
 
-      console.log(
-        'SELECTED DATE:',
-        formatDate(
-          selectedDate,
-        ),
-      );
 
-      console.log(
-        'SELECTED TIME:',
-        formatTime(
-          selectedTime,
-        ),
-      );
+
+
+
+
+
+
+
+
+
 
       // --------------------------------------------------------
       // VALIDAR SERVICIO
@@ -530,9 +468,7 @@ export default function ReservationScreen() {
           t('mobile.reservation.serviceMissing'),
         );
 
-        console.error(
-          'ERROR: serviceId no existe',
-        );
+
 
         return;
       }
@@ -549,6 +485,15 @@ export default function ReservationScreen() {
           t('mobile.reservation.selectVehicleMessage'),
         );
 
+        return;
+      }
+
+      const selectedVehicle = activeVehicles.find((vehicle) => vehicle.idVehiculo === selectedVehicleId);
+      if (!selectedVehicle || service?.estado !== true) {
+        Alert.alert(
+          t('mobile.reservation.error'),
+          selectedVehicle ? t('mobile.serviceDetail.unavailable') : t('vehicles.status.inactive'),
+        );
         return;
       }
 
@@ -635,6 +580,35 @@ export default function ReservationScreen() {
         return;
       }
 
+      setCreatingReservation(true);
+      try {
+        const [currentService, currentVehicles] = await Promise.all([
+          serviceService.getById(serviceId),
+          vehicleService.getMyVehicles(),
+        ]);
+        const currentVehicle = currentVehicles.find((vehicle) => vehicle.idVehiculo === selectedVehicleId);
+        if (currentService.estado !== true || !currentVehicle || currentVehicle.estado !== true) {
+          setVehicles(currentVehicles);
+          Alert.alert(
+            t('mobile.reservation.error'),
+            currentService.estado !== true ? t('mobile.serviceDetail.unavailable') : t('vehicles.status.inactive'),
+          );
+          return;
+        }
+      } catch (availabilityError: any) {
+        const status = availabilityError?.response?.status;
+        if ([400, 404, 409, 422].includes(status)) {
+          Alert.alert(t('mobile.reservation.error'), t('mobile.serviceDetail.unavailable'));
+        } else {
+          Alert.alert(t('mobile.reservation.error'), t('mobile.reservation.vehicleLoadError'));
+        }
+        return;
+      } finally {
+        setCreatingReservation(false);
+      }
+
+      setCreatingReservation(true);
+
       // --------------------------------------------------------
       // REQUEST
       // --------------------------------------------------------
@@ -659,60 +633,11 @@ export default function ReservationScreen() {
             ),
         };
 
-      console.log(
-        '========== REQUEST RESERVA ==========',
-      );
-
-      console.log(
-        'reservationData:',
-        reservationData,
-      );
-
-      console.log(
-        'JSON:',
-        JSON.stringify(
-          reservationData,
-          null,
-          2,
-        ),
-      );
-
-      console.log(
-        '=====================================',
-      );
-
       try {
-        setCreatingReservation(
-          true,
-        );
-
         const response =
           await reservationService.create(
             reservationData,
           );
-
-        console.log(
-          '========== RESERVA CREADA ==========',
-        );
-
-        console.log(
-          'RESPONSE:',
-          response,
-        );
-
-        console.log(
-          'ID RESERVA:',
-          response?.idReserva,
-        );
-
-        console.log(
-          'ESTADO:',
-          response?.estado,
-        );
-
-        console.log(
-          '====================================',
-        );
 
         navigation.navigate('ReservationPayment', {
           reservation: response,
@@ -720,59 +645,7 @@ export default function ReservationScreen() {
       } catch (
         error: any
       ) {
-        console.error(
-          '========== ERROR CREANDO RESERVA ==========',
-        );
-
-        console.error(
-          'ERROR COMPLETO:',
-          error,
-        );
-
-        console.error(
-          'STATUS:',
-          error?.response
-            ?.status,
-        );
-
-        console.error(
-          'DATA:',
-          error?.response
-            ?.data,
-        );
-
-        console.error(
-          'MESSAGE:',
-          error?.message,
-        );
-
-        console.error(
-          'HEADERS:',
-          error?.response
-            ?.headers,
-        );
-
-        console.error(
-          'REQUEST URL:',
-          error?.config
-            ?.url,
-        );
-
-        console.error(
-          'REQUEST METHOD:',
-          error?.config
-            ?.method,
-        );
-
-        console.error(
-          'REQUEST DATA:',
-          error?.config
-            ?.data,
-        );
-
-        console.error(
-          '============================================',
-        );
+        void error;
 
         // ------------------------------------------------------
         // OBTENER MENSAJE DEL BACKEND
@@ -1184,7 +1057,7 @@ export default function ReservationScreen() {
                     colors.text,
                 }}
               >
-                {vehicles.map(
+                {activeVehicles.map(
                   (
                     vehicle,
                   ) => (
@@ -1545,7 +1418,7 @@ export default function ReservationScreen() {
           disabled={
             creatingReservation ||
             !selectedVehicleId ||
-            vehicles.length ===
+            activeVehicles.length ===
               0
           }
           onPress={
@@ -1562,7 +1435,7 @@ export default function ReservationScreen() {
               opacity:
                 creatingReservation ||
                 !selectedVehicleId ||
-                vehicles.length ===
+                activeVehicles.length ===
                   0
                   ? 0.5
                   : pressed

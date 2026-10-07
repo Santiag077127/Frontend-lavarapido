@@ -11,9 +11,11 @@ let token: string | null = null;
 
 export const setToken = (newToken: string | null) => {
   token = newToken;
+  if (newToken) logoutInProgress = false;
 };
 
 let onLogout: (() => void) | null = null;
+let logoutInProgress = false;
 
 export const setLogoutHandler = (callback: () => void) => {
   onLogout = callback;
@@ -41,10 +43,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && token && !error.config?.url?.includes('/api/users/login')) {
-      if (onLogout) {
-        onLogout();
-      }
+    const isLoginRequest = error.config?.url?.replace(/\/$/, '').endsWith('/api/users/login');
+    if (error.response?.status === 401 && token && !isLoginRequest && !logoutInProgress) {
+      logoutInProgress = true;
+      token = null;
+      onLogout?.();
     }
 
     return Promise.reject(error);

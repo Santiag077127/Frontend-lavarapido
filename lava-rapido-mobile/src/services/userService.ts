@@ -9,7 +9,19 @@ export type UserProfile = {
   profilePicture: string | null;
 };
 
+export type CurrentUser = {
+  userId: string;
+  firstName: string;
+  email: string;
+  role: 'USER' | 'OPERATOR' | 'ADMIN';
+};
+
 export const userService = {
+
+  getCurrent: async (): Promise<CurrentUser> => {
+    const response = await api.get<CurrentUser>('/api/users/me');
+    return response.data;
+  },
 
   getProfile: async (): Promise<UserProfile> => {
 

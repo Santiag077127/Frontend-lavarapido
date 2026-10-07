@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import MapView, { Marker } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 
 import { locations } from '../data/locations'
 import LocationCard from '../components/LocationCard'
@@ -30,6 +30,7 @@ export default function MapScreen() {
 
       <MapView
         style={styles.map}
+        provider={PROVIDER_GOOGLE}
         initialRegion={initialRegion}
       >
         {locations.map(loc => (
