@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { images } from '../../../assets/images';
-import api from '../../../services/api';
+import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import type { Service } from '../../services/types/service.types';
 import { formatCurrency } from '../../../utils/formatters';
 
@@ -57,22 +57,36 @@ const HomeScreen = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
+  const [servicesError, setServicesError] = useState<ApiErrorKind | null>(null);
+  const [profileError, setProfileError] = useState<ApiErrorKind | null>(null);
 
   const loadData = async () => {
     try {
-      setError('');
-      const [servicesResponse, profileResponse] = await Promise.all([
+      setServicesError(null);
+      setProfileError(null);
+      const [servicesResult, profileResult] = await Promise.allSettled([
         api.get<Service[]>('/api/servicios'),
         api.get<UserProfile>('/api/users/profile'),
       ]);
 
-      // Keep the complete API result. Filters are derived locally from `estado`.
-      setServices(Array.isArray(servicesResponse.data) ? servicesResponse.data : []);
-      setUser(profileResponse.data);
-    } catch (err: any) {
+      if (servicesResult.status === 'fulfilled' && Array.isArray(servicesResult.value.data)) {
+        // Keep the complete API result. Filters are derived locally from `estado`.
+        setServices(servicesResult.value.data);
+      } else if (servicesResult.status === 'rejected') {
+        const kind = classifyApiError(servicesResult.reason);
+        if (kind !== 'unauthorized') setServicesError(kind);
+      } else {
+        setServicesError('unknown');
+      }
 
-      setError(t('mobile.home.error'));
+      if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+        setUser(profileResult.value.data);
+      } else if (profileResult.status === 'rejected') {
+        const kind = classifyApiError(profileResult.reason);
+        if (kind !== 'unauthorized') setProfileError(kind);
+      } else {
+        setProfileError('unknown');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -139,7 +153,7 @@ const HomeScreen = () => {
   );
 
   const renderEmptyState = () => {
-    if (error) return null;
+    if (servicesError && services.length === 0) return null;
     const hasSearch = search.trim().length > 0;
     const message = hasSearch
       ? t('mobile.home.noSearchResults')
@@ -205,13 +219,14 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      {!!error && (
+      {!!servicesError && (
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={22} color="#DC2626" />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>{`${t(`apiErrors.${servicesError}`)}${services.length > 0 ? ` ${t('apiErrors.staleData')}` : ''}`}</Text>
           <TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity>
         </View>
       )}
+      {!!profileError && <View style={styles.profileErrorContainer}><Text style={styles.profileErrorText}>{t(`apiErrors.${profileError}`)}</Text><TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity></View>}
     </>
   );
 
@@ -222,7 +237,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
-        data={error ? [] : filteredServices}
+        data={filteredServices}
         renderItem={renderService}
         keyExtractor={(item) => item.idServicio}
         ListHeaderComponent={listHeader}
@@ -279,6 +294,8 @@ const styles = StyleSheet.create({
   servicePrice: { fontSize: 17, fontWeight: '800', color: '#1E88E5' },
   errorContainer: { marginHorizontal: 16, marginBottom: 16, padding: 16, borderRadius: 12, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', flexDirection: 'row', alignItems: 'center', gap: 8 },
   errorText: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 18, color: '#991B1B' },
+  profileErrorContainer: { marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 12, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  profileErrorText: { flex: 1, minWidth: 0, color: '#991B1B', fontSize: 13, lineHeight: 18 },
   retryText: { fontSize: 13, fontWeight: '700', color: '#DC2626' },
   emptyContainer: { marginHorizontal: 16, padding: 24, borderRadius: 16, backgroundColor: '#FFFFFF', alignItems: 'center', borderWidth: 1, borderColor: '#E8EDF3' },
   emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#EAF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },

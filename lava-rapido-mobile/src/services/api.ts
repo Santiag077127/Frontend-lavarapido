@@ -7,6 +7,32 @@
 import axios from 'axios';
 import { resolveApiUrl } from './apiUrl';
 
+export type ApiErrorKind =
+  | 'network'
+  | 'timeout'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'not_found'
+  | 'server'
+  | 'unknown';
+
+export function classifyApiError(error: unknown): ApiErrorKind {
+  if (!axios.isAxiosError(error)) return 'unknown';
+
+  if (!error.response) {
+    return error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT'
+      ? 'timeout'
+      : 'network';
+  }
+
+  const status = error.response.status;
+  if (status === 401) return 'unauthorized';
+  if (status === 403) return 'forbidden';
+  if (status === 404) return 'not_found';
+  if (status >= 500) return 'server';
+  return 'unknown';
+}
+
 let token: string | null = null;
 
 export const setToken = (newToken: string | null) => {

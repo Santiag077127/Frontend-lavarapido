@@ -23,7 +23,7 @@ import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import BackButton from '../../../components/common/BackButton';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
-import api from '../../../services/api';
+import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
 import { reservationService } from '../services/reservationService';
 
@@ -64,7 +64,7 @@ export default function MyReservationsScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<ApiErrorKind | null>(null);
 
   const [cancellingId, setCancellingId] = useState<
     string | null
@@ -102,7 +102,7 @@ export default function MyReservationsScreen() {
           setLoading(true);
         }
 
-        setError(false);
+        setError(null);
 
         /**
          * Obtener usuario autenticado.
@@ -140,7 +140,7 @@ export default function MyReservationsScreen() {
         const reservationsData =
           Array.isArray(data)
             ? data
-            : [];
+            : (() => { throw new Error('invalid-reservations-response'); })();
 
         /**
          * Ordenar:
@@ -166,8 +166,8 @@ export default function MyReservationsScreen() {
       } catch (err: any) {
 
 
-        setReservations([]);
-        setError(true);
+        const kind = classifyApiError(err);
+        if (kind !== 'unauthorized') setError(kind);
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -830,7 +830,7 @@ export default function MyReservationsScreen() {
    * ============================================================
    */
   if (
-    error &&
+        error &&
     reservations.length === 0
   ) {
     return (
@@ -877,7 +877,7 @@ export default function MyReservationsScreen() {
             },
           ]}
         >
-          {t('mobile.reservations.loadError')}
+          {t(`apiErrors.${error}`)}
         </Text>
 
         <Pressable
@@ -1095,6 +1095,12 @@ export default function MyReservationsScreen() {
             colors={[primaryColor]}
           />
         }
+        ListHeaderComponent={error ? (
+          <View style={[styles.refreshError, { borderColor, backgroundColor: cardColor }]}>
+            <Text style={{ color: textColor, flex: 1 }}>{`${t(`apiErrors.${error}`)} ${t('apiErrors.staleData')}`}</Text>
+            <Pressable onPress={() => void loadReservations(false)}><Text style={{ color: primaryColor, fontWeight: '700' }}>{t('mobile.reservations.retry')}</Text></Pressable>
+          </View>
+        ) : null}
       />
     </View>
   );
@@ -1137,6 +1143,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+  },
+
+  refreshError: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
 
   emptyTitle: {
