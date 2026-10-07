@@ -9,6 +9,19 @@ interface User {
   role: "ADMIN" | "USER" | "OPERATOR"; // Rol del sistema
 }
 
+const readStoredUser = (): User | null => {
+  try {
+    return JSON.parse(sessionStorage.getItem("user") || "null") as User | null;
+  } catch {
+    sessionStorage.removeItem("user");
+    return null;
+  }
+};
+
+// Discard tokens left by earlier builds that persisted credentials across browser sessions.
+localStorage.removeItem("token");
+localStorage.removeItem("user");
+
 // Estado global de autenticación
 export interface AuthState {
   token: string | null; // JWT
@@ -25,15 +38,15 @@ export interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
 
   // Recuperar sesión guardada
-  token: localStorage.getItem("token"),
-  user: JSON.parse(localStorage.getItem("user") || "null"),
+  token: sessionStorage.getItem("token"),
+  user: readStoredUser(),
 
   // Login
   setAuth: (token, user) => {
 
-    // Guardar datos en localStorage
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
+    // Limitar la persistencia de la sesión a la pestaña actual.
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("user", JSON.stringify(user));
 
     // Actualizar estado global
     set({ token, user });
@@ -43,8 +56,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
 
     // Limpiar almacenamiento
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
 
     // Limpiar estado global
     set({ token: null, user: null });
