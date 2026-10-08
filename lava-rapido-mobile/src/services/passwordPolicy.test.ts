@@ -43,3 +43,11 @@ test('spaces remain part of the password and are not trimmed', () => {
   assert.equal(isValidPassword(password), true);
   assert.equal(getPasswordUtf8ByteLength(password), 8);
 });
+
+test('passwords containing only whitespace are invalid without trimming real passwords', () => {
+  assert.equal(isValidPassword('        '), false);
+  assert.equal(isValidPassword('\t\n        '), false);
+  const paddedPassword = '  hola1234  ';
+  assert.equal(isValidPassword(paddedPassword), true);
+  assert.equal(paddedPassword, '  hola1234  ');
+});

@@ -49,6 +49,8 @@ export type RootStackParamList = {
 
   EditProfile: undefined;
 
+  ChangePassword: undefined;
+
   // Vehículos
   MyVehicles: undefined;
 

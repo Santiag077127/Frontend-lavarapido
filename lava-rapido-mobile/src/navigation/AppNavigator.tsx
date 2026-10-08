@@ -17,6 +17,7 @@ import RegisterScreen from '../features/auth/screens/RegisterScreen';
 import ForgotPasswordScreen from '../features/auth/screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../features/auth/screens/ResetPasswordScreen';
 import EditProfileScreen from '../features/auth/screens/EditProfileScreen';
+import ChangePasswordScreen from '../features/auth/screens/ChangePasswordScreen';
 
 import ServiceDetailsScreen from '../features/profile/screens/ServiceDetailsScreen';
 
@@ -138,6 +139,11 @@ export default function AppNavigator({
               <Stack.Screen
                 name="EditProfile"
                 component={EditProfileScreen}
+              />
+
+              <Stack.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
               />
 
               {/* VEHÍCULOS */}

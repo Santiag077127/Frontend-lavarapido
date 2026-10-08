@@ -24,6 +24,11 @@ export interface LoginResponse {
   };
 }
 
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const authService = {
   register: (data: RegisterData) =>
     api.post('/api/users/register', data),
@@ -42,4 +47,7 @@ export const authService = {
 
   resetPassword: (token: string, nuevaContrasena: string) =>
     api.post('/api/auth/reset-password', { token, nuevaContrasena }),
+
+  changePassword: (data: ChangePasswordData) =>
+    api.put<void>('/api/users/password', data),
 };

@@ -30,7 +30,8 @@ export function getPasswordUtf8ByteLength(password: string): number {
 }
 
 export function isValidPassword(password: string): boolean {
-  return password.length >= MIN_PASSWORD_LENGTH
+  return password.trim().length > 0
+    && password.length >= MIN_PASSWORD_LENGTH
     && getPasswordUtf8ByteLength(password) <= MAX_PASSWORD_UTF8_BYTES;
 }
 
