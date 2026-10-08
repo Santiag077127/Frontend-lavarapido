@@ -12,5 +12,9 @@ test('exige una API HTTPS pública configurable', () => {
 
 test('permite HTTP local solamente en desarrollo', () => {
   assert.equal(resolveApiUrl('http://10.0.2.2:8081', true), 'http://10.0.2.2:8081');
+  assert.equal(resolveApiUrl('http://192.168.40.13:8081', true), 'http://192.168.40.13:8081');
+  assert.equal(resolveApiUrl('http://172.20.0.5:8081', true), 'http://172.20.0.5:8081');
   assert.throws(() => resolveApiUrl('http://10.0.2.2:8081', false));
+  assert.throws(() => resolveApiUrl('http://192.168.40.13:8081', false));
+  assert.throws(() => resolveApiUrl('http://api.example.test:8081', true));
 });
