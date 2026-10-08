@@ -7,12 +7,14 @@ export function resolveApiUrl(value: string | undefined, isDevelopment: boolean)
   } catch {
     throw new Error('EXPO_PUBLIC_API_URL debe ser una URL absoluta.');
   }
-  const local = [
-  'localhost',
-  '127.0.0.1',
-  '10.0.2.2',
-  '192.168.100.199',
-].includes(url.hostname);
+  const octets = url.hostname.split('.').map(Number);
+  const privateIPv4 = octets.length === 4 &&
+    octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255) &&
+    (octets[0] === 10 ||
+      (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+      (octets[0] === 192 && octets[1] === 168) ||
+      octets[0] === 127);
+  const local = url.hostname === 'localhost' || privateIPv4;
   if (url.protocol !== 'https:' && !(isDevelopment && local && url.protocol === 'http:')) {
     throw new Error('EXPO_PUBLIC_API_URL debe usar HTTPS (HTTP local solo en desarrollo).');
   }
