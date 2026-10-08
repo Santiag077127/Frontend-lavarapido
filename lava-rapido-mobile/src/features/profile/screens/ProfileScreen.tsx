@@ -838,6 +838,15 @@ export default function ProfileScreen({
         />
 
         <MenuItem
+          icon="key-outline"
+          title={t('changePassword.menuTitle')}
+          description={t('changePassword.menuDescription')}
+          onPress={() => navigation.navigate('ChangePassword')}
+          theme={theme}
+          darkMode={darkMode}
+        />
+
+        <MenuItem
           icon="car-outline"
           title={t('profile.vehicles')}
           description={t('profile.vehiclesDescription')}
