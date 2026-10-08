@@ -26,6 +26,7 @@ import {
 } from '@react-navigation/native'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import ConfirmationModal from '../../../components/notifications/ConfirmationModal'
 
 import {
   appAlert as Alert,
@@ -60,7 +61,6 @@ type AvatarKey =
   | 'avatar_4'
   | 'avatar_5'
 
-const PRIMARY_COLOR = '#2563EB'
 
 const AVATARS: {
   key: AvatarKey
@@ -96,19 +96,8 @@ export default function OperatorProfileScreen({
 
   const { t } = useTranslation()
 
-  const darkMode =
-    themeContext?.darkMode ?? false
-
-  const setDarkMode =
-    themeContext?.setDarkMode ?? (() => {})
-
-  const theme =
-    themeContext?.theme ?? {
-      background: '#BFD0DB',
-      card: '#FFFFFF',
-      text: '#000000',
-      textSecondary: '#555555',
-    }
+  const [logoutConfirmationVisible, setLogoutConfirmationVisible] = useState(false)
+  const { darkMode, setDarkMode, theme } = themeContext
 
   const { width } =
     useWindowDimensions()
@@ -233,7 +222,8 @@ export default function OperatorProfileScreen({
                 text: t('common.accept'),
                 onPress: logoutUser,
               },
-            ]
+            ],
+            'error',
           )
 
           return
@@ -241,7 +231,9 @@ export default function OperatorProfileScreen({
 
         Alert.alert(
           t('operator.profile.errorTitle'),
-          t('operator.profile.loadError')
+          t('operator.profile.loadError'),
+          undefined,
+          'error',
         )
       } finally {
         setLoading(false)
@@ -313,7 +305,9 @@ export default function OperatorProfileScreen({
 
       Alert.alert(
         t('operator.profile.avatarUpdatedTitle'),
-        t('operator.profile.avatarUpdatedMessage')
+        t('operator.profile.avatarUpdatedMessage'),
+        undefined,
+        'success',
       )
     } catch (error: any) {
       console.log(
@@ -333,7 +327,8 @@ export default function OperatorProfileScreen({
               text: t('common.accept'),
               onPress: logoutUser,
             },
-          ]
+          ],
+          'error',
         )
 
         return
@@ -343,7 +338,9 @@ export default function OperatorProfileScreen({
         t('operator.profile.errorTitle'),
         error?.response?.status === 400
           ? t('operator.profile.badRequest')
-          : t('operator.profile.avatarError')
+          : t('operator.profile.avatarError'),
+        undefined,
+        'error',
       )
     } finally {
       setSavingAvatar(false)
@@ -351,21 +348,7 @@ export default function OperatorProfileScreen({
   }
 
   const handleLogout = () => {
-    Alert.alert(
-      t('operator.profile.logoutTitle'),
-      t('operator.profile.logoutMessage'),
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('operator.profile.logout'),
-          style: 'destructive',
-          onPress: logoutUser,
-        },
-      ]
-    )
+    setLogoutConfirmationVisible(true);
   }
 
   if (loading) {
@@ -390,7 +373,7 @@ export default function OperatorProfileScreen({
         >
           <ActivityIndicator
             size="large"
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
 
           <Text
@@ -437,16 +420,14 @@ export default function OperatorProfileScreen({
             styles.emptyIcon,
             {
               backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
+                theme.primaryContainer,
             },
           ]}
         >
           <Ionicons
             name="person-outline"
             size={42}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
         </View>
 
@@ -480,7 +461,7 @@ export default function OperatorProfileScreen({
             styles.retryButton,
             {
               backgroundColor:
-                PRIMARY_COLOR,
+                theme.primary,
             },
           ]}
           onPress={() => {
@@ -491,11 +472,11 @@ export default function OperatorProfileScreen({
           <Ionicons
             name="refresh-outline"
             size={19}
-            color="#FFFFFF"
+            color={theme.onPrimary}
           />
 
           <Text
-            style={styles.retryText}
+            style={[styles.retryText, { color: theme.onPrimary }]}
           >
             {t('common.retry')}
           </Text>
@@ -513,7 +494,8 @@ export default function OperatorProfileScreen({
     )
 
   return (
-    <ScrollView
+    <>
+      <ScrollView
       style={[
         styles.container,
         {
@@ -537,9 +519,9 @@ export default function OperatorProfileScreen({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={PRIMARY_COLOR}
+          tintColor={theme.primary}
           colors={[
-            PRIMARY_COLOR,
+            theme.primary,
           ]}
         />
       }
@@ -553,9 +535,7 @@ export default function OperatorProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -564,12 +544,13 @@ export default function OperatorProfileScreen({
             styles.avatarBorder,
             {
               borderColor:
-                PRIMARY_COLOR,
+                theme.primary,
             },
           ]}
         >
           <Image
             source={currentAvatar}
+            accessibilityLabel={t('editProfile.profilePhoto')}
             style={[
               styles.avatar,
               {
@@ -595,7 +576,7 @@ export default function OperatorProfileScreen({
               styles.statusDot,
               {
                 backgroundColor:
-                  '#22C55E',
+                  theme.success,
                 borderColor:
                   theme.card,
               },
@@ -639,16 +620,14 @@ export default function OperatorProfileScreen({
             styles.profileBadge,
             {
               backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
+                theme.primaryContainer,
             },
           ]}
         >
           <Ionicons
             name="shield-checkmark-outline"
             size={15}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
 
           <Text
@@ -656,7 +635,7 @@ export default function OperatorProfileScreen({
               styles.profileBadgeText,
               {
                 color:
-                  PRIMARY_COLOR,
+                  theme.primary,
               },
             ]}
           >
@@ -674,9 +653,7 @@ export default function OperatorProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -688,16 +665,14 @@ export default function OperatorProfileScreen({
               styles.sectionIcon,
               {
                 backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#EEF4FF',
+                  theme.primaryContainer,
               },
             ]}
           >
             <Ionicons
               name="person-outline"
               size={20}
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
           </View>
 
@@ -775,9 +750,7 @@ export default function OperatorProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -789,16 +762,14 @@ export default function OperatorProfileScreen({
               styles.sectionIcon,
               {
                 backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#EEF4FF',
+                  theme.primaryContainer,
               },
             ]}
           >
             <Ionicons
               name="image-outline"
               size={20}
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
           </View>
 
@@ -837,13 +808,16 @@ export default function OperatorProfileScreen({
           style={styles.avatarGrid}
         >
           {AVATARS.map(
-            avatar => {
+            (avatar, index) => {
               const isSelected =
                 selectedAvatar ===
                 avatar.key
 
               return (
                 <TouchableOpacity
+                  accessibilityRole="radio"
+                  accessibilityLabel={t('accessibility.avatarOption', { number: index + 1 })}
+                  accessibilityState={{ selected: isSelected, disabled: savingAvatar }}
                   key={
                     avatar.key
                   }
@@ -861,14 +835,12 @@ export default function OperatorProfileScreen({
                     {
                       borderColor:
                         isSelected
-                          ? PRIMARY_COLOR
+                          ? theme.primary
                           : darkMode
-                            ? '#3A4655'
-                            : '#E2E8F0',
+                            ? theme.border
+                            : theme.border,
                       backgroundColor:
-                        darkMode
-                          ? '#202B38'
-                          : '#F8FAFC',
+                        theme.interactiveSurface,
                     },
                     isSelected && {
                       borderWidth: 3,
@@ -891,14 +863,14 @@ export default function OperatorProfileScreen({
                         styles.avatarCheck,
                         {
                           backgroundColor:
-                            PRIMARY_COLOR,
+                            theme.primary,
                         },
                       ]}
                     >
                       <Ionicons
                         name="checkmark"
                         size={13}
-                        color="#FFFFFF"
+                        color={theme.onPrimary}
                       />
                     </View>
                   )}
@@ -917,7 +889,7 @@ export default function OperatorProfileScreen({
             <ActivityIndicator
               size="small"
               color={
-                PRIMARY_COLOR
+                theme.primary
               }
             />
 
@@ -945,9 +917,7 @@ export default function OperatorProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -959,16 +929,14 @@ export default function OperatorProfileScreen({
               styles.sectionIcon,
               {
                 backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#EEF4FF',
+                  theme.primaryContainer,
               },
             ]}
           >
             <Ionicons
               name="briefcase-outline"
               size={20}
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
           </View>
 
@@ -1027,14 +995,8 @@ export default function OperatorProfileScreen({
         style={[
           styles.readOnlyCard,
           {
-            backgroundColor:
-              darkMode
-                ? '#1D2938'
-                : '#F0F7FF',
-            borderColor:
-              darkMode
-                ? '#334155'
-                : '#D7E8FF',
+            backgroundColor: theme.interactiveSurface,
+            borderColor: theme.border,
           },
         ]}
       >
@@ -1042,17 +1004,14 @@ export default function OperatorProfileScreen({
           style={[
             styles.readOnlyIcon,
             {
-              backgroundColor:
-                darkMode
-                  ? '#263B56'
-                  : '#E2EEFF',
+              backgroundColor: theme.primarySoft,
             },
           ]}
         >
           <Ionicons
             name="lock-closed-outline"
             size={20}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
         </View>
 
@@ -1097,9 +1056,7 @@ export default function OperatorProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -1158,9 +1115,7 @@ export default function OperatorProfileScreen({
                 styles.menuIcon,
                 {
                   backgroundColor:
-                    darkMode
-                      ? '#263241'
-                      : '#EEF4FF',
+                    theme.primaryContainer,
                 },
               ]}
             >
@@ -1171,7 +1126,7 @@ export default function OperatorProfileScreen({
                     : 'sunny-outline'
                 }
                 size={20}
-                color={PRIMARY_COLOR}
+                color={theme.primary}
               />
             </View>
 
@@ -1209,15 +1164,16 @@ export default function OperatorProfileScreen({
           </View>
 
           <Switch
+            accessibilityLabel={t('operator.profile.darkMode')}
             value={darkMode}
             onValueChange={
               setDarkMode
             }
             trackColor={{
-              false: '#CBD5E1',
-              true: PRIMARY_COLOR,
+              false: theme.border,
+              true: theme.primary,
             }}
-            thumbColor="#FFFFFF"
+            thumbColor={darkMode ? theme.onPrimary : theme.card}
           />
         </View>
       </View>
@@ -1225,22 +1181,23 @@ export default function OperatorProfileScreen({
       {/* CERRAR SESIÓN */}
 
       <TouchableOpacity
+        accessibilityRole="button"
         activeOpacity={0.8}
-        style={styles.logout}
+        style={[styles.logout, { backgroundColor: theme.errorAction, shadowColor: theme.errorAction }]}
         onPress={handleLogout}
       >
         <View
-          style={styles.logoutIcon}
+          style={[styles.logoutIcon, { backgroundColor: theme.errorBackground }]}
         >
           <Ionicons
             name="log-out-outline"
             size={20}
-            color="#FFFFFF"
+            color={theme.errorOnAction}
           />
         </View>
 
         <Text
-          style={styles.logoutText}
+          style={[styles.logoutText, { color: theme.errorOnAction }]}
         >
           {t('operator.profile.logout')}
         </Text>
@@ -1276,6 +1233,20 @@ export default function OperatorProfileScreen({
         style={styles.bottomSpace}
       />
     </ScrollView>
+      <ConfirmationModal
+        visible={logoutConfirmationVisible}
+        title={t('operator.profile.logoutTitle')}
+        message={t('operator.profile.logoutMessage')}
+        confirmLabel={t('operator.profile.logout')}
+        cancelLabel={t('common.cancel')}
+        variant="danger"
+        onConfirm={() => {
+          setLogoutConfirmationVisible(false);
+          logoutUser();
+        }}
+        onCancel={() => setLogoutConfirmationVisible(false)}
+      />
+    </>
   )
 }
 
@@ -1295,9 +1266,7 @@ function InfoItem({
         styles.infoRow,
         {
           borderColor:
-            darkMode
-              ? '#303B4A'
-              : '#E5E7EB',
+            theme.border,
         },
         last && {
           borderBottomWidth: 0,
@@ -1309,16 +1278,14 @@ function InfoItem({
           styles.infoIcon,
           {
             backgroundColor:
-              darkMode
-                ? '#263241'
-                : '#EEF4FF',
+              theme.primaryContainer,
           },
         ]}
       >
         <Ionicons
           name={icon}
           size={19}
-          color={PRIMARY_COLOR}
+          color={theme.primary}
         />
       </View>
 
@@ -1423,7 +1390,6 @@ const styles = StyleSheet.create({
   },
 
   retryText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 7,
@@ -1616,7 +1582,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
 
   avatarSaving: {
@@ -1716,12 +1681,10 @@ const styles = StyleSheet.create({
   logout: {
     height: 57,
     borderRadius: 17,
-    backgroundColor: '#DC3F35',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
-    shadowColor: '#DC3F35',
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1736,12 +1699,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor:
-      'rgba(255,255,255,0.14)',
   },
 
   logoutText: {
-    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 15.5,
     marginLeft: 8,

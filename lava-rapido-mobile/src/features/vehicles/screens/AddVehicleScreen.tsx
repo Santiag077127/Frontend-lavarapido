@@ -335,7 +335,7 @@ export default function AddVehicleScreen({
             <Ionicons
               name="car-sport-outline"
               size={26}
-              color="#fff"
+              color={theme.onPrimary}
             />
           </View>
 
@@ -392,6 +392,7 @@ export default function AddVehicleScreen({
           />
 
           <TextInput
+            accessibilityLabel={t('vehicles.fields.plate')}
             value={placa}
             onChangeText={(value) =>
               setPlaca(normalizePlate(value))
@@ -434,6 +435,9 @@ export default function AddVehicleScreen({
         </Text>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${t('vehicles.fields.brand')}: ${loadingBrands ? t('vehicles.form.loadingBrands') : selectedBrandObject?.nombre || t('vehicles.form.selectBrand')}`}
+          accessibilityState={{ disabled: loadingBrands || saving, busy: loadingBrands }}
           style={[
             styles.selectContainer,
             {
@@ -502,12 +506,15 @@ export default function AddVehicleScreen({
 
             return (
               <Pressable
+                accessibilityRole="radio"
+                accessibilityLabel={t(type.labelKey)}
+                accessibilityState={{ selected, disabled: saving }}
                 key={type.value}
                 style={[
                   styles.typeCard,
                   {
                     backgroundColor: selected
-                      ? theme.primary + '15'
+                      ? theme.primarySoft
                       : theme.card,
                     borderColor: selected
                       ? theme.primary
@@ -555,7 +562,7 @@ export default function AddVehicleScreen({
                     <Ionicons
                       name="checkmark"
                       size={11}
-                      color="#fff"
+                      color={theme.onPrimary}
                     />
                   </View>
                 )}
@@ -591,6 +598,7 @@ export default function AddVehicleScreen({
           />
 
           <TextInput
+            accessibilityLabel={t('vehicles.fields.color')}
             value={color}
             onChangeText={setColor}
             placeholder={t('vehicles.form.colorPlaceholder')}
@@ -627,12 +635,15 @@ export default function AddVehicleScreen({
           ]}
           onPress={handleSave}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saving, busy: saving }}
+          accessibilityLiveRegion="polite"
           activeOpacity={0.85}
         >
           {saving ? (
             <ActivityIndicator
               size="small"
-              color="#fff"
+              color={theme.onPrimary}
             />
           ) : (
             <Ionicons
@@ -642,11 +653,11 @@ export default function AddVehicleScreen({
                   : 'add-circle-outline'
               }
               size={22}
-              color="#fff"
+              color={theme.onPrimary}
             />
           )}
 
-          <Text style={styles.saveButtonText}>
+          <Text style={[styles.saveButtonText, { color: theme.onPrimary }]}>
             {saving
               ? t('vehicles.form.saving')
               : isEditing
@@ -665,6 +676,7 @@ export default function AddVehicleScreen({
           ]}
           onPress={() => navigation.goBack()}
           disabled={saving}
+          accessibilityRole="button"
           activeOpacity={0.8}
         >
           <Text
@@ -687,7 +699,7 @@ export default function AddVehicleScreen({
         transparent
         onRequestClose={() => setShowBrands(false)}
       >
-        <View style={styles.modalBackdrop}>
+        <View style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}>
           <View
             style={[
               styles.brandPicker,
@@ -722,6 +734,7 @@ export default function AddVehicleScreen({
               </View>
 
               <Pressable
+                accessibilityRole="button"
                 accessibilityLabel={t('vehicles.form.closeBrandSelector')}
                 style={[
                   styles.closeButton,
@@ -752,6 +765,7 @@ export default function AddVehicleScreen({
                 color={theme.textSecondary}
               />
               <TextInput
+                accessibilityLabel={t('vehicles.form.searchBrand')}
                 value={brandQuery}
                 onChangeText={setBrandQuery}
                 placeholder={t('vehicles.form.searchBrand')}
@@ -765,6 +779,7 @@ export default function AddVehicleScreen({
               />
               {brandQuery.length > 0 && (
                 <Pressable
+                  accessibilityRole="button"
                   accessibilityLabel={t('vehicles.form.clearSearch')}
                   onPress={() => setBrandQuery('')}
                 >
@@ -805,12 +820,15 @@ export default function AddVehicleScreen({
 
                   return (
                     <Pressable
+                      accessibilityRole="radio"
+                      accessibilityLabel={brand.nombre}
+                      accessibilityState={{ selected }}
                       key={brand.idMarca}
                       style={[
                         styles.brandOption,
                         {
                           backgroundColor: selected
-                            ? theme.primary + '14'
+                            ? theme.primarySoft
                             : theme.card,
                           borderColor: selected
                             ? theme.primary
@@ -829,7 +847,7 @@ export default function AddVehicleScreen({
                           {
                             backgroundColor: selected
                               ? theme.primary
-                              : theme.primary + '16',
+                              : theme.primarySoft,
                           },
                         ]}
                       >
@@ -838,7 +856,7 @@ export default function AddVehicleScreen({
                             styles.brandInitialText,
                             {
                               color: selected
-                                ? '#fff'
+                                ? theme.onPrimary
                                 : theme.primary,
                             },
                           ]}
@@ -1030,7 +1048,6 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
 
   brandPicker: {
@@ -1167,7 +1184,6 @@ const styles = StyleSheet.create({
   },
 
   saveButtonText: {
-    color: '#fff',
     fontSize: 15,
     fontWeight: '800',
   },

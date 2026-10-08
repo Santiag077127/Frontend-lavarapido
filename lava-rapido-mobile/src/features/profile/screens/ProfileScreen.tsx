@@ -26,6 +26,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
+import ConfirmationModal from '../../../components/notifications/ConfirmationModal'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
 import api, { setToken } from '../../../services/api'
@@ -51,7 +52,6 @@ type AvatarKey =
   | 'avatar_4'
   | 'avatar_5'
 
-const PRIMARY_COLOR = '#2563EB'
 
 const AVATARS: {
   key: AvatarKey
@@ -85,21 +85,8 @@ export default function ProfileScreen({
   const navigation = useNavigation<any>()
   const { t } = useTranslation()
 
-  const themeContext = useContext(ThemeContext)
-
-  const darkMode =
-    themeContext?.darkMode ?? false
-
-  const setDarkMode =
-    themeContext?.setDarkMode ?? (() => {})
-
-  const theme =
-    themeContext?.theme ?? {
-      background: '#BFD0DB',
-      card: '#FFFFFF',
-      text: '#000000',
-      textSecondary: '#555555',
-    }
+  const [logoutConfirmationVisible, setLogoutConfirmationVisible] = useState(false)
+  const { theme, darkMode, setDarkMode } = useContext(ThemeContext)
 
   const { width } = useWindowDimensions()
 
@@ -149,7 +136,8 @@ export default function ProfileScreen({
                 text: t('profile.accept'),
                 onPress: logoutUser,
               },
-            ]
+            ],
+            'error',
           )
 
           return
@@ -161,7 +149,9 @@ export default function ProfileScreen({
             ? t('profile.connectionError')
             : error?.response?.status === 404
               ? t('profile.notFound')
-              : t('profile.loadError')
+              : t('profile.loadError'),
+          undefined,
+          'error',
         )
       } finally {
         setLoading(false)
@@ -276,7 +266,9 @@ export default function ProfileScreen({
 
       Alert.alert(
         t('profile.avatarUpdatedTitle'),
-        t('profile.avatarUpdatedMessage')
+        t('profile.avatarUpdatedMessage'),
+        undefined,
+        'success',
       )
     } catch (error: any) {
       console.log(
@@ -296,7 +288,9 @@ export default function ProfileScreen({
 
       Alert.alert(
         t('profile.errorTitle'),
-        message
+        message,
+        undefined,
+        'error',
       )
     } finally {
       setChangingAvatar(false)
@@ -304,21 +298,7 @@ export default function ProfileScreen({
   }
 
   const handleLogout = () => {
-    Alert.alert(
-      t('profile.logoutTitle'),
-      t('profile.logoutMessage'),
-      [
-        {
-          text: t('profile.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('profile.logout'),
-          style: 'destructive',
-          onPress: logoutUser,
-        },
-      ]
-    )
+    setLogoutConfirmationVisible(true);
   }
 
   if (loading) {
@@ -343,7 +323,7 @@ export default function ProfileScreen({
         >
           <ActivityIndicator
             size="large"
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
 
           <Text
@@ -390,16 +370,14 @@ export default function ProfileScreen({
             styles.emptyIcon,
             {
               backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
+                theme.primaryContainer,
             },
           ]}
         >
           <Ionicons
             name="person-outline"
             size={42}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
         </View>
 
@@ -428,12 +406,13 @@ export default function ProfileScreen({
         </Text>
 
         <TouchableOpacity
+          accessibilityRole="button"
           activeOpacity={0.8}
           style={[
             styles.retryButton,
             {
               backgroundColor:
-                PRIMARY_COLOR,
+                theme.primary,
             },
           ]}
           onPress={() => {
@@ -444,11 +423,11 @@ export default function ProfileScreen({
           <Ionicons
             name="refresh-outline"
             size={19}
-            color="#FFFFFF"
+            color={theme.onPrimary}
           />
 
           <Text
-            style={styles.retryText}
+            style={[styles.retryText, { color: theme.onPrimary }]}
           >
             {t('profile.retry')}
           </Text>
@@ -471,7 +450,8 @@ export default function ProfileScreen({
     )
 
   return (
-    <ScrollView
+    <>
+      <ScrollView
       style={[
         styles.container,
         {
@@ -493,8 +473,8 @@ export default function ProfileScreen({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          tintColor={PRIMARY_COLOR}
-          colors={[PRIMARY_COLOR]}
+          tintColor={theme.primary}
+          colors={[theme.primary]}
         />
       }
     >
@@ -505,9 +485,7 @@ export default function ProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -516,12 +494,13 @@ export default function ProfileScreen({
             styles.avatarBorder,
             {
               borderColor:
-                PRIMARY_COLOR,
+                theme.primary,
             },
           ]}
         >
           <Image
             source={currentAvatar}
+            accessibilityLabel={t('editProfile.profilePhoto')}
             style={[
               styles.avatar,
               {
@@ -547,7 +526,7 @@ export default function ProfileScreen({
               styles.statusDot,
               {
                 backgroundColor:
-                  '#22C55E',
+                  theme.success,
                 borderColor:
                   theme.card,
               },
@@ -561,16 +540,14 @@ export default function ProfileScreen({
               styles.profileBadge,
               {
                 backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#EEF4FF',
+                  theme.primaryContainer,
               },
             ]}
           >
             <Ionicons
               name="person-circle-outline"
               size={15}
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
 
             <Text
@@ -619,9 +596,7 @@ export default function ProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -633,16 +608,14 @@ export default function ProfileScreen({
               styles.sectionIcon,
               {
                 backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#EEF4FF',
+                  theme.primaryContainer,
               },
             ]}
           >
             <Ionicons
               name="person-outline"
               size={20}
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
           </View>
 
@@ -716,9 +689,7 @@ export default function ProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -758,7 +729,7 @@ export default function ProfileScreen({
           {changingAvatar && (
             <ActivityIndicator
               size="small"
-              color={PRIMARY_COLOR}
+              color={theme.primary}
             />
           )}
         </View>
@@ -768,17 +739,13 @@ export default function ProfileScreen({
             styles.avatarGrid,
             {
               backgroundColor:
-                darkMode
-                  ? '#171E27'
-                  : '#F8FAFC',
+                theme.inputBackground,
               borderColor:
-                darkMode
-                  ? '#303B4A'
-                  : '#E2E8F0',
+                theme.border,
             },
           ]}
         >
-          {AVATARS.map(item => {
+          {AVATARS.map((item, index) => {
             const selected =
               selectedAvatar ===
               item.key
@@ -786,6 +753,9 @@ export default function ProfileScreen({
             return (
               <TouchableOpacity
                 key={item.key}
+                accessibilityRole="radio"
+                accessibilityLabel={t('accessibility.avatarOption', { number: index + 1 })}
+                accessibilityState={{ selected, disabled: changingAvatar }}
                 activeOpacity={0.75}
                 disabled={
                   changingAvatar
@@ -800,13 +770,11 @@ export default function ProfileScreen({
                   {
                     borderColor:
                       selected
-                        ? PRIMARY_COLOR
+                        ? theme.primary
                         : 'transparent',
                     backgroundColor:
                       selected
-                        ? darkMode
-                          ? '#263241'
-                          : '#EEF4FF'
+                        ? theme.primaryContainer
                         : 'transparent',
                   },
                 ]}
@@ -825,7 +793,7 @@ export default function ProfileScreen({
                       styles.check,
                       {
                         backgroundColor:
-                          PRIMARY_COLOR,
+                          theme.primary,
                         borderColor:
                           theme.card,
                       },
@@ -834,7 +802,7 @@ export default function ProfileScreen({
                     <Ionicons
                       name="checkmark"
                       size={13}
-                      color="#FFFFFF"
+                      color={theme.onPrimary}
                     />
                   </View>
                 )}
@@ -852,9 +820,7 @@ export default function ProfileScreen({
             backgroundColor:
               theme.card,
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -914,9 +880,7 @@ export default function ProfileScreen({
                 styles.menuIcon,
                 {
                   backgroundColor:
-                    darkMode
-                      ? '#263241'
-                      : '#EEF4FF',
+                    theme.primaryContainer,
                 },
               ]}
             >
@@ -927,7 +891,7 @@ export default function ProfileScreen({
                     : 'sunny-outline'
                 }
                 size={20}
-                color={PRIMARY_COLOR}
+                color={theme.primary}
               />
             </View>
 
@@ -961,36 +925,38 @@ export default function ProfileScreen({
           </View>
 
           <Switch
+            accessibilityLabel={t('profile.darkMode')}
             value={darkMode}
             onValueChange={
               setDarkMode
             }
             trackColor={{
-              false: '#CBD5E1',
-              true: PRIMARY_COLOR,
+              false: theme.border,
+              true: theme.primary,
             }}
-            thumbColor="#FFFFFF"
+            thumbColor={darkMode ? theme.onPrimary : theme.card}
           />
         </View>
       </View>
 
       <TouchableOpacity
+        accessibilityRole="button"
         activeOpacity={0.8}
-        style={styles.logout}
+        style={[styles.logout, { backgroundColor: theme.errorAction, shadowColor: theme.errorAction }]}
         onPress={handleLogout}
       >
         <View
-          style={styles.logoutIcon}
+          style={[styles.logoutIcon, { backgroundColor: theme.errorBackground }]}
         >
           <Ionicons
             name="log-out-outline"
             size={20}
-            color="#FFFFFF"
+            color={theme.errorOnAction}
           />
         </View>
 
         <Text
-          style={styles.logoutText}
+          style={[styles.logoutText, { color: theme.errorOnAction }]}
         >
           {t('profile.logout')}
         </Text>
@@ -1024,6 +990,20 @@ export default function ProfileScreen({
         style={styles.bottomSpace}
       />
     </ScrollView>
+      <ConfirmationModal
+        visible={logoutConfirmationVisible}
+        title={t('profile.logoutTitle')}
+        message={t('profile.logoutMessage')}
+        confirmLabel={t('profile.logout')}
+        cancelLabel={t('profile.cancel')}
+        variant="danger"
+        onConfirm={() => {
+          setLogoutConfirmationVisible(false);
+          logoutUser();
+        }}
+        onCancel={() => setLogoutConfirmationVisible(false)}
+      />
+    </>
   )
 }
 
@@ -1043,9 +1023,7 @@ function InfoItem({
         styles.infoRow,
         {
           borderColor:
-            darkMode
-              ? '#303B4A'
-              : '#E5E7EB',
+            theme.border,
         },
         last && {
           borderBottomWidth: 0,
@@ -1057,16 +1035,14 @@ function InfoItem({
           styles.infoIcon,
           {
             backgroundColor:
-              darkMode
-                ? '#263241'
-                : '#EEF4FF',
+              theme.primaryContainer,
           },
         ]}
       >
         <Ionicons
           name={icon}
           size={19}
-          color={PRIMARY_COLOR}
+          color={theme.primary}
         />
       </View>
 
@@ -1111,13 +1087,12 @@ function MenuItem({
 }: any) {
   return (
     <TouchableOpacity
+      accessibilityRole="button"
       style={[
         styles.menuItem,
         {
           borderColor:
-            darkMode
-              ? '#303B4A'
-              : '#E5E7EB',
+            theme.border,
         },
       ]}
       activeOpacity={0.7}
@@ -1131,16 +1106,14 @@ function MenuItem({
             styles.menuIcon,
             {
               backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
+                theme.primaryContainer,
             },
           ]}
         >
           <Ionicons
             name={icon}
             size={20}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
         </View>
 
@@ -1178,11 +1151,7 @@ function MenuItem({
       <Ionicons
         name="chevron-forward"
         size={20}
-        color={
-          darkMode
-            ? '#667085'
-            : '#94A3B8'
-        }
+        color={theme.icon}
       />
     </TouchableOpacity>
   )
@@ -1258,7 +1227,6 @@ const styles = StyleSheet.create({
   },
 
   retryText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 7,
@@ -1531,12 +1499,10 @@ const styles = StyleSheet.create({
   logout: {
     height: 57,
     borderRadius: 17,
-    backgroundColor: '#DC3F35',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,
-    shadowColor: '#DC3F35',
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1551,12 +1517,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor:
-      'rgba(255,255,255,0.14)',
   },
 
   logoutText: {
-    color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 15.5,
     marginLeft: 8,

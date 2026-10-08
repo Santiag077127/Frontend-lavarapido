@@ -38,7 +38,7 @@ export default function LoginScreen({
 }: Props) {
   const navigation = useNavigation<any>();
 
-  const { theme } = useContext(ThemeContext);
+  const { theme, darkMode } = useContext(ThemeContext);
   const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
@@ -124,10 +124,7 @@ export default function LoginScreen({
     <>
       <StatusBar
         barStyle={
-          theme.background === '#000000' ||
-          theme.background === '#000'
-            ? 'light-content'
-            : 'dark-content'
+          darkMode ? 'light-content' : 'dark-content'
         }
         backgroundColor={backgroundColor}
         translucent={false}
@@ -183,10 +180,12 @@ export default function LoginScreen({
               source={images.logo}
               style={styles.logo}
               resizeMode="contain"
+              accessible={false}
             />
 
             {/* TITULO */}
             <Text
+              accessibilityRole="header"
               style={[
                 styles.title,
                 {
@@ -225,10 +224,15 @@ export default function LoginScreen({
                   color={theme.errorText}
                   style={styles.errorIcon}
                 />
-                <Text style={[styles.errorText, { color: theme.errorText }]}>
+                <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.errorText, { color: theme.errorText }]}>
                   {errorMessage}
                 </Text>
-                <TouchableOpacity onPress={clearError} activeOpacity={0.7}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t('accessibility.dismissError')}
+                  onPress={clearError}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="close" size={18} color={theme.errorText} />
                 </TouchableOpacity>
               </View>
@@ -263,6 +267,7 @@ export default function LoginScreen({
                 />
 
                 <TextInput
+                  accessibilityLabel={t('login.email')}
                   style={[
                     styles.input,
                     {
@@ -315,6 +320,7 @@ export default function LoginScreen({
                 />
 
                 <TextInput
+                  accessibilityLabel={t('login.password')}
                   style={[
                     styles.input,
                     {
@@ -344,6 +350,9 @@ export default function LoginScreen({
                   }
                   disabled={loading}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(showPassword ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
+                  accessibilityState={{ expanded: showPassword, disabled: loading }}
                 >
                   <Ionicons
                     name={
@@ -387,13 +396,16 @@ export default function LoginScreen({
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading, busy: loading }}
+              accessibilityLiveRegion="polite"
             >
               {loading ? (
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>
                   {t('login.loading')}
                 </Text>
               ) : (
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>
                   {t('login.button')}
                 </Text>
               )}
@@ -419,6 +431,7 @@ export default function LoginScreen({
                 }}
                 disabled={loading}
                 activeOpacity={0.7}
+                accessibilityRole="button"
               >
                 <Text style={[styles.registerText, { color: theme.primary }]}>
                   {t('login.register')}
@@ -556,7 +569,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '800',
   },

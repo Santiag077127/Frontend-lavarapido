@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -19,6 +19,7 @@ import { images } from '../../../assets/images';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import type { Service } from '../../services/types/service.types';
 import { formatCurrency } from '../../../utils/formatters';
+import { ThemeContext } from '../../../theme/ThemeContext';
 
 interface UserProfile {
   idUsuario?: string;
@@ -51,6 +52,8 @@ const getServiceImage = (nombre: string) =>
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const { t } = useTranslation();
+  const { theme } = useContext(ThemeContext);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [services, setServices] = useState<Service[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [filter, setFilter] = useState<ServiceFilter>('available');
@@ -124,8 +127,8 @@ const HomeScreen = () => {
   };
 
   const renderService = ({ item }: { item: Service }) => (
-    <TouchableOpacity activeOpacity={0.88} style={[styles.serviceCard, item.estado !== true && styles.inactiveService]} disabled={item.estado !== true} onPress={() => handleServicePress(item)}>
-      <Image source={getServiceImage(item.nombre)} style={styles.serviceImage} resizeMode="cover" />
+    <TouchableOpacity accessibilityRole="button" activeOpacity={0.88} style={[styles.serviceCard, item.estado !== true && styles.inactiveService]} disabled={item.estado !== true} onPress={() => handleServicePress(item)}>
+      <Image source={getServiceImage(item.nombre)} style={styles.serviceImage} resizeMode="cover" accessible={false} />
       <View style={styles.serviceContent}>
         <View style={styles.serviceTitleRow}>
           <Text style={styles.serviceName} numberOfLines={1}>{item.nombre}</Text>
@@ -143,7 +146,7 @@ const HomeScreen = () => {
         {!!item.descripcion && <Text style={styles.serviceDescription} numberOfLines={2}>{item.descripcion}</Text>}
         <View style={styles.serviceInfo}>
           <View style={styles.infoItem}>
-            <Ionicons name="time-outline" size={15} color="#6B7280" />
+            <Ionicons name="time-outline" size={15} color={theme.icon} />
             <Text style={styles.infoText}>{item.duracionMinutos} {t('mobile.home.minutes')}</Text>
           </View>
           <Text style={styles.servicePrice}>{formatCurrency(item.precio)}</Text>
@@ -164,7 +167,7 @@ const HomeScreen = () => {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIcon}>
-          <Ionicons name={hasSearch ? 'search-outline' : 'car-outline'} size={38} color="#1E88E5" />
+          <Ionicons name={hasSearch ? 'search-outline' : 'car-outline'} size={38} color={theme.primary} />
         </View>
         <Text style={styles.emptyTitle}>{hasSearch ? t('mobile.home.noSearchResultsTitle') : t('mobile.home.noAvailableTitle')}</Text>
         <Text style={styles.emptyText}>{message}</Text>
@@ -185,35 +188,36 @@ const HomeScreen = () => {
           <Text style={styles.bannerTitle}>{t('mobile.home.bannerTitle')}</Text>
           <Text style={styles.bannerSubtitle}>{t('mobile.home.bannerSubtitle')}</Text>
         </View>
-        <View style={styles.bannerIconContainer}><Ionicons name="car-sport" size={72} color="#FFFFFF" /></View>
+        <View style={styles.bannerIconContainer}><Ionicons name="car-sport" size={72} color={theme.onPrimary} /></View>
       </View>
 
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={styles.sectionTitle}>{t('mobile.home.sectionTitle')}</Text>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>{t('mobile.home.sectionTitle')}</Text>
           <Text style={styles.sectionSubtitle}>{t('mobile.home.sectionSubtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.controls}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="#6B7280" />
+          <Ionicons name="search-outline" size={20} color={theme.icon} />
           <TextInput
+            accessibilityLabel={t('mobile.home.searchPlaceholder')}
             value={search}
             onChangeText={setSearch}
             placeholder={t('mobile.home.searchPlaceholder')}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.placeholder}
             style={styles.searchInput}
             returnKeyType="search"
             clearButtonMode="while-editing"
           />
-          {!!search && <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}><Ionicons name="close-circle" size={20} color="#94A3B8" /></TouchableOpacity>}
+          {!!search && <TouchableOpacity accessibilityRole="button" accessibilityLabel={t('accessibility.clearSearch')} onPress={() => setSearch('')} hitSlop={8}><Ionicons name="close-circle" size={20} color={theme.placeholder} /></TouchableOpacity>}
         </View>
         <View style={styles.filterGroup}>
-          <TouchableOpacity onPress={() => setFilter('available')} style={[styles.filterButton, filter === 'available' && styles.filterButtonSelected]} activeOpacity={0.8}>
+          <TouchableOpacity accessibilityRole="radio" accessibilityState={{ selected: filter === 'available' }} onPress={() => setFilter('available')} style={[styles.filterButton, filter === 'available' && styles.filterButtonSelected]} activeOpacity={0.8}>
             <Text style={[styles.filterButtonText, filter === 'available' && styles.filterButtonTextSelected]}>{t('mobile.home.available')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setFilter('all')} style={[styles.filterButton, filter === 'all' && styles.filterButtonSelected]} activeOpacity={0.8}>
+          <TouchableOpacity accessibilityRole="radio" accessibilityState={{ selected: filter === 'all' }} onPress={() => setFilter('all')} style={[styles.filterButton, filter === 'all' && styles.filterButtonSelected]} activeOpacity={0.8}>
             <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextSelected]}>{t('mobile.home.all')}</Text>
           </TouchableOpacity>
         </View>
@@ -221,17 +225,17 @@ const HomeScreen = () => {
 
       {!!servicesError && (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={22} color="#DC2626" />
-          <Text style={styles.errorText}>{`${t(`apiErrors.${servicesError}`)}${services.length > 0 ? ` ${t('apiErrors.staleData')}` : ''}`}</Text>
-          <TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity>
+          <Ionicons name="alert-circle-outline" size={22} color={theme.errorText} />
+          <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.errorText}>{`${t(`apiErrors.${servicesError}`)}${services.length > 0 ? ` ${t('apiErrors.staleData')}` : ''}`}</Text>
+          <TouchableOpacity accessibilityRole="button" onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity>
         </View>
       )}
-      {!!profileError && <View style={styles.profileErrorContainer}><Text style={styles.profileErrorText}>{t(`apiErrors.${profileError}`)}</Text><TouchableOpacity onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity></View>}
+      {!!profileError && <View style={styles.profileErrorContainer}><Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.profileErrorText}>{t(`apiErrors.${profileError}`)}</Text><TouchableOpacity accessibilityRole="button" onPress={loadData} activeOpacity={0.8}><Text style={styles.retryText}>{t('mobile.home.retry')}</Text></TouchableOpacity></View>}
     </>
   );
 
   if (loading) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#1E88E5" /><Text style={styles.loadingText}>{t('mobile.home.loading')}</Text></View>;
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.primary} /><Text accessibilityLiveRegion="polite" style={styles.loadingText}>{t('mobile.home.loading')}</Text></View>;
   }
 
   return (
@@ -242,67 +246,67 @@ const HomeScreen = () => {
         keyExtractor={(item) => item.idServicio}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={<View style={styles.footer}><Ionicons name="shield-checkmark-outline" size={20} color="#1E88E5" /><Text style={styles.footerText}>{t('mobile.home.footer')}</Text></View>}
+        ListFooterComponent={<View style={styles.footer}><Ionicons name="shield-checkmark-outline" size={20} color={theme.success} /><Text style={styles.footerText}>{t('mobile.home.footer')}</Text></View>}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#1E88E5']} tintColor="#1E88E5" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F9FC' },
+const createStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   listContent: { paddingBottom: 24 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7F9FC' },
-  loadingText: { marginTop: 12, fontSize: 14, color: '#6B7280' },
-  header: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: '#FFFFFF' },
-  greeting: { fontSize: 15, color: '#6B7280', marginBottom: 4 },
-  userName: { fontSize: 25, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  headerSubtitle: { fontSize: 14, color: '#6B7280', lineHeight: 20 },
-  banner: { marginHorizontal: 16, marginTop: 16, borderRadius: 16, backgroundColor: '#1E88E5', minHeight: 185, padding: 16, overflow: 'hidden', flexDirection: 'row' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
+  loadingText: { marginTop: 12, fontSize: 14, color: theme.textSecondary },
+  header: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: theme.card },
+  greeting: { fontSize: 15, color: theme.textSecondary, marginBottom: 4 },
+  userName: { fontSize: 25, fontWeight: '800', color: theme.text, marginBottom: 4 },
+  headerSubtitle: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+  banner: { marginHorizontal: 16, marginTop: 16, borderRadius: 16, backgroundColor: theme.primaryDark, minHeight: 185, padding: 16, overflow: 'hidden', flexDirection: 'row' },
   bannerContent: { flex: 1, zIndex: 2 },
-  bannerTitle: { color: '#FFFFFF', fontSize: 22, lineHeight: 28, fontWeight: '800', marginBottom: 8 },
-  bannerSubtitle: { color: '#EAF4FF', fontSize: 13, lineHeight: 19, maxWidth: 230, marginBottom: 16 },
+  bannerTitle: { color: theme.onPrimary, fontSize: 22, lineHeight: 28, fontWeight: '800', marginBottom: 8 },
+  bannerSubtitle: { color: theme.onPrimary, fontSize: 13, lineHeight: 19, maxWidth: 230, marginBottom: 16 },
   bannerIconContainer: { position: 'absolute', right: -10, bottom: -8, opacity: 0.25 },
   sectionHeader: { paddingHorizontal: 16, marginTop: 24, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 21, fontWeight: '800', color: '#111827' },
-  sectionSubtitle: { marginTop: 4, fontSize: 13, color: '#6B7280' },
+  sectionTitle: { fontSize: 21, fontWeight: '800', color: theme.text },
+  sectionSubtitle: { marginTop: 4, fontSize: 13, color: theme.textSecondary },
   controls: { paddingHorizontal: 16, marginBottom: 16 },
-  searchContainer: { minHeight: 52, borderWidth: 1, borderColor: '#DCE3EC', backgroundColor: '#FFFFFF', borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
-  searchInput: { flex: 1, minWidth: 0, fontSize: 15, color: '#111827', marginHorizontal: 12, paddingVertical: 8 },
+  searchContainer: { minHeight: 52, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' },
+  searchInput: { flex: 1, minWidth: 0, fontSize: 15, color: theme.text, marginHorizontal: 12, paddingVertical: 8 },
   filterGroup: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  filterButton: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: '#DCE3EC', backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  filterButtonSelected: { backgroundColor: '#1E88E5', borderColor: '#1E88E5' },
-  filterButtonText: { color: '#475569', fontSize: 14, fontWeight: '700' },
-  filterButtonTextSelected: { color: '#FFFFFF' },
-  serviceCard: { marginHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 16, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#E8EDF3', shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 5, elevation: 2 },
+  filterButton: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center' },
+  filterButtonSelected: { backgroundColor: theme.primaryDark, borderColor: theme.primaryDark },
+  filterButtonText: { color: theme.textSecondary, fontSize: 14, fontWeight: '700' },
+  filterButtonTextSelected: { color: theme.onPrimary },
+  serviceCard: { marginHorizontal: 16, backgroundColor: theme.card, borderRadius: 16, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: theme.border, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 5, elevation: 2 },
   inactiveService: { opacity: 0.58 },
   serviceImage: { width: '100%', height: 165 },
   serviceContent: { padding: 16 },
   serviceTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  serviceName: { flex: 1, minWidth: 0, fontSize: 17, fontWeight: '800', color: '#111827' },
-  availableBadge: { backgroundColor: '#E8F5E9', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
-  availableBadgeText: { color: '#2E7D32', fontSize: 11, fontWeight: '700' },
-  unavailableBadge: { backgroundColor: '#FEE2E2', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
-  unavailableBadgeText: { color: '#991B1B', fontSize: 11, fontWeight: '700' },
-  serviceDescription: { fontSize: 13, lineHeight: 18, color: '#6B7280', marginBottom: 12 },
+  serviceName: { flex: 1, minWidth: 0, fontSize: 17, fontWeight: '800', color: theme.text },
+  availableBadge: { backgroundColor: theme.successBackground, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  availableBadgeText: { color: theme.successText, fontSize: 11, fontWeight: '700' },
+  unavailableBadge: { backgroundColor: theme.errorBackground, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4 },
+  unavailableBadgeText: { color: theme.errorText, fontSize: 11, fontWeight: '700' },
+  serviceDescription: { fontSize: 13, lineHeight: 18, color: theme.textSecondary, marginBottom: 12 },
   serviceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  infoText: { fontSize: 12, color: '#6B7280' },
-  servicePrice: { fontSize: 17, fontWeight: '800', color: '#1E88E5' },
-  errorContainer: { marginHorizontal: 16, marginBottom: 16, padding: 16, borderRadius: 12, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', flexDirection: 'row', alignItems: 'center', gap: 8 },
-  errorText: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 18, color: '#991B1B' },
-  profileErrorContainer: { marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 12, backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA', flexDirection: 'row', alignItems: 'center', gap: 8 },
-  profileErrorText: { flex: 1, minWidth: 0, color: '#991B1B', fontSize: 13, lineHeight: 18 },
-  retryText: { fontSize: 13, fontWeight: '700', color: '#DC2626' },
-  emptyContainer: { marginHorizontal: 16, padding: 24, borderRadius: 16, backgroundColor: '#FFFFFF', alignItems: 'center', borderWidth: 1, borderColor: '#E8EDF3' },
-  emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#EAF4FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: 8 },
-  emptyText: { fontSize: 13, lineHeight: 19, color: '#6B7280', textAlign: 'center' },
-  footer: { marginTop: 24, marginHorizontal: 16, paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E5E7EB', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  footerText: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
+  infoText: { fontSize: 12, color: theme.textSecondary },
+  servicePrice: { fontSize: 17, fontWeight: '800', color: theme.primary },
+  errorContainer: { marginHorizontal: 16, marginBottom: 16, padding: 16, borderRadius: 12, backgroundColor: theme.errorBackground, borderWidth: 1, borderColor: theme.errorBorder, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  errorText: { flex: 1, minWidth: 0, fontSize: 13, lineHeight: 18, color: theme.errorText },
+  profileErrorContainer: { marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 12, backgroundColor: theme.errorBackground, borderWidth: 1, borderColor: theme.errorBorder, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  profileErrorText: { flex: 1, minWidth: 0, color: theme.errorText, fontSize: 13, lineHeight: 18 },
+  retryText: { fontSize: 13, fontWeight: '700', color: theme.errorText },
+  emptyContainer: { marginHorizontal: 16, padding: 24, borderRadius: 16, backgroundColor: theme.card, alignItems: 'center', borderWidth: 1, borderColor: theme.border },
+  emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: theme.primaryContainer, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  emptyTitle: { fontSize: 17, fontWeight: '800', color: theme.text, textAlign: 'center', marginBottom: 8 },
+  emptyText: { fontSize: 13, lineHeight: 19, color: theme.textSecondary, textAlign: 'center' },
+  footer: { marginTop: 24, marginHorizontal: 16, paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: theme.border, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
+  footerText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600' },
 });
 
 export default HomeScreen;

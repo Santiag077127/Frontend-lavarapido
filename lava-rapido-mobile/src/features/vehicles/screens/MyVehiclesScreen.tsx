@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
 import BackButton from '../../../components/common/BackButton';
+import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import {
   vehicleService,
@@ -44,13 +45,14 @@ const vehicleTypeKeys: Record<string, string> = {
 export default function MyVehiclesScreen({
   navigation,
 }: Props) {
-  const { theme, darkMode } = useContext(ThemeContext);
+  const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<ApiErrorKind | null>(null);
+  const [pendingVehicleStatus, setPendingVehicleStatus] = useState<{ vehicle: Vehicle; nextStatus: boolean } | null>(null);
 
   const loadVehicles = async () => {
     try {
@@ -89,48 +91,24 @@ export default function MyVehiclesScreen({
   };
 
   const handleChangeStatus = (vehicle: Vehicle) => {
-    const nuevoEstado = !vehicle.estado;
+    setPendingVehicleStatus({ vehicle, nextStatus: !vehicle.estado });
+  };
 
-    Alert.alert(
-      nuevoEstado
-        ? t('vehicles.status.activateTitle')
-        : t('vehicles.status.deactivateTitle'),
-      nuevoEstado
-        ? t('vehicles.status.activateMessage', { plate: vehicle.placa })
-        : t('vehicles.status.deactivateMessage', { plate: vehicle.placa }),
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: nuevoEstado
-            ? t('vehicles.status.activate')
-            : t('vehicles.status.deactivate'),
-          style: nuevoEstado ? 'default' : 'destructive',
-          onPress: async () => {
-            try {
-              await vehicleService.changeStatus(
-                vehicle.idVehiculo,
-                nuevoEstado,
-              );
+  const confirmChangeStatus = async () => {
+    if (!pendingVehicleStatus) return;
+    const { vehicle, nextStatus } = pendingVehicleStatus;
+    setPendingVehicleStatus(null);
 
-              await loadVehicles();
-            } catch (error: any) {
-              console.error(
-                'Error cambiando estado:',
-                error?.response?.status || error?.message,
-              );
-
-              Alert.alert(
-                t('vehicles.errors.title'),
-                t('vehicles.errors.status'),
-              );
-            }
-          },
-        },
-      ],
-    );
+    try {
+      await vehicleService.changeStatus(vehicle.idVehiculo, nextStatus);
+      await loadVehicles();
+    } catch (error: any) {
+      console.error(
+        'Error cambiando estado:',
+        error?.response?.status || error?.message,
+      );
+      Alert.alert(t('vehicles.errors.title'), t('vehicles.errors.status'));
+    }
   };
 
   const renderVehicle = ({
@@ -153,7 +131,7 @@ export default function MyVehiclesScreen({
             style={[
               styles.vehicleIcon,
               {
-                backgroundColor: `${theme.primary}18`,
+                backgroundColor: theme.primarySoft,
               },
             ]}
           >
@@ -197,9 +175,9 @@ export default function MyVehiclesScreen({
               styles.statusBadge,
               {
                 backgroundColor: item.estado
-                  ? `${theme.primary}18`
+                  ? theme.successBackground
                   : theme.errorBackground,
-                borderColor: item.estado ? `${theme.primary}35` : theme.errorBorder,
+                borderColor: item.estado ? theme.successBorder : theme.errorBorder,
                 borderWidth: 1,
               },
             ]}
@@ -208,7 +186,7 @@ export default function MyVehiclesScreen({
               style={[
                 styles.statusText,
                 {
-                  color: item.estado ? theme.primary : theme.errorText,
+                  color: item.estado ? theme.successText : theme.errorText,
                 },
               ]}
             >
@@ -298,6 +276,8 @@ export default function MyVehiclesScreen({
 
         <View style={styles.actions}>
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`${t('accessibility.editVehicle')}: ${item.placa}`}
             style={[
               styles.actionButton,
               {
@@ -310,14 +290,14 @@ export default function MyVehiclesScreen({
             <Ionicons
               name="create-outline"
               size={19}
-              color="#FFFFFF"
+              color={theme.onPrimary}
             />
 
             <Text
               style={[
                 styles.actionText,
                 {
-                  color: '#FFFFFF',
+                  color: theme.onPrimary,
                 },
               ]}
             >
@@ -326,16 +306,18 @@ export default function MyVehiclesScreen({
           </TouchableOpacity>
 
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`${t(item.estado ? 'vehicles.status.deactivate' : 'vehicles.status.activate')}: ${item.placa}`}
             style={[
               styles.actionButton,
               {
                 backgroundColor: item.estado
                   ? theme.errorBackground
-                  : `${theme.primary}15`,
+                  : theme.primarySoft,
                 borderWidth: 1,
                 borderColor: item.estado
                   ? theme.errorBorder
-                  : `${theme.primary}40`,
+                  : theme.infoBorder,
               },
             ]}
             onPress={() => handleChangeStatus(item)}
@@ -352,6 +334,7 @@ export default function MyVehiclesScreen({
             />
 
             <Text
+              accessibilityLiveRegion="polite"
               style={[
                 styles.actionText,
                 {
@@ -415,7 +398,7 @@ export default function MyVehiclesScreen({
           onPress={() => navigation.goBack()}
         />
         <View style={styles.headerText}>
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
+          <Text accessibilityRole="header" style={[styles.title, { color: theme.text }]} numberOfLines={2}>
             {t('vehicles.title')}
           </Text>
           <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
@@ -443,21 +426,21 @@ export default function MyVehiclesScreen({
         }
         ListHeaderComponent={loadError && vehicles.length > 0 ? (
           <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
-            <Text style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
-            <TouchableOpacity onPress={loadVehicles}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
+            <TouchableOpacity accessibilityRole="button" onPress={loadVehicles}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
           </View>
         ) : null}
         ListEmptyComponent={
           loadError ? <View style={styles.emptyContainer}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.errorBackground }]}><Ionicons name="cloud-offline-outline" size={48} color={theme.errorText} /></View>
-            <Text style={[styles.emptyTitle, { color: theme.errorText }]}>{t(`apiErrors.${loadError}`)}</Text>
-            <TouchableOpacity style={[styles.emptyButton, { backgroundColor: theme.primary }]} onPress={loadVehicles} activeOpacity={0.85}><Text style={styles.emptyButtonText}>{t('common.retry')}</Text></TouchableOpacity>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.emptyTitle, { color: theme.errorText }]}>{t(`apiErrors.${loadError}`)}</Text>
+            <TouchableOpacity accessibilityRole="button" style={[styles.emptyButton, { backgroundColor: theme.primary }]} onPress={loadVehicles} activeOpacity={0.85}>            <Text style={[styles.emptyButtonText, { color: theme.onPrimary }]}>{t('common.retry')}</Text></TouchableOpacity>
           </View> : <View style={styles.emptyContainer}>
             <View
               style={[
                 styles.emptyIcon,
                 {
-                  backgroundColor: theme.primary + '15',
+                  backgroundColor: theme.primarySoft,
                 },
               ]}
             >
@@ -491,6 +474,7 @@ export default function MyVehiclesScreen({
             </Text>
 
             <TouchableOpacity
+              accessibilityRole="button"
               style={[
                 styles.emptyButton,
                 {
@@ -503,10 +487,10 @@ export default function MyVehiclesScreen({
               <Ionicons
                 name="add"
                 size={22}
-                color="#fff"
+                color={theme.onPrimary}
               />
 
-              <Text style={styles.emptyButtonText}>
+              <Text style={[styles.emptyButtonText, { color: theme.onPrimary }]}>
                 {t('vehicles.actions.add')}
               </Text>
             </TouchableOpacity>
@@ -516,6 +500,8 @@ export default function MyVehiclesScreen({
 
       {vehicles.length > 0 && (
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={t('vehicles.actions.add')}
           style={[
             styles.floatingButton,
             {
@@ -528,14 +514,26 @@ export default function MyVehiclesScreen({
           <Ionicons
             name="add"
             size={28}
-            color="#fff"
+            color={theme.onPrimary}
           />
 
-          <Text style={styles.floatingButtonText}>
+          <Text style={[styles.floatingButtonText, { color: theme.onPrimary }]}>
             {t('vehicles.actions.addShort')}
           </Text>
         </TouchableOpacity>
       )}
+      <ConfirmationModal
+        visible={Boolean(pendingVehicleStatus)}
+        title={pendingVehicleStatus?.nextStatus ? t('vehicles.status.activateTitle') : t('vehicles.status.deactivateTitle')}
+        message={pendingVehicleStatus?.nextStatus
+          ? t('vehicles.status.activateMessage', { plate: pendingVehicleStatus.vehicle.placa })
+          : t('vehicles.status.deactivateMessage', { plate: pendingVehicleStatus?.vehicle.placa })}
+        confirmLabel={pendingVehicleStatus?.nextStatus ? t('vehicles.status.activate') : t('vehicles.status.deactivate')}
+        cancelLabel={t('common.cancel')}
+        variant={pendingVehicleStatus?.nextStatus ? 'normal' : 'warning'}
+        onConfirm={() => void confirmChangeStatus()}
+        onCancel={() => setPendingVehicleStatus(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -756,7 +754,6 @@ const styles = StyleSheet.create({
   },
 
   emptyButtonText: {
-    color: '#fff',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -781,7 +778,6 @@ const styles = StyleSheet.create({
   },
 
   floatingButtonText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '700',
   },

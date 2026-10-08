@@ -22,6 +22,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import BackButton from '../../../components/common/BackButton';
+import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
@@ -40,13 +41,6 @@ interface ProfileResponse {
   phoneNumber: string;
   profilePicture: string | null;
 }
-
-const SAFE_GREEN = '#16A34A';
-const SAFE_RED = '#DC2626';
-const SAFE_ORANGE = '#F59E0B';
-const SAFE_BLUE = '#2563EB';
-const SAFE_GRAY = '#64748B';
-const SAFE_WHITE = '#FFFFFF';
 
 export default function MyReservationsScreen() {
   const navigation = useNavigation<any>();
@@ -69,26 +63,14 @@ export default function MyReservationsScreen() {
   const [cancellingId, setCancellingId] = useState<
     string | null
   >(null);
+  const [pendingCancellation, setPendingCancellation] = useState<ReservationResponse | null>(null);
 
-  const primaryColor =
-    theme?.primary || SAFE_GREEN;
-
-  const backgroundColor =
-    theme?.background || '#F5F7FA';
-
-  const cardColor =
-    theme?.card || SAFE_WHITE;
-
-  const textColor =
-    theme?.text || '#111827';
-
-  const mutedColor = darkMode
-    ? '#98A2B3'
-    : SAFE_GRAY;
-
-  const borderColor = darkMode
-    ? '#303B4A'
-    : '#E2E8F0';
+  const primaryColor = theme.primary;
+  const backgroundColor = theme.background;
+  const cardColor = theme.card;
+  const textColor = theme.text;
+  const mutedColor = theme.textSecondary;
+  const borderColor = theme.border;
 
   /**
    * ============================================================
@@ -203,78 +185,39 @@ export default function MyReservationsScreen() {
    * CANCELAR RESERVA
    * ============================================================
    */
-  const handleCancel = (
-    reservation: ReservationResponse
-  ) => {
-    Alert.alert(
-      t('mobile.reservations.cancelTitle'),
-      t('mobile.reservations.cancelQuestion', {
-        service: reservation.nombreServicio || t('mobile.reservations.serviceFallback'),
-      }),
-      [
-        {
-          text: t('mobile.reservations.no'),
-          style: 'cancel',
-        },
-        {
-          text: t('mobile.reservations.yesCancel'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setCancellingId(
-                reservation.idReserva
-              );
-
-
-
-              const updated =
-                await reservationService.cancel(
-                  reservation.idReserva
-                );
-
-
-
-              /**
-               * Actualizar únicamente la reserva
-               * cancelada.
-               */
-              setReservations(previous =>
-                previous.map(item =>
-                  item.idReserva ===
-                  reservation.idReserva
-                    ? updated
-                    : item
-                )
-              );
-
-              Alert.alert(
-                t('mobile.reservations.cancelledTitle'),
-                t('mobile.reservations.cancelledMessage')
-              );
-            } catch (err: any) {
-
-
-              const responseData =
-                err?.response?.data;
-
-              Alert.alert(
-                t('mobile.reservations.cancelErrorTitle'),
-                t('mobile.reservations.cancelError')
-              );
-            } finally {
-              setCancellingId(null);
-            }
-          },
-        },
-      ]
-    );
+  const handleCancel = (reservation: ReservationResponse) => {
+    setPendingCancellation(reservation);
   };
 
-  /**
-   * ============================================================
-   * FORMATEAR FECHA
-   * ============================================================
-   */
+  const confirmCancel = async () => {
+    const reservation = pendingCancellation;
+    if (!reservation) return;
+    setPendingCancellation(null);
+
+    try {
+      setCancellingId(reservation.idReserva);
+      const updated = await reservationService.cancel(reservation.idReserva);
+      setReservations(previous => previous.map(item =>
+        item.idReserva === reservation.idReserva ? updated : item
+      ));
+      Alert.alert(
+        t('mobile.reservations.cancelledTitle'),
+        t('mobile.reservations.cancelledMessage'),
+        undefined,
+        'success',
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('mobile.reservations.cancelErrorTitle'),
+        t('mobile.reservations.cancelError'),
+        undefined,
+        'error',
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   const formatDate = (
     date: string
   ) => {
@@ -331,35 +274,40 @@ export default function MyReservationsScreen() {
       case 'PENDIENTE':
         return {
           label: t('mobile.reservationDetail.status.pending'),
-          color: SAFE_ORANGE,
+          color: theme.warningText,
+          background: theme.warningBackground,
           icon: 'time-outline' as const,
         };
 
       case 'ASIGNADA':
         return {
           label: t('mobile.reservationDetail.status.assigned'),
-          color: SAFE_BLUE,
+          color: theme.infoText,
+          background: theme.infoBackground,
           icon: 'checkmark-circle-outline' as const,
         };
 
       case 'EN_PROCESO':
         return {
           label: t('mobile.reservationDetail.status.inProcess'),
-          color: SAFE_BLUE,
+          color: theme.inProgressText,
+          background: theme.processBackground,
           icon: 'water-outline' as const,
         };
 
       case 'FINALIZADA':
         return {
           label: t('mobile.reservationDetail.status.finished'),
-          color: SAFE_GREEN,
+          color: theme.successText,
+          background: theme.successBackground,
           icon: 'checkmark-done-circle-outline' as const,
         };
 
       case 'CANCELADA':
         return {
           label: t('mobile.reservationDetail.status.cancelled'),
-          color: SAFE_RED,
+          color: theme.errorText,
+          background: theme.errorBackground,
           icon: 'close-circle-outline' as const,
         };
 
@@ -367,6 +315,7 @@ export default function MyReservationsScreen() {
         return {
           label: t('mobile.reservations.unknown'),
           color: mutedColor,
+          background: theme.interactiveSurface,
           icon: 'help-circle-outline' as const,
         };
     }
@@ -421,8 +370,7 @@ export default function MyReservationsScreen() {
               style={[
                 styles.serviceIcon,
                 {
-                  backgroundColor:
-                    `${primaryColor}18`,
+                  backgroundColor: theme.primarySoft,
                 },
               ]}
             >
@@ -470,8 +418,7 @@ export default function MyReservationsScreen() {
             style={[
               styles.statusBadge,
               {
-                backgroundColor:
-                  `${status.color}18`,
+                backgroundColor: status.background,
               },
             ]}
           >
@@ -510,7 +457,7 @@ export default function MyReservationsScreen() {
         )}
 
         {/* INFORMACIÓN */}
-        <View style={[styles.infoGrid, { backgroundColor: `${primaryColor}0A` }]}>
+        <View style={[styles.infoGrid, { backgroundColor: theme.primarySoft }]}>
           {/* FECHA */}
           <View style={styles.infoItem}>
             <Ionicons
@@ -704,7 +651,7 @@ export default function MyReservationsScreen() {
               },
             ]}
           >
-          <View style={[styles.priceBlock, { backgroundColor: `${primaryColor}12` }]}>
+          <View style={[styles.priceBlock, { backgroundColor: theme.primarySoft }]}>
             <Text
               style={[
                 styles.priceLabel,
@@ -732,6 +679,9 @@ export default function MyReservationsScreen() {
 
           {canCancel(item.estado) && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={cancelling ? `${t('mobile.reservations.cancelTitle')}: ${item.nombreServicio}, ${t('accessibility.inProgress')}` : `${t('mobile.reservations.cancelTitle')}: ${item.nombreServicio}`}
+              accessibilityState={{ disabled: cancelling, busy: cancelling }}
               disabled={cancelling}
               onPress={() =>
                 handleCancel(item)
@@ -739,8 +689,8 @@ export default function MyReservationsScreen() {
               style={[
                 styles.cancelButton,
                 {
-                  borderColor: SAFE_RED,
-                  backgroundColor: `${SAFE_RED}10`,
+                  borderColor: theme.errorText,
+                  backgroundColor: theme.errorBackground,
                   opacity: cancelling
                     ? 0.6
                     : 1,
@@ -750,21 +700,22 @@ export default function MyReservationsScreen() {
               {cancelling ? (
                 <ActivityIndicator
                   size="small"
-                  color={SAFE_RED}
+                  color={theme.errorText}
                 />
               ) : (
                 <>
                   <Ionicons
                     name="close-outline"
                     size={18}
-                    color={SAFE_RED}
+                    color={theme.errorText}
                   />
 
                   <Text
+                    accessibilityLiveRegion="polite"
                     style={[
                       styles.cancelButtonText,
                       {
-                        color: SAFE_RED,
+                        color: theme.errorText,
                       },
                     ]}
                   >
@@ -781,8 +732,8 @@ export default function MyReservationsScreen() {
           onPress={() => navigation.navigate('ServiceDetails', { reservation: item })}
           accessibilityRole="button"
         >
-          <Ionicons name="information-circle-outline" size={18} color={SAFE_WHITE} />
-          <Text style={[styles.detailButtonText, { color: SAFE_WHITE }]}>
+          <Ionicons name="information-circle-outline" size={18} color={theme.onPrimary} />
+          <Text style={[styles.detailButtonText, { color: theme.onPrimary }]}>
             {t('mobile.services.detail')}
           </Text>
         </Pressable>
@@ -847,14 +798,14 @@ export default function MyReservationsScreen() {
             styles.emptyIcon,
             {
               backgroundColor:
-                `${SAFE_RED}15`,
+                theme.errorBackground,
             },
           ]}
         >
           <Ionicons
             name="cloud-offline-outline"
             size={42}
-            color={SAFE_RED}
+            color={theme.errorText}
           />
         </View>
 
@@ -881,6 +832,7 @@ export default function MyReservationsScreen() {
         </Text>
 
         <Pressable
+          accessibilityRole="button"
           onPress={() =>
             loadReservations()
           }
@@ -895,12 +847,12 @@ export default function MyReservationsScreen() {
           <Ionicons
             name="refresh-outline"
             size={19}
-            color={SAFE_WHITE}
+            color={theme.onPrimary}
           />
 
           <Text
             style={
-              styles.primaryButtonText
+              [styles.primaryButtonText, { color: theme.onPrimary }]
             }
           >
             {t('mobile.reservations.retry')}
@@ -930,7 +882,7 @@ export default function MyReservationsScreen() {
             styles.emptyIcon,
             {
               backgroundColor:
-                `${primaryColor}15`,
+                theme.primarySoft,
             },
           ]}
         >
@@ -964,6 +916,7 @@ export default function MyReservationsScreen() {
         </Text>
 
         <Pressable
+          accessibilityRole="button"
           onPress={() =>
             navigation.navigate('Home')
           }
@@ -978,12 +931,12 @@ export default function MyReservationsScreen() {
           <Ionicons
             name="car-outline"
             size={19}
-            color={SAFE_WHITE}
+            color={theme.onPrimary}
           />
 
           <Text
             style={
-              styles.primaryButtonText
+              [styles.primaryButtonText, { color: theme.onPrimary }]
             }
           >
             {t('mobile.reservations.reserveService')}
@@ -1053,7 +1006,7 @@ export default function MyReservationsScreen() {
             styles.countBadge,
             {
               backgroundColor:
-                `${primaryColor}18`,
+                theme.primarySoft,
             },
           ]}
         >
@@ -1098,9 +1051,19 @@ export default function MyReservationsScreen() {
         ListHeaderComponent={error ? (
           <View style={[styles.refreshError, { borderColor, backgroundColor: cardColor }]}>
             <Text style={{ color: textColor, flex: 1 }}>{`${t(`apiErrors.${error}`)} ${t('apiErrors.staleData')}`}</Text>
-            <Pressable onPress={() => void loadReservations(false)}><Text style={{ color: primaryColor, fontWeight: '700' }}>{t('mobile.reservations.retry')}</Text></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => void loadReservations(false)}><Text style={{ color: primaryColor, fontWeight: '700' }}>{t('mobile.reservations.retry')}</Text></Pressable>
           </View>
         ) : null}
+      />
+      <ConfirmationModal
+        visible={Boolean(pendingCancellation)}
+        title={t('mobile.reservations.cancelTitle')}
+        message={t('mobile.reservations.cancelQuestion', { service: pendingCancellation?.nombreServicio || t('mobile.reservations.serviceFallback') })}
+        confirmLabel={t('mobile.reservations.yesCancel')}
+        cancelLabel={t('mobile.reservations.no')}
+        variant="danger"
+        onConfirm={() => void confirmCancel()}
+        onCancel={() => setPendingCancellation(null)}
       />
     </View>
   );
@@ -1183,7 +1146,6 @@ const styles = StyleSheet.create({
   },
 
   primaryButtonText: {
-    color: SAFE_WHITE,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -1398,4 +1360,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

@@ -35,16 +35,20 @@ const PasswordRequirement = ({
   valid,
   text,
   textColor,
+  successColor,
+  errorColor,
 }: {
   valid: boolean;
   text: string;
   textColor: string;
+  successColor: string;
+  errorColor: string;
 }) => (
   <View style={styles.requirementRow}>
     <Text
       style={[
         styles.requirementIcon,
-        { color: valid ? '#2EAD62' : '#E05252' },
+        { color: valid ? successColor : errorColor },
       ]}
     >
       {valid ? '✓' : '✗'}
@@ -52,7 +56,7 @@ const PasswordRequirement = ({
     <Text
       style={[
         styles.requirementText,
-        { color: valid ? '#2EAD62' : textColor },
+        { color: valid ? successColor : textColor },
       ]}
     >
       {text}
@@ -204,9 +208,9 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
   };
 
   // COLORES
-  const iconColor = darkMode ? '#FFFFFF' : '#444444';
-  const inputBackground = theme.card;
-  const borderColor = darkMode ? '#444444' : '#E0E0E0';
+  const iconColor = theme.icon;
+  const inputBackground = theme.inputBackground;
+  const borderColor = theme.border;
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -232,6 +236,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             source={require('../../../assets/logo.png')}
             style={styles.logo}
             resizeMode="contain"
+            accessible={false}
           />
 
           <View style={styles.form}>
@@ -242,6 +247,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <MaterialIcons name="email" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.email')}
                 placeholder={t('register.email')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
@@ -265,6 +271,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="user" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.firstName')}
                 placeholder={t('register.firstName')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
@@ -282,6 +289,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="user" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.lastName')}
                 placeholder={t('register.lastName')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
@@ -299,6 +307,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Feather name="phone" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.phone')}
                 placeholder={t('register.phone')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
@@ -326,22 +335,25 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 return (
                   <TouchableOpacity
                     key={type}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${t('register.documentType')}: ${type}`}
+                    accessibilityState={{ selected }}
                     activeOpacity={0.8}
                     onPress={() => setDocumentType(type)}
                     style={[
                       styles.documentButton,
                       {
                         backgroundColor: selected
-                          ? '#2A66B2'
+                          ? theme.primaryDark
                           : inputBackground,
-                        borderColor: selected ? '#2A66B2' : borderColor,
+                        borderColor: selected ? theme.primaryDark : borderColor,
                       },
                     ]}
                   >
                     <Text
                       style={[
                         styles.documentButtonText,
-                        { color: selected ? '#FFFFFF' : theme.text },
+                        { color: selected ? theme.onPrimary : theme.text },
                       ]}
                     >
                       {type}
@@ -358,6 +370,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <MaterialIcons name="badge" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.documentNumber')}
                 placeholder={t('register.documentNumber')}
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text }]}
@@ -378,6 +391,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Ionicons name="lock-closed" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.password')}
                 placeholder={t('register.password')}
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showPassword}
@@ -393,6 +407,9 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 returnKeyType="next"
               />
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(showPassword ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
+                accessibilityState={{ expanded: showPassword }}
                 onPress={() => setShowPassword(!showPassword)}
                 hitSlop={10}
               >
@@ -409,7 +426,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               style={[
                 styles.requirementsBox,
                 {
-                  backgroundColor: darkMode ? '#202020' : '#F7F9FC',
+                  backgroundColor: theme.surface,
                   borderColor,
                 },
               ]}
@@ -421,11 +438,15 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 valid={password.length >= 8}
                 text={t('register.minLength')}
                 textColor={theme.textSecondary}
+                successColor={theme.successText}
+                errorColor={theme.errorText}
               />
               <PasswordRequirement
                 valid={passwordBytes <= 72}
                 text={t('register.maxUtf8Bytes', { count: passwordBytes })}
                 textColor={theme.textSecondary}
+                successColor={theme.successText}
+                errorColor={theme.errorText}
               />
             </View>
 
@@ -436,6 +457,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             >
               <Ionicons name="lock-closed" size={20} color={iconColor} />
               <TextInput
+                accessibilityLabel={t('register.confirmPassword')}
                 placeholder={t('register.confirmPassword')}
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showConfirmPassword}
@@ -452,6 +474,9 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 onSubmitEditing={handleRegister}
               />
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(showConfirmPassword ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
+                accessibilityState={{ expanded: showConfirmPassword }}
                 onPress={() =>
                   setShowConfirmPassword(!showConfirmPassword)
                 }
@@ -475,7 +500,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 <Text
                   style={[
                     styles.passwordMatchText,
-                    { color: confirmationMatches ? '#2EAD62' : '#E05252' },
+                    { color: confirmationMatches ? theme.successText : theme.errorText },
                   ]}
                 >
                   {confirmationMatches
@@ -491,12 +516,12 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 style={[
                   styles.messageBox,
                   {
-                    backgroundColor: darkMode ? '#3B1F1F' : '#FFF0F0',
-                    borderColor: darkMode ? '#6B3030' : '#FFD0D0',
+                    backgroundColor: theme.errorBackground,
+                    borderColor: theme.errorBorder,
                   },
                 ]}
               >
-                <Text style={styles.errorText}>⚠ {error}</Text>
+                <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.errorText, { color: theme.errorText }]} >⚠ {error}</Text>
               </View>
             ) : null}
 
@@ -506,26 +531,30 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 style={[
                   styles.messageBox,
                   {
-                    backgroundColor: darkMode ? '#193524' : '#EFFBF3',
-                    borderColor: darkMode ? '#285B3D' : '#C8EFD4',
+                    backgroundColor: theme.successBackground,
+                    borderColor: theme.successBorder,
                   },
                 ]}
               >
-                <Text style={styles.successText}>✓ {success}</Text>
+                <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.successText, { color: theme.successText }]} >✓ {success}</Text>
               </View>
             ) : null}
 
             {/* BOTÓN REGISTRAR */}
             <TouchableOpacity
               activeOpacity={0.8}
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.button, { backgroundColor: theme.primaryDark }, loading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={loading}
+              accessibilityLabel={loading ? `${t('register.button')}, ${t('accessibility.inProgress')}` : t('register.button')}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading, busy: loading }}
+              accessibilityLiveRegion="polite"
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.onPrimary} />
               ) : (
-                <Text style={styles.buttonText}>{t('register.button')}</Text>
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('register.button')}</Text>
               )}
             </TouchableOpacity>
 
@@ -534,10 +563,11 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               activeOpacity={0.7}
               onPress={() => navigation.navigate('Login')}
               disabled={loading}
+              accessibilityRole="button"
             >
               <Text style={[styles.link, { color: theme.text }]}>
                 {t('register.hasAccount')}{' '}
-                <Text style={styles.linkHighlight}>{t('register.signIn')}</Text>
+                <Text style={[styles.linkHighlight, { color: theme.primary }]}>{t('register.signIn')}</Text>
               </Text>
             </TouchableOpacity>
 
@@ -656,20 +686,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   errorText: {
-    color: '#E05252',
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
   },
   successText: {
-    color: '#2EAD62',
     fontSize: 13,
     fontWeight: '500',
     lineHeight: 18,
   },
   button: {
     width: '100%',
-    backgroundColor: '#2A66B2',
     minHeight: 55,
     borderRadius: 15,
     justifyContent: 'center',
@@ -683,7 +710,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.65 },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -694,7 +720,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   linkHighlight: {
-    color: '#2A66B2',
     fontWeight: '700',
     textDecorationLine: 'underline',
   },

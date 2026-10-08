@@ -25,16 +25,31 @@ export default function ForgotPasswordScreen({ navigation }: any) {
   const [sending, setSending] = useState(false)
   const handleSendCode = async () => {
     if (!email.trim()) {
-      Alert.alert(t('forgotPassword.errorTitle'), t('forgotPassword.emailRequired'))
+      Alert.alert(
+        t('forgotPassword.errorTitle'),
+        t('forgotPassword.emailRequired'),
+        undefined,
+        'warning',
+      )
       return
     }
     setSending(true)
     try {
       await authService.requestPasswordReset(email.trim())
-      Alert.alert(t('forgotPassword.sentTitle', { defaultValue: 'Solicitud recibida' }), t('forgotPassword.sentMessage', { defaultValue: 'Si el correo está registrado, recibirás un enlace y un token de un solo uso. Copia el token en la siguiente pantalla.' }))
+      Alert.alert(
+        t('accessibility.forgotPasswordSentTitle'),
+        t('accessibility.forgotPasswordSentMessage'),
+        undefined,
+        'success',
+      )
       navigation.navigate('ResetPassword')
     } catch {
-      Alert.alert(t('forgotPassword.errorTitle'), t('forgotPassword.sendError', { defaultValue: 'No se pudo solicitar la recuperación. Inténtalo de nuevo.' }))
+      Alert.alert(
+        t('forgotPassword.errorTitle'),
+        t('accessibility.forgotPasswordSendError'),
+        undefined,
+        'error',
+      )
     } finally {
       setSending(false)
     }
@@ -47,15 +62,15 @@ export default function ForgotPasswordScreen({ navigation }: any) {
           <View style={styles.content}>
             <View style={styles.header}>
               <BackButton accessibilityLabel={t('mobile.serviceDetail.back')} onPress={() => navigation.goBack()} />
-              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('forgotPassword.title')}</Text>
+              <Text accessibilityRole="header" style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('forgotPassword.title')}</Text>
             </View>
-            <Image source={images.logo} style={styles.logo} resizeMode="contain" />
+            <Image source={images.logo} style={styles.logo} resizeMode="contain" accessible={false} />
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('forgotPassword.subtitle')}</Text>
             <View style={styles.field}>
               <Text style={[styles.label, { color: theme.text }]}>{t('forgotPassword.email')}</Text>
-              <TextInput placeholder={t('forgotPassword.email')} placeholderTextColor={theme.placeholder} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" returnKeyType="done" onSubmitEditing={handleSendCode} style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} />
+              <TextInput accessibilityLabel={t('forgotPassword.email')} placeholder={t('forgotPassword.email')} placeholderTextColor={theme.placeholder} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" returnKeyType="done" onSubmitEditing={handleSendCode} style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} />
             </View>
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} disabled={sending} accessibilityRole="button" accessibilityState={{ disabled: sending }} activeOpacity={0.8}><Text style={styles.buttonText}>{t('forgotPassword.sendCode')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleSendCode} disabled={sending} accessibilityRole="button" accessibilityLabel={sending ? `${t('forgotPassword.sendCode')}, ${t('accessibility.inProgress')}` : t('forgotPassword.sendCode')} accessibilityState={{ disabled: sending, busy: sending }} activeOpacity={0.8}><Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('forgotPassword.sendCode')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -73,5 +88,5 @@ const styles = StyleSheet.create({
   field: { marginBottom: 24 }, label: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
   input: { minHeight: 52, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, fontSize: 16 },
   button: { minHeight: 52, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontWeight: '700' },
 })

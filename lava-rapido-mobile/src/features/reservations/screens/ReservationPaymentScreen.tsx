@@ -340,13 +340,13 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             accessibilityLabel={t('mobile.serviceDetail.back')}
             onPress={() => navigation.goBack()}
           />
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
+          <Text accessibilityRole="header" style={[styles.title, { color: theme.text }]} numberOfLines={2}>
             {t('mobile.paymentFlow.title')}
           </Text>
         </View>
 
         <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
+          <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
         </View>
 
         {checkout && !isFinal ? (
@@ -379,7 +379,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               { backgroundColor: theme.card, borderColor: theme.border },
             ]}
           >
-            <View style={[styles.checkoutGlyph, { backgroundColor: `${theme.primary}16` }]}>
+            <View style={[styles.checkoutGlyph, { backgroundColor: theme.primarySoft }]}>
               <Ionicons
                 name={loading || checking ? 'shield-checkmark-outline' : 'card-outline'}
                 size={28}
@@ -389,7 +389,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             {loading || checking ? (
               <>
                 <ActivityIndicator color={theme.primary} size="large" />
-                <Text style={[styles.placeholderText, { color: theme.textSecondary }]}>
+                <Text accessibilityLiveRegion="polite" style={[styles.placeholderText, { color: theme.textSecondary }]}>
                   {loading ? t('mobile.paymentFlow.processing') : t('mobile.paymentFlow.checking')}
                 </Text>
               </>
@@ -400,52 +400,53 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         )}
 
         {(!checkout || widgetError) && <View style={[styles.footer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {widgetError && <Text style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>}
-          {error && <Text style={[styles.error, { color: theme.errorText }]}>{startError || t('mobile.paymentFlow.error')}</Text>}
+          {widgetError && <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>}
+          {error && <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.error, { color: theme.errorText }]}>{startError || t('mobile.paymentFlow.error')}</Text>}
           {payment?.intentoActual?.estado === 'aprobado_duplicado' && (
-            <Text style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.duplicateHint')}</Text>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.error, { color: theme.errorText }]}>{t('mobile.paymentFlow.duplicateHint')}</Text>
           )}
 
           {widgetError && checkout && !isFinal && (
             <Pressable
+              accessibilityRole="button"
               style={[styles.button, { backgroundColor: theme.primary }]}
               onPress={() => {
                 setWidgetError(false);
                 setWidgetReloadKey((value) => value + 1);
               }}
             >
-              <Text style={styles.buttonText}>{t('mobile.paymentFlow.retry')}</Text>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retry')}</Text>
             </Pressable>
           )}
           {checkout && widgetOpened && !checking && !isFinal && (
-            <Pressable style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void verifyAfterCheckout()}>
+            <Pressable accessibilityRole="button" style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void verifyAfterCheckout()}>
               <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
             </Pressable>
           )}
           {!checkout && payment?.estado === 'pendiente' && !loading && (
             <>
               <Text style={[styles.hint, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.pendingHint')}</Text>
-              <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void refreshStatus()} disabled={checking}>
-                <Text style={styles.buttonText}>{t('mobile.paymentFlow.checkAgain')}</Text>
+              <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void refreshStatus()} disabled={checking}>
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
               </Pressable>
-              <Pressable style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void resumePendingCheckout()} disabled={checking}>
+              <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void resumePendingCheckout()} disabled={checking}>
                 <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.continue')}</Text>
               </Pressable>
             </>
           )}
           {!payment && !checkout && !loading && (
-            <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void preparePayment()} disabled={checking}>
-              <Text style={styles.buttonText}>{t('mobile.paymentFlow.retry')}</Text>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void preparePayment()} disabled={checking}>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retry')}</Text>
             </Pressable>
           )}
           {payment?.estado === 'rechazado' && (
-            <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void retryPayment()} disabled={loading}>
-              <Text style={styles.buttonText}>{t('mobile.paymentFlow.retryPayment')}</Text>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: loading, busy: loading }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void retryPayment()} disabled={loading}>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retryPayment')}</Text>
             </Pressable>
           )}
           {isFinal && payment?.estado === 'aprobado' && (
-            <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Reservas' })}>
-              <Text style={styles.buttonText}>{t('mobile.paymentFlow.myReservations')}</Text>
+            <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Reservas' })}>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.myReservations')}</Text>
             </Pressable>
           )}
         </View>}
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
   error: { fontSize: 13, textAlign: 'center' },
   hint: { fontSize: 12, textAlign: 'center' },
   button: { minHeight: 52, borderRadius: 16, paddingHorizontal: 18, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', elevation: 2 },
-  buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  buttonText: { fontWeight: '700', fontSize: 15 },
   secondaryButton: { minHeight: 48, borderWidth: 1, borderRadius: 15, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   secondaryButtonText: { fontWeight: '700', fontSize: 14 },
 });

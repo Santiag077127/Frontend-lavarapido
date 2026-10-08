@@ -179,7 +179,7 @@ export default function ReservationScreen() {
       inputBackground: theme.inputBackground,
       danger: theme.errorText,
 
-      success: '#16A34A',
+      success: theme.success,
     }),
     [darkMode, theme],
   );
@@ -288,6 +288,7 @@ export default function ReservationScreen() {
                   style: 'cancel',
                 },
               ],
+              'info',
             );
           }
         } catch (
@@ -298,6 +299,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.error'),
             t('mobile.reservation.vehicleLoadError'),
+            undefined,
+            'error',
           );
         } finally {
           setLoadingVehicles(
@@ -346,6 +349,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.invalidSchedule'),
           t('mobile.reservation.startsAfter', { hour: MIN_HOUR }),
+          undefined,
+          'warning',
         );
 
         return false;
@@ -358,6 +363,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.invalidSchedule'),
           t('mobile.reservation.startsBefore', { hour: MAX_HOUR }),
+          undefined,
+          'warning',
         );
 
         return false;
@@ -381,6 +388,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.invalidSchedule'),
             t('mobile.reservation.endsAfter', { hour: MAX_HOUR }),
+            undefined,
+            'warning',
           );
 
           return false;
@@ -466,6 +475,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.error'),
           t('mobile.reservation.serviceMissing'),
+          undefined,
+          'error',
         );
 
 
@@ -483,6 +494,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.selectVehicleTitle'),
           t('mobile.reservation.selectVehicleMessage'),
+          undefined,
+          'warning',
         );
 
         return;
@@ -493,6 +506,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.error'),
           selectedVehicle ? t('mobile.serviceDetail.unavailable') : t('vehicles.status.inactive'),
+          undefined,
+          'error',
         );
         return;
       }
@@ -530,6 +545,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.invalidDate'),
           t('mobile.reservation.pastDate'),
+          undefined,
+          'warning',
         );
 
         return;
@@ -564,6 +581,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.invalidTime'),
             t('mobile.reservation.pastTime'),
+            undefined,
+            'warning',
           );
 
           return;
@@ -592,15 +611,27 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.error'),
             currentService.estado !== true ? t('mobile.serviceDetail.unavailable') : t('vehicles.status.inactive'),
+            undefined,
+            'error',
           );
           return;
         }
       } catch (availabilityError: any) {
         const status = availabilityError?.response?.status;
         if ([400, 404, 409, 422].includes(status)) {
-          Alert.alert(t('mobile.reservation.error'), t('mobile.serviceDetail.unavailable'));
+          Alert.alert(
+            t('mobile.reservation.error'),
+            t('mobile.serviceDetail.unavailable'),
+            undefined,
+            'error',
+          );
         } else {
-          Alert.alert(t('mobile.reservation.error'), t('mobile.reservation.vehicleLoadError'));
+          Alert.alert(
+            t('mobile.reservation.error'),
+            t('mobile.reservation.vehicleLoadError'),
+            undefined,
+            'error',
+          );
         }
         return;
       } finally {
@@ -693,6 +724,7 @@ export default function ReservationScreen() {
                 style: 'default',
               },
             ],
+            'warning',
           );
 
           return;
@@ -709,6 +741,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.invalidData'),
             t('mobile.reservation.genericCreateError'),
+            undefined,
+            'error',
           );
 
           return;
@@ -725,6 +759,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.expiredTitle'),
             t('mobile.reservation.expiredMessage'),
+            undefined,
+            'error',
           );
 
           return;
@@ -741,6 +777,8 @@ export default function ReservationScreen() {
           Alert.alert(
             t('mobile.reservation.serverTitle'),
             t('mobile.reservation.serverMessage'),
+            undefined,
+            'error',
           );
 
           return;
@@ -753,6 +791,8 @@ export default function ReservationScreen() {
         Alert.alert(
           t('mobile.reservation.createErrorTitle'),
           t('mobile.reservation.genericCreateError'),
+          undefined,
+          'error',
         );
       } finally {
         setCreatingReservation(
@@ -838,7 +878,7 @@ export default function ReservationScreen() {
             accessibilityLabel={t('mobile.reservation.back')}
             onPress={() => navigation.goBack()}
           />
-          <Text style={[styles.pageTitle, { color: colors.text }]} numberOfLines={2}>
+          <Text accessibilityRole="header" style={[styles.pageTitle, { color: colors.text }]} numberOfLines={2}>
             {t('mobile.reservation.newTitle')}
           </Text>
         </View>
@@ -899,7 +939,7 @@ export default function ReservationScreen() {
             }
           >
             <View
-              style={[styles.infoItem, { backgroundColor: `${colors.primary}10` }]}
+              style={[styles.infoItem, { backgroundColor: theme.primarySoft }]}
             >
               <Text
                 style={[
@@ -927,7 +967,7 @@ export default function ReservationScreen() {
             </View>
 
             <View
-              style={[styles.infoItem, { backgroundColor: `${colors.primary}10` }]}
+              style={[styles.infoItem, { backgroundColor: theme.primarySoft }]}
             >
               <Text
                 style={[
@@ -1042,6 +1082,7 @@ export default function ReservationScreen() {
               ]}
             >
               <Picker
+                accessibilityLabel={t('mobile.reservation.selectVehicle')}
                 selectedValue={
                   selectedVehicleId
                 }
@@ -1102,6 +1143,8 @@ export default function ReservationScreen() {
           </Text>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${t('mobile.reservation.reservationDate')}: ${selectedDate.toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
             style={[
               styles.selector,
               {
@@ -1192,6 +1235,8 @@ export default function ReservationScreen() {
           </Text>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${t('mobile.reservation.reservationTime')}: ${selectedTime.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}`}
             style={[
               styles.selector,
               {
@@ -1415,6 +1460,9 @@ export default function ReservationScreen() {
         {/* CREAR RESERVA */}
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={creatingReservation ? `${t('mobile.reservation.confirm')}, ${t('accessibility.inProgress')}` : t('mobile.reservation.confirm')}
+          accessibilityState={{ disabled: creatingReservation || !selectedVehicleId || activeVehicles.length === 0, busy: creatingReservation }}
           disabled={
             creatingReservation ||
             !selectedVehicleId ||
@@ -1446,14 +1494,14 @@ export default function ReservationScreen() {
         >
           {creatingReservation ? (
             <ActivityIndicator
-              color="#FFFFFF"
+              color={theme.onPrimary}
             />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={21} color="#FFFFFF" />
+              <Ionicons name="checkmark-circle-outline" size={21} color={theme.onPrimary} />
               <Text
                 style={
-                  styles.createButtonText
+                  [styles.createButtonText, { color: theme.onPrimary }]
                 }
               >
                 {t('mobile.reservation.confirm')}
@@ -1465,6 +1513,7 @@ export default function ReservationScreen() {
         {/* CANCELAR */}
 
         <Pressable
+          accessibilityRole="button"
           disabled={
             creatingReservation
           }
@@ -1684,7 +1733,6 @@ const styles =
     },
 
     createButtonText: {
-      color: '#FFFFFF',
       fontSize: 16,
       fontWeight: '700',
     },

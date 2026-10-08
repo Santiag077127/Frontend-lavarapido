@@ -297,8 +297,8 @@ export default function AssignedServicesScreen() {
         }
         ListHeaderComponent={loadError && assignments.length > 0 ? (
           <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
-            <Text style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
-            <TouchableOpacity onPress={loadAssignments}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
+            <TouchableOpacity accessibilityRole="button" onPress={loadAssignments}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
           </View>
         ) : null}
         ListEmptyComponent={
@@ -324,7 +324,7 @@ export default function AssignedServicesScreen() {
             >
               {loadError ? t(`apiErrors.${loadError}`) : t('operator.empty.description')}
             </Text>
-            {loadError && <TouchableOpacity onPress={loadAssignments} style={styles.retryButton}><Text style={{ color: theme.primary, fontWeight: '700' }}>{t('common.retry')}</Text></TouchableOpacity>}
+            {loadError && <TouchableOpacity accessibilityRole="button" onPress={loadAssignments} style={styles.retryButton}><Text style={{ color: theme.primary, fontWeight: '700' }}>{t('common.retry')}</Text></TouchableOpacity>}
           </View>
         }
         renderItem={({ item }) => {
@@ -332,6 +332,12 @@ export default function AssignedServicesScreen() {
 
           const isUpdating =
             updatingId === item.idAsignacion;
+          const statusStyle = {
+            asignada: { backgroundColor: theme.infoBackground, color: theme.infoText },
+            en_proceso: { backgroundColor: theme.processBackground, color: theme.inProgressText },
+            completada: { backgroundColor: theme.successBackground, color: theme.successText },
+            cancelada: { backgroundColor: theme.errorBackground, color: theme.errorText },
+          }[item.estado];
 
           return (
             <View
@@ -376,7 +382,8 @@ export default function AssignedServicesScreen() {
                   style={[
                     styles.statusBadge,
                     {
-                      borderColor: theme.primary,
+                      borderColor: statusStyle.color,
+                      backgroundColor: statusStyle.backgroundColor,
                     },
                   ]}
                 >
@@ -384,7 +391,7 @@ export default function AssignedServicesScreen() {
                     style={[
                       styles.statusText,
                       {
-                        color: theme.primary,
+                        color: statusStyle.color,
                       },
                     ]}
                   >
@@ -705,6 +712,9 @@ export default function AssignedServicesScreen() {
 
               {action && (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={isUpdating ? `${action.label}, ${t('accessibility.inProgress')}` : action.label}
+                  accessibilityState={{ disabled: isUpdating, busy: isUpdating }}
                   disabled={isUpdating}
                   activeOpacity={0.8}
                   onPress={() =>
@@ -726,11 +736,11 @@ export default function AssignedServicesScreen() {
                 >
                   {isUpdating ? (
                     <ActivityIndicator
-                      color="#fff"
+                      color={theme.onPrimary}
                     />
                   ) : (
                     <Text
-                      style={styles.buttonText}
+                      style={[styles.buttonText, { color: theme.onPrimary }]}
                     >
                       {action.label}
                     </Text>
@@ -962,7 +972,6 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: '#fff',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -980,4 +989,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-
