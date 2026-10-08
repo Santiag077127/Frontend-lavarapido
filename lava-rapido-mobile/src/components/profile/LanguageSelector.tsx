@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useTranslation } from 'react-i18next'
 import { changeLanguage, type LanguageCode } from '../../i18n'
 
-type Props = { theme: { card: string; text: string; textSecondary: string }; darkMode: boolean }
+type Props = { theme: any; darkMode: boolean }
 
 const languages: LanguageCode[] = ['es', 'en', 'pt', 'fr']
 
@@ -21,29 +21,29 @@ export default function LanguageSelector({ theme, darkMode }: Props) {
 
   return (
     <>
-      <TouchableOpacity style={[styles.row, { borderColor: darkMode ? '#303B4A' : '#E5E7EB' }]} activeOpacity={0.7} onPress={() => setVisible(true)} accessibilityRole="button" accessibilityLabel={t('language.title')}>
+      <TouchableOpacity style={[styles.row, { borderColor: theme.border }]} activeOpacity={0.7} onPress={() => setVisible(true)} accessibilityRole="button" accessibilityLabel={`${t('language.title')}: ${t(`language.names.${selectedLanguage}`)}`} accessibilityState={{ expanded: visible }}>
         <View style={styles.left}>
-          <View style={[styles.icon, { backgroundColor: darkMode ? '#263241' : '#EEF4FF' }]}><Ionicons name="language-outline" size={20} color="#2563EB" /></View>
+          <View style={[styles.icon, { backgroundColor: theme.primaryContainer }]}><Ionicons name="language-outline" size={20} color={theme.primary} /></View>
           <View style={styles.textContainer}>
             <Text style={[styles.title, { color: theme.text }]}>{t('language.title')}</Text>
             <Text style={[styles.description, { color: theme.textSecondary }]}>{t(`language.names.${selectedLanguage}`)}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={darkMode ? '#667085' : '#94A3B8'} />
+        <Ionicons name="chevron-forward" size={20} color={theme.icon} />
       </TouchableOpacity>
 
       <Modal transparent visible={visible} animationType="fade" onRequestClose={() => setVisible(false)}>
-        <View style={styles.backdrop}>
-          <View style={[styles.modal, { backgroundColor: theme.card }]}>
+        <View style={[styles.backdrop, { backgroundColor: theme.overlay }]}>
+          <View style={[styles.modal, { backgroundColor: theme.card, borderColor: theme.border }]} accessibilityViewIsModal>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>{t('language.select')}</Text>
-              <TouchableOpacity onPress={() => setVisible(false)} accessibilityLabel={t('language.close')}><Ionicons name="close" size={24} color={theme.textSecondary} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setVisible(false)} accessibilityRole="button" accessibilityLabel={t('language.close')}><Ionicons name="close" size={24} color={theme.textSecondary} /></TouchableOpacity>
             </View>
             {languages.map(language => {
               const selected = language === currentLanguage
-              return <TouchableOpacity key={language} style={[styles.languageOption, { borderColor: darkMode ? '#303B4A' : '#E5E7EB' }]} onPress={() => selectLanguage(language)} accessibilityRole="radio" accessibilityState={{ selected }}>
+              return <TouchableOpacity key={language} style={[styles.languageOption, { borderColor: theme.border }]} onPress={() => selectLanguage(language)} accessibilityRole="radio" accessibilityState={{ selected }}>
                 <View><Text style={[styles.languageName, { color: theme.text }]}>{t(`language.names.${language}`)}</Text><Text style={[styles.languageSubtitle, { color: theme.textSecondary }]}>{t(`language.englishNames.${language}`)}</Text></View>
-                {selected && <Ionicons name="checkmark-circle" size={23} color="#2563EB" />}
+                {selected && <Ionicons name="checkmark-circle" size={23} color={theme.primary} />}
               </TouchableOpacity>
             })}
           </View>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   left: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   icon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   textContainer: { flex: 1 }, title: { fontSize: 15, fontWeight: '700' }, description: { fontSize: 11.5, marginTop: 3 },
-  backdrop: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: 'rgba(15, 23, 42, 0.55)' }, modal: { borderRadius: 20, padding: 20 },
+  backdrop: { flex: 1, justifyContent: 'center', padding: 24 }, modal: { borderRadius: 20, padding: 20 },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }, modalTitle: { fontSize: 18, fontWeight: '800' },
   languageOption: { minHeight: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 0.5 }, languageName: { fontSize: 16, fontWeight: '700' }, languageSubtitle: { fontSize: 12, marginTop: 2 },
 })

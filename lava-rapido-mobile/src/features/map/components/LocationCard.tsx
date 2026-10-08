@@ -1,12 +1,16 @@
+import { useContext } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import { ThemeContext } from '../../../theme/ThemeContext'
 
 export default function LocationCard({ location }: any) {
+  const { theme } = useContext(ThemeContext)
+
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>{location.name}</Text>
-      <Text>{location.address}</Text>
-      <Text>{location.city}</Text>
-      <Text>📞 {location.phone}</Text>
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <Text style={[styles.title, { color: theme.text }]}>{location.name}</Text>
+      <Text style={{ color: theme.textSecondary }}>{location.address}</Text>
+      <Text style={{ color: theme.textSecondary }}>{location.city}</Text>
+      <Text style={{ color: theme.textSecondary }}>📞 {location.phone}</Text>
     </View>
   )
 }
@@ -17,13 +21,17 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: '#fff',
+    borderWidth: 1,
     padding: 16,
     borderRadius: 12,
-    elevation: 5
+    elevation: 5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: 16
+    fontSize: 16,
+    fontWeight: '700',
   }
 })

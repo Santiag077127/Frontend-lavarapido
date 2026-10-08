@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext, useMemo } from 'react'
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
+import { ThemeContext } from '../../../theme/ThemeContext'
 
 const { width } = Dimensions.get('window')
 
@@ -20,6 +21,8 @@ export default function LandingScreen() {
 
   const navigation = useNavigation<any>()
   const { t } = useTranslation()
+  const { theme, darkMode } = useContext(ThemeContext)
+  const styles = useMemo(() => createStyles(theme), [theme])
 
   return (
 
@@ -29,13 +32,13 @@ export default function LandingScreen() {
     >
 
       <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#f0f4f8"
+        barStyle={darkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background}
       />
 
       {/* 🚀 HERO */}
       <LinearGradient
-        colors={['#f0f4f8', '#e3f0ff']}
+        colors={[theme.background, theme.primaryContainer]}
         style={styles.hero}
       >
 
@@ -88,7 +91,7 @@ export default function LandingScreen() {
         <View style={styles.phone}>
 
           <LinearGradient
-            colors={['#38afff', '#1a3a8f', '#1565c0']}
+            colors={[theme.primaryDark, theme.primary, theme.primaryDark]}
             style={styles.phoneGradient}
           >
 
@@ -149,7 +152,7 @@ export default function LandingScreen() {
                 <Ionicons
                   name="map"
                   size={28}
-                  color="#1E6FB9"
+                  color={theme.primary}
                 />
 
                 <Text style={styles.smallCardTitle}>
@@ -165,7 +168,7 @@ export default function LandingScreen() {
                 <Ionicons
                   name="person"
                   size={28}
-                  color="#1E6FB9"
+                  color={theme.primary}
                 />
 
                 <Text style={styles.smallCardTitle}>
@@ -200,7 +203,7 @@ export default function LandingScreen() {
           <Ionicons
             name="phone-portrait"
             size={35}
-            color="#1E6FB9"
+            color={theme.primary}
           />
 
           <Text style={styles.featureTitle}>
@@ -216,7 +219,7 @@ export default function LandingScreen() {
           <Ionicons
             name="location"
             size={35}
-            color="#1E6FB9"
+            color={theme.primary}
           />
 
           <Text style={styles.featureTitle}>
@@ -232,7 +235,7 @@ export default function LandingScreen() {
           <Ionicons
             name="moon"
             size={35}
-            color="#1E6FB9"
+            color={theme.primary}
           />
 
           <Text style={styles.featureTitle}>
@@ -248,7 +251,7 @@ export default function LandingScreen() {
 
       {/* 🚀 CTA */}
       <LinearGradient
-        colors={['#38afff', '#1a3a8f', '#1565c0']}
+        colors={[theme.primaryDark, theme.primary, theme.primaryDark]}
         style={styles.cta}
       >
 
@@ -275,11 +278,11 @@ export default function LandingScreen() {
   )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: theme.background,
   },
 
   hero: {
@@ -289,9 +292,9 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    backgroundColor: 'rgba(21,101,192,0.1)',
+    backgroundColor: theme.primaryContainer,
     borderWidth: 1,
-    borderColor: 'rgba(21,101,192,0.2)',
+    borderColor: theme.border,
     alignSelf: 'flex-start',
     paddingHorizontal: 15,
     paddingVertical: 8,
@@ -300,27 +303,27 @@ const styles = StyleSheet.create({
   },
 
   badgeText: {
-    color: '#1565c0',
+    color: theme.primary,
     fontWeight: '600',
   },
 
   title: {
     fontSize: 42,
     fontWeight: '900',
-    color: '#0d1f4c',
+    color: theme.text,
   },
 
   titleBlue: {
     fontSize: 42,
     fontWeight: '900',
-    color: '#1E6FB9',
+    color: theme.primary,
   },
 
   subtitle: {
     marginTop: 15,
     fontSize: 16,
     lineHeight: 24,
-    color: '#5a6a85',
+    color: theme.textSecondary,
   },
 
   buttonsContainer: {
@@ -330,28 +333,28 @@ const styles = StyleSheet.create({
   },
 
   primaryButton: {
-    backgroundColor: '#1E6FB9',
+    backgroundColor: theme.primaryDark,
     paddingHorizontal: 28,
     paddingVertical: 15,
     borderRadius: 18,
   },
 
   primaryButtonText: {
-    color: '#fff',
+    color: theme.onPrimary,
     fontWeight: 'bold',
     fontSize: 16,
   },
 
   secondaryButton: {
     borderWidth: 1,
-    borderColor: '#7FA9C4',
+    borderColor: theme.border,
     paddingHorizontal: 28,
     paddingVertical: 15,
     borderRadius: 18,
   },
 
   secondaryButtonText: {
-    color: '#1E6FB9',
+    color: theme.primary,
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -364,7 +367,7 @@ const styles = StyleSheet.create({
   phone: {
     width: width * 0.82,
     height: 620,
-    backgroundColor: '#e3f0ff',
+    backgroundColor: theme.surface,
     borderRadius: 40,
     padding: 10,
     elevation: 10,
@@ -381,18 +384,18 @@ const styles = StyleSheet.create({
   },
 
   phoneTitle: {
-    color: '#fff',
+    color: theme.onPrimary,
     fontSize: 24,
     fontWeight: 'bold',
   },
 
   phoneSubtitle: {
-    color: '#D6EAF8',
+    color: theme.onPrimary,
     marginTop: 5,
   },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     borderRadius: 20,
     padding: 15,
     marginBottom: 15,
@@ -407,22 +410,23 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: theme.text,
   },
 
   cardDescription: {
-    color: '#6B7280',
+    color: theme.textSecondary,
     marginTop: 5,
   },
 
   active: {
-    color: '#27AE60',
+    color: theme.successText,
     fontWeight: 'bold',
   },
 
   progressBar: {
     width: '100%',
     height: 10,
-    backgroundColor: '#dbeafe',
+    backgroundColor: theme.primaryContainer,
     borderRadius: 20,
     overflow: 'hidden',
     marginTop: 15,
@@ -431,12 +435,12 @@ const styles = StyleSheet.create({
   progress: {
     width: '75%',
     height: '100%',
-    backgroundColor: '#1E6FB9',
+    backgroundColor: theme.primaryDark,
   },
 
   progressText: {
     marginTop: 10,
-    color: '#6B7280',
+    color: theme.textSecondary,
   },
 
   featuresGrid: {
@@ -446,7 +450,7 @@ const styles = StyleSheet.create({
 
   smallCard: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     borderRadius: 20,
     padding: 15,
   },
@@ -454,11 +458,12 @@ const styles = StyleSheet.create({
   smallCardTitle: {
     marginTop: 10,
     fontWeight: 'bold',
+    color: theme.text,
   },
 
   smallCardText: {
     marginTop: 5,
-    color: '#6B7280',
+    color: theme.textSecondary,
     fontSize: 12,
   },
 
@@ -470,19 +475,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1E1E1E',
+    color: theme.text,
     textAlign: 'center',
   },
 
   sectionSubtitle: {
     marginTop: 10,
-    color: '#6B7280',
+    color: theme.textSecondary,
     textAlign: 'center',
     marginBottom: 30,
   },
 
   featureCard: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     borderRadius: 25,
     padding: 25,
     marginBottom: 20,
@@ -492,11 +497,12 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 20,
     fontWeight: 'bold',
+    color: theme.text,
   },
 
   featureText: {
     marginTop: 10,
-    color: '#6B7280',
+    color: theme.textSecondary,
     lineHeight: 22,
   },
 
@@ -511,19 +517,19 @@ const styles = StyleSheet.create({
   ctaTitle: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#fff',
+    color: theme.onPrimary,
     textAlign: 'center',
   },
 
   ctaText: {
     marginTop: 15,
-    color: '#D6EAF8',
+    color: theme.onPrimary,
     textAlign: 'center',
     lineHeight: 24,
   },
 
   ctaButton: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.card,
     paddingHorizontal: 35,
     paddingVertical: 16,
     borderRadius: 18,
@@ -531,7 +537,7 @@ const styles = StyleSheet.create({
   },
 
   ctaButtonText: {
-    color: '#1E1E1E',
+    color: theme.text,
     fontWeight: 'bold',
     fontSize: 16,
   },

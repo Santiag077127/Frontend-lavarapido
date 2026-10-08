@@ -6,6 +6,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../theme/ThemeContext';
 
@@ -28,22 +29,24 @@ export default function BackButton({
   backgroundColor,
   hitSlop = 4,
   disabled = false,
-  accessibilityLabel = 'Volver',
+  accessibilityLabel,
 }: BackButtonProps) {
   const { theme, darkMode } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      activeOpacity={0.75}
+      accessibilityLabel={accessibilityLabel ?? t('mobile.serviceDetail.back')}
+      activeOpacity={0.65}
       disabled={disabled}
       hitSlop={hitSlop}
       onPress={onPress}
       style={[
         styles.backButton,
         {
-          backgroundColor: backgroundColor ?? (darkMode ? '#263241' : '#F1F5F9'),
+          backgroundColor: backgroundColor ?? theme.interactiveSurface,
+          borderColor: theme.border,
         },
         style,
       ]}

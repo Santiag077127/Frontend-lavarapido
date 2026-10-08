@@ -21,24 +21,49 @@ export default function ResetPasswordScreen({ navigation }: any) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const handleReset = async () => {
     if (!token.trim() || !password || !confirmPassword) {
-      Alert.alert(t('resetPassword.incompleteTitle'), t('resetPassword.incompleteMessage'))
+      Alert.alert(
+        t('resetPassword.incompleteTitle'),
+        t('resetPassword.incompleteMessage'),
+        undefined,
+        'warning',
+      )
       return
     }
     if (!passwordsMatch(password, confirmPassword)) {
-      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.mismatch'))
+      Alert.alert(
+        t('resetPassword.errorTitle'),
+        t('resetPassword.mismatch'),
+        undefined,
+        'warning',
+      )
       return
     }
     if (!isValidPassword(password)) {
-      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.passwordRequirements', { defaultValue: 'La contraseña debe tener al menos 8 unidades y un máximo de 72 bytes UTF-8.' }))
+      Alert.alert(
+        t('resetPassword.errorTitle'),
+        t('accessibility.passwordRequirements'),
+        undefined,
+        'warning',
+      )
       return
     }
     setSaving(true)
     try {
       await authService.resetPassword(token.trim(), password)
-      Alert.alert(t('resetPassword.successTitle'), t('resetPassword.successMessage'))
+      Alert.alert(
+        t('resetPassword.successTitle'),
+        t('resetPassword.successMessage'),
+        undefined,
+        'success',
+      )
       navigation.navigate('Login')
     } catch {
-      Alert.alert(t('resetPassword.errorTitle'), t('resetPassword.resetError', { defaultValue: 'Token inválido o vencido, o contraseña no válida. Solicita un nuevo enlace e inténtalo otra vez.' }))
+      Alert.alert(
+        t('resetPassword.errorTitle'),
+        t('accessibility.resetError'),
+        undefined,
+        'error',
+      )
     } finally {
       setSaving(false)
     }
@@ -46,8 +71,8 @@ export default function ResetPasswordScreen({ navigation }: any) {
   const passwordField = (placeholder: string, value: string, onChangeText: (text: string) => void, visible: boolean, toggle: () => void, icon: 'lock-closed-outline' | 'shield-checkmark-outline') => (
     <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
       <Ionicons name={icon} size={22} color={theme.primary} />
-      <TextInput placeholder={placeholder} placeholderTextColor={theme.placeholder} secureTextEntry={!visible} value={value} onChangeText={onChangeText} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
-      <TouchableOpacity onPress={toggle} hitSlop={8} accessibilityRole="button" accessibilityLabel={visible ? t('resetPassword.hidePassword', { defaultValue: 'Ocultar contraseña' }) : t('resetPassword.showPassword', { defaultValue: 'Mostrar contraseña' })} accessibilityState={{ expanded: visible }}><Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} /></TouchableOpacity>
+      <TextInput accessibilityLabel={placeholder} placeholder={placeholder} placeholderTextColor={theme.placeholder} secureTextEntry={!visible} value={value} onChangeText={onChangeText} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
+      <TouchableOpacity onPress={toggle} hitSlop={8} accessibilityRole="button" accessibilityLabel={t(visible ? 'accessibility.hidePassword' : 'accessibility.showPassword')} accessibilityState={{ expanded: visible }}><Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} /></TouchableOpacity>
     </View>
   )
   return (
@@ -57,17 +82,17 @@ export default function ResetPasswordScreen({ navigation }: any) {
           <View style={styles.content}>
             <View style={styles.header}>
               <BackButton accessibilityLabel={t('mobile.serviceDetail.back')} onPress={() => navigation.goBack()} />
-              <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('resetPassword.title')}</Text>
+              <Text accessibilityRole="header" style={[styles.headerTitle, { color: theme.text }]} numberOfLines={2}>{t('resetPassword.title')}</Text>
             </View>
-            <Image source={images.logo} style={styles.logo} resizeMode="contain" />
+            <Image source={images.logo} style={styles.logo} resizeMode="contain" accessible={false} />
             <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('resetPassword.subtitle')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
               <Ionicons name="key-outline" size={22} color={theme.primary} />
-              <TextInput placeholder={t('resetPassword.token', { defaultValue: 'Token recibido por correo' })} accessibilityLabel={t('resetPassword.token', { defaultValue: 'Token recibido por correo' })} placeholderTextColor={theme.placeholder} value={token} onChangeText={setToken} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
+              <TextInput placeholder={t('accessibility.resetToken')} accessibilityLabel={t('accessibility.resetToken')} placeholderTextColor={theme.placeholder} value={token} onChangeText={setToken} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} />
             </View>
             {passwordField(t('resetPassword.newPassword'), password, setPassword, showPassword, () => setShowPassword(!showPassword), 'lock-closed-outline')}
             {passwordField(t('resetPassword.confirmPassword'), confirmPassword, setConfirmPassword, showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), 'shield-checkmark-outline')}
-            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleReset} disabled={saving} accessibilityRole="button" accessibilityState={{ disabled: saving }} activeOpacity={0.8}><Text style={styles.buttonText}>{t('resetPassword.save')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleReset} disabled={saving} accessibilityRole="button" accessibilityLabel={saving ? `${t('resetPassword.save')}, ${t('accessibility.inProgress')}` : t('resetPassword.save')} accessibilityState={{ disabled: saving, busy: saving }} activeOpacity={0.8}><Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('resetPassword.save')}</Text></TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -84,5 +109,5 @@ const styles = StyleSheet.create({
   inputContainer: { minHeight: 52, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, marginBottom: 16 },
   input: { flex: 1, minHeight: 50, marginHorizontal: 12, fontSize: 16 },
   button: { minHeight: 52, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontWeight: '700' },
 })

@@ -89,6 +89,7 @@ export default function ServiceDetailScreen() {
               style={[styles.image, { backgroundColor: theme.border }]}
               resizeMode="cover"
               accessibilityIgnoresInvertColors
+              accessible={false}
             />
 
             <View style={styles.cardContent}>
@@ -103,7 +104,7 @@ export default function ServiceDetailScreen() {
 
           <View style={styles.infoGrid}>
             <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={[styles.metricIcon, { backgroundColor: `${theme.primary}18` }]}>
+              <View style={[styles.metricIcon, { backgroundColor: theme.primarySoft }]}>
                 <Ionicons name="time-outline" size={20} color={theme.primary} />
               </View>
               <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
@@ -115,7 +116,7 @@ export default function ServiceDetailScreen() {
             </View>
 
             <View style={[styles.infoCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={[styles.metricIcon, { backgroundColor: `${theme.primary}18` }]}>
+              <View style={[styles.metricIcon, { backgroundColor: theme.primarySoft }]}>
                 <Ionicons name="cash-outline" size={20} color={theme.primary} />
               </View>
               <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>
@@ -131,15 +132,15 @@ export default function ServiceDetailScreen() {
             style={[
               styles.statusCard,
               {
-                backgroundColor: service.estado ? `${theme.primary}12` : theme.errorBackground,
-                borderColor: service.estado ? `${theme.primary}35` : theme.errorBorder,
+                backgroundColor: service.estado ? theme.successBackground : theme.errorBackground,
+                borderColor: service.estado ? theme.successBorder : theme.errorBorder,
               },
             ]}
           >
             <View
               style={[
                 styles.statusIndicator,
-                { backgroundColor: service.estado ? '#16a34a' : theme.errorText },
+                { backgroundColor: service.estado ? theme.success : theme.errorText },
               ]}
             />
             <Text style={[styles.statusText, { color: theme.text }]}>
@@ -150,7 +151,7 @@ export default function ServiceDetailScreen() {
             <Ionicons
               name={service.estado ? 'checkmark-circle-outline' : 'close-circle-outline'}
               size={20}
-              color={service.estado ? '#16a34a' : theme.errorText}
+              color={service.estado ? theme.success : theme.errorText}
             />
           </View>
 
@@ -167,14 +168,14 @@ export default function ServiceDetailScreen() {
             <Text
               style={[
                 styles.reserveButtonText,
-                { color: service.estado ? '#FFFFFF' : theme.textSecondary },
+                { color: service.estado ? theme.onPrimary : theme.textSecondary },
               ]}
             >
               {service.estado
                 ? t('mobile.serviceDetail.reserve')
                 : t('mobile.serviceDetail.unavailable')}
             </Text>
-            {service.estado && <Ionicons name="arrow-forward" size={19} color="#FFFFFF" />}
+            {service.estado && <Ionicons name="arrow-forward" size={19} color={theme.onPrimary} />}
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

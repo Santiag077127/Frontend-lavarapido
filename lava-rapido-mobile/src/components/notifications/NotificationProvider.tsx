@@ -18,14 +18,17 @@ type AlertButton = {
   style?: 'default' | 'cancel' | 'destructive';
 };
 
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
 type Notification = {
   title: string;
   message?: string;
   buttons: AlertButton[];
+  type: NotificationType;
 };
 
 type NotificationContextValue = {
-  show: (title: string, message?: string, buttons?: AlertButton[]) => void;
+  show: (title: string, message?: string, buttons?: AlertButton[], type?: NotificationType) => void;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -44,27 +47,30 @@ let showGlobalNotification: NotificationContextValue['show'] | null = null;
 
 // Mantiene la firma de Alert.alert para no modificar la lógica de cada pantalla.
 export const appAlert = {
-  alert: (title: string, message?: string, buttons?: AlertButton[]) => {
-    showGlobalNotification?.(title, message, buttons);
+  alert: (title: string, message?: string, buttons?: AlertButton[], type: NotificationType = 'info') => {
+    showGlobalNotification?.(title, message, buttons, type);
   },
 };
 
-const isError = (title: string) =>
-  /error|erro|erreur|invalid|inval|no se pudo|impossible|unable|expirad|expired|expirad/i.test(title);
-
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const { theme } = useContext(ThemeContext);
+  const { theme, darkMode } = useContext(ThemeContext);
   const { t } = useTranslation();
   const [notification, setNotification] = useState<Notification | null>(null);
 
-  const show = (title: string, message?: string, buttons: AlertButton[] = []) => {
-    setNotification({ title, message, buttons });
+  const show = (title: string, message?: string, buttons: AlertButton[] = [], type: NotificationType = 'info') => {
+    setNotification({ title, message, buttons, type });
   };
 
   showGlobalNotification = show;
 
   const value = useMemo(() => ({ show }), []);
-  const error = notification ? isError(notification.title) : false;
+  const alertStyles = {
+    success: { background: theme.successBackground, foreground: theme.successText, border: theme.successBorder, icon: 'checkmark-circle-outline' as const },
+    error: { background: theme.errorBackground, foreground: theme.errorText, border: theme.errorBorder, icon: 'alert-circle-outline' as const },
+    warning: { background: theme.warningBackground, foreground: theme.warningText, border: theme.warningBorder, icon: 'warning-outline' as const },
+    info: { background: theme.infoBackground, foreground: theme.infoText, border: theme.infoBorder, icon: 'information-circle-outline' as const },
+  };
+  const alertStyle = alertStyles[notification?.type ?? 'info'];
   const buttons = notification?.buttons.length
     ? notification.buttons
     : [{ text: t('common.ok') }];
@@ -84,20 +90,25 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         animationType="fade"
         onRequestClose={() => dismiss()}
       >
-        <Pressable style={styles.backdrop} onPress={() => dismiss()}>
+        <Pressable
+          accessible={false}
+          style={[styles.backdrop, { backgroundColor: theme.overlay }]}
+          onPress={() => dismiss()}
+        >
           <Pressable
-            style={[styles.card, { backgroundColor: theme.card }]}
+            style={[styles.card, { backgroundColor: theme.card, shadowColor: theme.shadow }]}
             onPress={(event) => event.stopPropagation()}
+            accessibilityViewIsModal
           >
-            <View style={[styles.icon, { backgroundColor: error ? theme.errorBackground : '#e3f0ff' }]}>
+            <View style={[styles.icon, { backgroundColor: alertStyle.background, borderColor: alertStyle.border, borderWidth: 1 }]}>
               <Ionicons
-                name={error ? 'alert-circle-outline' : 'checkmark-circle-outline'}
+                name={alertStyle.icon}
                 size={28}
-                color={error ? theme.errorText : theme.primary}
+                color={alertStyle.foreground}
               />
             </View>
 
-            <Text style={[styles.title, { color: theme.text }]}>{notification?.title}</Text>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.title, { color: theme.text }]}>{notification?.title}</Text>
             {notification?.message ? (
               <Text style={[styles.message, { color: theme.textSecondary }]}>
                 {notification.message}
@@ -112,19 +123,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 return (
                   <TouchableOpacity
                     key={`${button.text ?? 'action'}-${index}`}
+                    accessibilityRole="button"
                     style={[
                       styles.button,
                       secondary
                         ? [styles.secondaryButton, { borderColor: theme.border }]
-                        : { backgroundColor: destructive ? '#c0392b' : theme.primary },
+                        : { backgroundColor: destructive ? theme.errorAction : darkMode ? theme.primaryDark : theme.primary },
                     ]}
                     onPress={() => dismiss(button)}
                     activeOpacity={0.8}
+                    accessibilityLabel={button.text ?? t('common.ok')}
                   >
                     <Text
                       style={[
                         styles.buttonText,
-                        { color: secondary ? theme.text : '#ffffff' },
+                        { color: secondary ? theme.text : destructive ? theme.errorOnAction : theme.onPrimary },
                       ]}
                     >
                       {button.text ?? t('common.ok')}
@@ -145,7 +158,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: 'rgba(13, 31, 76, 0.42)',
   },
   card: {
     width: '100%',
@@ -155,7 +167,6 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     elevation: 12,
-    shadowColor: '#0d1b3e',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 18,

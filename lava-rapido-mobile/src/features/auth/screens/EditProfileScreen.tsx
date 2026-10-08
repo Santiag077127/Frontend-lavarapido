@@ -40,7 +40,6 @@ import {
 
 import api from '../../../services/api'
 
-const PRIMARY_COLOR = '#2563EB'
 
 type UserProfile = {
   userId: string
@@ -88,19 +87,7 @@ export default function EditProfileScreen() {
   const navigation =
     useNavigation<any>()
 
-  const themeContext =
-    useContext(ThemeContext)
-
-  const darkMode =
-    themeContext?.darkMode ?? false
-
-  const theme =
-    themeContext?.theme ?? {
-      background: '#BFD0DB',
-      card: '#FFFFFF',
-      text: '#000000',
-      textSecondary: '#555555',
-    }
+  const { theme, darkMode } = useContext(ThemeContext)
 
   const { t } = useTranslation()
 
@@ -222,7 +209,9 @@ export default function EditProfileScreen() {
                 ? t('editProfile.unauthorized')
                 : error?.response?.status === 404
                   ? t('editProfile.notFound')
-                  : t('editProfile.loadError')
+                  : t('editProfile.loadError'),
+            undefined,
+            'error',
           )
         } finally {
           setLoading(false)
@@ -290,7 +279,9 @@ export default function EditProfileScreen() {
     if (!cleanFirstName) {
       Alert.alert(
         t('editProfile.requiredTitle'),
-        t('editProfile.firstNameRequired')
+        t('editProfile.firstNameRequired'),
+        undefined,
+        'warning',
       )
 
       return false
@@ -299,7 +290,9 @@ export default function EditProfileScreen() {
     if (!cleanLastName) {
       Alert.alert(
         t('editProfile.requiredTitle'),
-        t('editProfile.lastNameRequired')
+        t('editProfile.lastNameRequired'),
+        undefined,
+        'warning',
       )
 
       return false
@@ -308,7 +301,9 @@ export default function EditProfileScreen() {
     if (!cleanPhone) {
       Alert.alert(
         t('editProfile.requiredTitle'),
-        t('editProfile.phoneRequired')
+        t('editProfile.phoneRequired'),
+        undefined,
+        'warning',
       )
 
       return false
@@ -319,7 +314,9 @@ export default function EditProfileScreen() {
     ) {
       Alert.alert(
         t('editProfile.invalidPhoneTitle'),
-        t('editProfile.invalidPhone')
+        t('editProfile.invalidPhone'),
+        undefined,
+        'warning',
       )
 
       return false
@@ -371,7 +368,8 @@ export default function EditProfileScreen() {
             onPress: () =>
               navigation.goBack(),
           },
-        ]
+        ],
+        'success',
       )
     } catch (error: any) {
       console.log(
@@ -395,7 +393,9 @@ export default function EditProfileScreen() {
 
       Alert.alert(
         t('editProfile.errorTitle'),
-        message
+        message,
+        undefined,
+        'error',
       )
     } finally {
       setSaving(false)
@@ -432,7 +432,7 @@ export default function EditProfileScreen() {
         >
           <ActivityIndicator
             size="large"
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
 
           <Text
@@ -494,9 +494,7 @@ export default function EditProfileScreen() {
               backgroundColor:
                 theme.card,
               borderColor:
-                darkMode
-                  ? '#303B4A'
-                  : '#E2E8F0',
+                theme.border,
             },
           ]}
         >
@@ -543,9 +541,7 @@ export default function EditProfileScreen() {
               backgroundColor:
                 theme.card,
               borderColor:
-                darkMode
-                  ? '#303B4A'
-                  : '#E2E8F0',
+                theme.border,
             },
           ]}
         >
@@ -554,7 +550,7 @@ export default function EditProfileScreen() {
               styles.avatarWrapper,
               {
                 borderColor:
-                  PRIMARY_COLOR,
+                  theme.primary,
               },
             ]}
           >
@@ -594,7 +590,7 @@ export default function EditProfileScreen() {
           <View
             style={styles.avatarGrid}
           >
-            {AVATARS.map(item => {
+            {AVATARS.map((item, index) => {
               const selected =
                 selectedAvatar ===
                 item.key
@@ -602,6 +598,9 @@ export default function EditProfileScreen() {
               return (
                 <TouchableOpacity
                   key={item.key}
+                  accessibilityRole="radio"
+                  accessibilityLabel={t('accessibility.avatarOption', { number: index + 1 })}
+                  accessibilityState={{ selected }}
                   activeOpacity={0.75}
                   disabled={saving}
                   onPress={() =>
@@ -614,14 +613,12 @@ export default function EditProfileScreen() {
                     {
                       borderColor:
                         selected
-                          ? PRIMARY_COLOR
+                          ? theme.primary
                           : 'transparent',
 
                       backgroundColor:
                         selected
-                          ? darkMode
-                            ? '#263241'
-                            : '#EEF4FF'
+                          ? theme.primaryContainer
                           : 'transparent',
                     },
                   ]}
@@ -640,7 +637,7 @@ export default function EditProfileScreen() {
                         styles.avatarCheck,
                         {
                           backgroundColor:
-                            PRIMARY_COLOR,
+                            theme.primary,
                           borderColor:
                             theme.card,
                         },
@@ -649,7 +646,7 @@ export default function EditProfileScreen() {
                       <Ionicons
                         name="checkmark"
                         size={12}
-                        color="#FFFFFF"
+                        color={theme.onPrimary}
                       />
                     </View>
                   )}
@@ -668,9 +665,7 @@ export default function EditProfileScreen() {
               backgroundColor:
                 theme.card,
               borderColor:
-                darkMode
-                  ? '#303B4A'
-                  : '#E2E8F0',
+                theme.border,
             },
           ]}
         >
@@ -682,16 +677,14 @@ export default function EditProfileScreen() {
                 styles.sectionIcon,
                 {
                   backgroundColor:
-                    darkMode
-                      ? '#263241'
-                      : '#EEF4FF',
+                    theme.primaryContainer,
                 },
               ]}
             >
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={PRIMARY_COLOR}
+                color={theme.primary}
               />
             </View>
 
@@ -768,14 +761,10 @@ export default function EditProfileScreen() {
                 styles.inputContainer,
                 {
                   backgroundColor:
-                    darkMode
-                      ? '#171E27'
-                      : '#F8FAFC',
+                    theme.inputBackground,
 
                   borderColor:
-                    darkMode
-                      ? '#303B4A'
-                      : '#E2E8F0',
+                    theme.border,
                 },
               ]}
             >
@@ -784,9 +773,7 @@ export default function EditProfileScreen() {
                   styles.inputIcon,
                   {
                     backgroundColor:
-                      darkMode
-                        ? '#263241'
-                        : '#EEF4FF',
+                      theme.primaryContainer,
                   },
                 ]}
               >
@@ -856,20 +843,16 @@ export default function EditProfileScreen() {
         >
           <TouchableOpacity
             activeOpacity={0.8}
+            accessibilityRole="button"
             disabled={saving}
             onPress={handleCancel}
             style={[
               styles.cancelButton,
               {
-                backgroundColor:
-                  darkMode
-                    ? '#263241'
-                    : '#FFFFFF',
+                backgroundColor: theme.card,
 
                 borderColor:
-                  darkMode
-                    ? '#3A4655'
-                    : '#CBD5E1',
+                  theme.border,
 
                 opacity:
                   saving ? 0.6 : 1,
@@ -897,13 +880,17 @@ export default function EditProfileScreen() {
 
           <TouchableOpacity
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: saving, busy: saving }}
+            accessibilityLiveRegion="polite"
             disabled={saving}
             onPress={handleSave}
+            accessibilityLabel={saving ? `${t('editProfile.save')}, ${t('accessibility.inProgress')}` : t('editProfile.save')}
             style={[
               styles.saveButton,
               {
                 backgroundColor:
-                  PRIMARY_COLOR,
+                  theme.primary,
                 opacity:
                   saving ? 0.75 : 1,
               },
@@ -912,18 +899,18 @@ export default function EditProfileScreen() {
             {saving ? (
               <ActivityIndicator
                 size="small"
-                color="#FFFFFF"
+                color={theme.onPrimary}
               />
             ) : (
               <Ionicons
                 name="checkmark-circle-outline"
                 size={20}
-                color="#FFFFFF"
+                color={theme.onPrimary}
               />
             )}
 
             <Text
-              style={styles.saveText}
+              style={[styles.saveText, { color: theme.onPrimary }]}
             >
               {saving
                 ? t('editProfile.saving')
@@ -996,14 +983,10 @@ function FormInput({
           styles.inputContainer,
           {
             backgroundColor:
-              darkMode
-                ? '#171E27'
-                : '#F8FAFC',
+              theme.inputBackground,
 
             borderColor:
-              darkMode
-                ? '#303B4A'
-                : '#E2E8F0',
+              theme.border,
           },
         ]}
       >
@@ -1012,20 +995,19 @@ function FormInput({
             styles.inputIcon,
             {
               backgroundColor:
-                darkMode
-                  ? '#263241'
-                  : '#EEF4FF',
+                theme.primaryContainer,
             },
           ]}
         >
           <Ionicons
             name={icon}
             size={19}
-            color={PRIMARY_COLOR}
+            color={theme.primary}
           />
         </View>
 
         <TextInput
+          accessibilityLabel={label}
           value={value}
           onChangeText={
             onChangeText
@@ -1304,7 +1286,6 @@ const styles = StyleSheet.create({
   },
 
   saveText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
     marginLeft: 7,
@@ -1327,4 +1308,3 @@ const styles = StyleSheet.create({
     height: 15,
   },
 })
-
