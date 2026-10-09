@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { images } from '../../../assets/images';
+import { getServiceImage } from '../../../assets/serviceImages';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import type { Service } from '../../services/types/service.types';
 import { formatCurrency } from '../../../utils/formatters';
@@ -32,22 +32,10 @@ interface UserProfile {
 
 type ServiceFilter = 'available' | 'all';
 
-const serviceImages: Record<string, any> = {
-  'lavado basico': images.ServicioBasico,
-  'lavado de motor': images.ServicioMotor,
-  'aspirado profundo': images.ServicioAspirado,
-  'lavado de tapiceria': images.ServicioTapiceria,
-  'pulido y abrillantado': images.ServicioPulido,
-  'encerado profesional': images.ServicioEncerado,
-};
-
 const normalizeText = (text = '') => text
   .toLowerCase()
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '');
-
-const getServiceImage = (nombre: string) =>
-  serviceImages[normalizeText(nombre)] || images.ServicioBasico;
 
 const HomeScreen = () => {
   const navigation = useNavigation<any>();
@@ -128,7 +116,7 @@ const HomeScreen = () => {
 
   const renderService = ({ item }: { item: Service }) => (
     <TouchableOpacity accessibilityRole="button" activeOpacity={0.88} style={[styles.serviceCard, item.estado !== true && styles.inactiveService]} disabled={item.estado !== true} onPress={() => handleServicePress(item)}>
-      <Image source={getServiceImage(item.nombre)} style={styles.serviceImage} resizeMode="cover" accessible={false} />
+      <Image source={getServiceImage(item.nombre, { serviceId: item.idServicio, screen: 'HomeScreen' })} style={styles.serviceImage} resizeMode="cover" accessible={false} />
       <View style={styles.serviceContent}>
         <View style={styles.serviceTitleRow}>
           <Text style={styles.serviceName} numberOfLines={1}>{item.nombre}</Text>

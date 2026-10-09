@@ -105,29 +105,6 @@ export default function LandingScreen() {
               </Text>
             </View>
 
-            {/* CARD */}
-            <View style={styles.card}>
-
-              <View style={styles.cardRow}>
-
-                <View>
-                  <Text style={styles.cardTitle}>
-                    {t('landing.premiumWash')}
-                  </Text>
-
-                  <Text style={styles.cardDescription}>
-                    {t('landing.completeService')}
-                  </Text>
-                </View>
-
-                <Text style={styles.active}>
-                  {t('landing.active')}
-                </Text>
-
-              </View>
-
-            </View>
-
             {/* TRACKING */}
             <View style={styles.card}>
 
@@ -401,26 +378,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 15,
   },
 
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
   cardTitle: {
     fontWeight: 'bold',
     fontSize: 16,
     color: theme.text,
-  },
-
-  cardDescription: {
-    color: theme.textSecondary,
-    marginTop: 5,
-  },
-
-  active: {
-    color: theme.successText,
-    fontWeight: 'bold',
   },
 
   progressBar: {
