@@ -22,7 +22,7 @@ import type { RootStackParamList } from '../../../navigation/types';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import BackButton from '../../../components/common/BackButton';
 import { formatCurrency } from '../../../utils/formatters';
-import { images } from '../../../assets/images';
+import { getServiceImage } from '../../../assets/serviceImages';
 
 type ServiceDetailRouteProp = RouteProp<RootStackParamList, 'ServiceDetail'>;
 type ServiceDetailNavigationProp = NavigationProp<RootStackParamList>;
@@ -85,7 +85,10 @@ export default function ServiceDetailScreen() {
         >
           <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Image
-              source={images.ServicioBasico}
+              source={getServiceImage(service.nombre, {
+                serviceId: service.idServicio,
+                screen: 'ServiceDetailScreen',
+              })}
               style={[styles.image, { backgroundColor: theme.border }]}
               resizeMode="cover"
               accessibilityIgnoresInvertColors
