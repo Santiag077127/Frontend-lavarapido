@@ -9,11 +9,16 @@
     ],
     "android": {
       "package": "com.lavarapido.vehicular",
-       "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [
       "expo-font",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4aa9ab1e-7689-4dea-b13b-844460bacdf4"
+      }
+    }
   }
 }
