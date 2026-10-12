@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import AssignedServicesScreen from '../features/operator/screens/AssignedServicesScreen';
 import OperatorProfileScreen from '../features/operator/screens/OperatorProfileScreen';
+import NotificationsScreen from '../features/notifications/screens/NotificationsScreen';
 import { ThemeContext } from '../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -16,10 +17,10 @@ export default function OperatorNavigator({ setIsLoggedIn }: Props) {
   const { i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language || 'es';
   const labels: Record<string, Record<string, string>> = {
-    es: { Asignaciones: 'Asignaciones', Perfil: 'Perfil' },
-    en: { Asignaciones: 'Assignments', Perfil: 'Profile' },
-    pt: { Asignaciones: 'Atribui\u00e7\u00f5es', Perfil: 'Perfil' },
-    fr: { Asignaciones: 'Affectations', Perfil: 'Profil' },
+    es: { Asignaciones: 'Asignaciones', Notificaciones: 'Notificaciones', Perfil: 'Perfil' },
+    en: { Asignaciones: 'Assignments', Notificaciones: 'Alerts', Perfil: 'Profile' },
+    pt: { Asignaciones: 'Atribui\u00e7\u00f5es', Notificaciones: 'Avisos', Perfil: 'Perfil' },
+    fr: { Asignaciones: 'Affectations', Notificaciones: 'Alertes', Perfil: 'Profil' },
   };
 
   return (
@@ -32,7 +33,7 @@ export default function OperatorNavigator({ setIsLoggedIn }: Props) {
         tabBarStyle: { backgroundColor: theme.card, borderTopColor: theme.border, height: 60, paddingBottom: 5 },
         tabBarIcon: ({ color, size }) => (
           <Ionicons
-            name={route.name === 'Asignaciones' ? 'list-outline' : 'person-outline'}
+            name={route.name === 'Asignaciones' ? 'list-outline' : route.name === 'Notificaciones' ? 'notifications-outline' : 'person-outline'}
             size={size}
             color={color}
           />
@@ -40,6 +41,9 @@ export default function OperatorNavigator({ setIsLoggedIn }: Props) {
       })}
     >
       <Tab.Screen name="Asignaciones" component={AssignedServicesScreen} />
+      <Tab.Screen name="Notificaciones">
+        {() => <NotificationsScreen operator />}
+      </Tab.Screen>
       <Tab.Screen name="Perfil">
         {() => <OperatorProfileScreen setIsLoggedIn={setIsLoggedIn} />}
       </Tab.Screen>

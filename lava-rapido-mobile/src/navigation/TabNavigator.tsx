@@ -19,6 +19,7 @@ import MapScreen from '../features/map/screens/MapScreen'
 import MyReservationsScreen from '../features/reservations/screens/MyReservationsScreen'
 
 import MyServicesScreen from '../features/profile/screens/MyServicesScreen'
+import NotificationsScreen from '../features/notifications/screens/NotificationsScreen'
 
 import {
   ThemeContext,
@@ -51,10 +52,10 @@ export default function TabNavigator({
   const { i18n } = useTranslation()
   const language = i18n.resolvedLanguage || i18n.language || 'es'
   const labels: Record<string, Record<string, string>> = {
-    es: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil' },
-    en: { Home: 'Home', Reservas: 'Bookings', 'Mis servicios': 'My services', Mapa: 'Map', Perfil: 'Profile' },
-    pt: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Meus servicos', Mapa: 'Mapa', Perfil: 'Perfil' },
-    fr: { Home: 'Accueil', Reservas: 'R\u00e9servations', 'Mis servicios': 'Mes services', Mapa: 'Carte', Perfil: 'Profil' },
+    es: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    en: { Home: 'Home', Reservas: 'Bookings', 'Mis servicios': 'My services', Mapa: 'Map', Perfil: 'Profile', Notificaciones: 'Alerts' },
+    pt: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Meus servicos', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    fr: { Home: 'Accueil', Reservas: 'R\u00e9servations', 'Mis servicios': 'Mes services', Mapa: 'Carte', Perfil: 'Profil', Notificaciones: 'Alertes' },
   }
   const tabLabels = labels[language] || labels.es
 
@@ -96,7 +97,8 @@ export default function TabNavigator({
             | 'calendar'
             | 'receipt'
             | 'map'
-            | 'person' =
+            | 'person'
+            | 'notifications' =
             'home'
 
           if (
@@ -126,6 +128,11 @@ export default function TabNavigator({
           ) {
             iconName = 'map'
           }
+
+          else if (
+            route.name ===
+            'Notificaciones'
+          ) { iconName = 'notifications' }
 
           else if (
             route.name ===
@@ -183,6 +190,7 @@ export default function TabNavigator({
       />
 
       {/* 👤 PERFIL */}
+      <Tab.Screen name="Notificaciones" component={NotificationsScreen} />
       <Tab.Screen name="Perfil">
         {() => (
           <ProfileScreen

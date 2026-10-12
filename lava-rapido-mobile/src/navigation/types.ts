@@ -11,6 +11,7 @@ export type MainTabParamList = {
   'Mis servicios': undefined;
   Mapa: undefined;
   Perfil: undefined;
+  Notificaciones: undefined;
 };
 
 export type RootStackParamList = {
@@ -18,7 +19,7 @@ export type RootStackParamList = {
 
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
 
-  OperatorTabs: undefined;
+  OperatorTabs: { screen: 'Notificaciones' } | undefined;
 
   Login: undefined;
 
