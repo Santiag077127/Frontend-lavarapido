@@ -66,9 +66,13 @@ export const ConfiguracionPage = () => {
             <h3>{t("settings.password.title")}</h3>
             <p>{t("settings.password.desc")}</p>
           </div>
+          <Link to="/dashboard/cambiar-contrasena">
+            <LockKeyhole size={16} />
+            Cambiar contraseña
+          </Link>
           <Link to="/forgot-password" state={{ fromDashboard: true }}>
             <ArrowLeft size={16} />
-            {t("settings.password.action")}
+            Recuperar por correo
           </Link>
         </article>
 
