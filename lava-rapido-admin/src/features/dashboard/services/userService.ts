@@ -15,3 +15,12 @@ export const updateProfile = async (data: Partial<UserProfile>): Promise<UserPro
   });
   return response.data;
 };
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export const changePassword = async (data: ChangePasswordPayload): Promise<void> => {
+  await api.put("/users/password", data);
+};

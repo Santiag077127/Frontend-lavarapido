@@ -16,6 +16,7 @@ import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
 import { ConfiguracionPage } from "@/features/dashboard/pages/ConfiguracionPage/ConfiguracionPage";
 import { PagoResultadoPage } from "@/features/dashboard/pages/PagoResultadoPage/PagoResultadoPage";
 import { NotificacionesPage } from "@/features/dashboard/pages/NotificacionesPage/NotificacionesPage";
+import { ChangePasswordPage } from "@/features/dashboard/pages/ChangePasswordPage/ChangePasswordPage";
 import { RequireAdmin } from "./RequireAdmin";
 import { AuthNavigation } from "./AuthNavigation";
 import { AccessDeniedPage } from "./AccessDeniedPage";
@@ -46,6 +47,7 @@ export const AppRouter = () => {
           <Route path="operadores" element={<OperadoresPage />} />
           <Route path="perfil" element={<PerfilPage />} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
+          <Route path="cambiar-contrasena" element={<ChangePasswordPage />} />
           <Route path="notificaciones" element={<NotificacionesPage />} />
         </Route>
         </Route>
