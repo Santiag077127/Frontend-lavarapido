@@ -39,6 +39,7 @@ export const setToken = (newToken: string | null) => {
   token = newToken;
   if (newToken) logoutInProgress = false;
 };
+export const getToken = () => token;
 
 let onLogout: (() => void) | null = null;
 let logoutInProgress = false;
@@ -57,7 +58,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    if (token) {
+    if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -70,7 +71,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isLoginRequest = error.config?.url?.replace(/\/$/, '').endsWith('/api/users/login');
-    if (error.response?.status === 401 && token && !isLoginRequest && !logoutInProgress) {
+    const requestToken = error.config?.headers?.Authorization;
+    if (error.response?.status === 401 && token && requestToken === `Bearer ${token}`
+        && !isLoginRequest && !logoutInProgress) {
       logoutInProgress = true;
       token = null;
       onLogout?.();

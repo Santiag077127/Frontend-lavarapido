@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
+import * as Notifications from 'expo-notifications'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import AppNavigator from './src/navigation/AppNavigator'
@@ -12,8 +13,11 @@ import { setLogoutHandler, setToken } from './src/services/api'
 import { userService } from './src/services/userService'
 import { appAlert } from './src/components/notifications/NotificationProvider'
 import i18n from './src/i18n'
+import type { RootStackParamList } from './src/navigation/types'
+import { registerPush, deactivatePush } from './src/services/pushNotifications'
 
 export default function App() {
+  const navigationRef = useNavigationContainerRef<RootStackParamList>()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [role, setRole] = useState<UserRole | null>(null)
   const [languageReady, setLanguageReady] = useState(false)
@@ -47,8 +51,28 @@ export default function App() {
   }, [isLoggedIn, refreshIdentity])
 
   useEffect(() => {
+    if (isLoggedIn) void registerPush().catch(() => {})
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    const openInbox = () => {
+      if (!isLoggedIn || !navigationRef.isReady()) return
+      if (role === 'OPERATOR') navigationRef.navigate('OperatorTabs', { screen: 'Notificaciones' })
+      else navigationRef.navigate('MainTabs', { screen: 'Notificaciones' })
+      Notifications.clearLastNotificationResponse()
+    }
+    const subscription = Notifications.addNotificationResponseReceivedListener(openInbox)
+    const last = Notifications.getLastNotificationResponse()
+    if (last) openInbox()
+    return () => subscription.remove()
+  }, [isLoggedIn, role, navigationRef])
+
+  useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && isLoggedIn) void refreshIdentity()
+      if (state === 'active' && isLoggedIn) {
+        void refreshIdentity()
+        void registerPush().catch(() => {})
+      }
     })
     return () => subscription.remove()
   }, [isLoggedIn, refreshIdentity])
@@ -61,6 +85,7 @@ export default function App() {
     setIsLoggedIn(value)
 
     if (!value) {
+      void deactivatePush().catch(() => {})
       setToken(null)
       setRole(null)
     }
@@ -74,7 +99,7 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <NotificationProvider>
-          <NavigationContainer>
+          <NavigationContainer ref={navigationRef}>
             <AppNavigator
               isLoggedIn={isLoggedIn}
               setIsLoggedIn={handleLoggedInChange}
