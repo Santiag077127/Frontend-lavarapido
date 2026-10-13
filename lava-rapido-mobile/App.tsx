@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState, Linking } from 'react-native'
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
-import * as Notifications from 'expo-notifications'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import AppNavigator from './src/navigation/AppNavigator'
@@ -14,7 +13,7 @@ import { userService } from './src/services/userService'
 import { appAlert } from './src/components/notifications/NotificationProvider'
 import i18n from './src/i18n'
 import type { RootStackParamList } from './src/navigation/types'
-import { registerPush, deactivatePush } from './src/services/pushNotifications'
+import { clearLastPushResponse, deactivatePush, registerPush, subscribeToPushResponses } from './src/services/pushNotifications'
 import { extractPasswordResetToken } from './src/services/passwordResetLink'
 
 export default function App() {
@@ -97,12 +96,9 @@ export default function App() {
       if (!isLoggedIn || !navigationRef.isReady()) return
       if (role === 'OPERATOR') navigationRef.navigate('OperatorTabs', { screen: 'Notificaciones' })
       else navigationRef.navigate('MainTabs', { screen: 'Notificaciones' })
-      Notifications.clearLastNotificationResponse()
+      clearLastPushResponse()
     }
-    const subscription = Notifications.addNotificationResponseReceivedListener(openInbox)
-    const last = Notifications.getLastNotificationResponse()
-    if (last) openInbox()
-    return () => subscription.remove()
+    return subscribeToPushResponses(openInbox)
   }, [isLoggedIn, role, navigationRef])
 
   useEffect(() => {

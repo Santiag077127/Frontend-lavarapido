@@ -16,8 +16,6 @@ import ProfileScreen from '../features/profile/screens/ProfileScreen'
 
 import MapScreen from '../features/map/screens/MapScreen'
 
-import MyReservationsScreen from '../features/reservations/screens/MyReservationsScreen'
-
 import MyServicesScreen from '../features/profile/screens/MyServicesScreen'
 import NotificationsScreen from '../features/notifications/screens/NotificationsScreen'
 
@@ -52,10 +50,10 @@ export default function TabNavigator({
   const { i18n } = useTranslation()
   const language = i18n.resolvedLanguage || i18n.language || 'es'
   const labels: Record<string, Record<string, string>> = {
-    es: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
-    en: { Home: 'Home', Reservas: 'Bookings', 'Mis servicios': 'My services', Mapa: 'Map', Perfil: 'Profile', Notificaciones: 'Alerts' },
-    pt: { Home: 'Inicio', Reservas: 'Reservas', 'Mis servicios': 'Meus servicos', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
-    fr: { Home: 'Accueil', Reservas: 'R\u00e9servations', 'Mis servicios': 'Mes services', Mapa: 'Carte', Perfil: 'Profil', Notificaciones: 'Alertes' },
+    es: { Home: 'Inicio', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    en: { Home: 'Home', 'Mis servicios': 'My services', Mapa: 'Map', Perfil: 'Profile', Notificaciones: 'Alerts' },
+    pt: { Home: 'Inicio', 'Mis servicios': 'Meus serviços', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    fr: { Home: 'Accueil', 'Mis servicios': 'Mes services', Mapa: 'Carte', Perfil: 'Profil', Notificaciones: 'Alertes' },
   }
   const tabLabels = labels[language] || labels.es
 
@@ -94,7 +92,6 @@ export default function TabNavigator({
 
           let iconName:
             | 'home'
-            | 'calendar'
             | 'receipt'
             | 'map'
             | 'person'
@@ -106,13 +103,6 @@ export default function TabNavigator({
             'Home'
           ) {
             iconName = 'home'
-          }
-
-          else if (
-            route.name ===
-            'Reservas'
-          ) {
-            iconName = 'calendar'
           }
 
           else if (
@@ -165,15 +155,6 @@ export default function TabNavigator({
           />
         )}
       </Tab.Screen>
-
-      {/* 🗺️ MAPA */}
-      <Tab.Screen
-        name="Reservas"
-        component={
-          MyReservationsScreen
-        }
-        options={{ tabBarButton: () => null }}
-      />
 
       <Tab.Screen
         name="Mis servicios"

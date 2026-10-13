@@ -12,18 +12,22 @@ import en from './locales/en.json';
 import fr from './locales/fr.json';
 import pt from './locales/pt.json';
 import { recoveryCopy } from './recoveryCopy';
+import { notificationCopy } from './notificationCopy';
+import { paymentCopy } from './paymentCopy';
 
-const withRecovery = <T extends { forgotPassword: Record<string, string>; resetPassword: Record<string, string> }>(
+const withRecovery = <T extends { forgotPassword: Record<string, string>; resetPassword: Record<string, string>; notifications: Record<string, unknown>; mobile: { paymentFlow: Record<string, string> } }>(
   base: T,
-  copy: typeof recoveryCopy.es | typeof recoveryCopy.en | typeof recoveryCopy.fr | typeof recoveryCopy.pt,
+  copy: (typeof recoveryCopy.es | typeof recoveryCopy.en | typeof recoveryCopy.fr | typeof recoveryCopy.pt) & (typeof notificationCopy.es | typeof notificationCopy.en | typeof notificationCopy.fr | typeof notificationCopy.pt) & (typeof paymentCopy.es | typeof paymentCopy.en | typeof paymentCopy.fr | typeof paymentCopy.pt),
 ) => ({
   ...base,
   forgotPassword: { ...base.forgotPassword, ...copy.forgotPassword },
   resetPassword: { ...base.resetPassword, ...copy.resetPassword },
+  notifications: { ...base.notifications, ...copy.notifications },
+  mobile: { ...base.mobile, paymentFlow: { ...base.mobile.paymentFlow, ...copy.paymentFlow } },
 });
 
 i18n.use(initReactI18next).init({
-  resources: { es: { translation: withRecovery(es, recoveryCopy.es) }, en: { translation: withRecovery(en, recoveryCopy.en) }, fr: { translation: withRecovery(fr, recoveryCopy.fr) }, pt: { translation: withRecovery(pt, recoveryCopy.pt) } },
+  resources: { es: { translation: withRecovery(es, { ...recoveryCopy.es, ...notificationCopy.es, ...paymentCopy.es }) }, en: { translation: withRecovery(en, { ...recoveryCopy.en, ...notificationCopy.en, ...paymentCopy.en }) }, fr: { translation: withRecovery(fr, { ...recoveryCopy.fr, ...notificationCopy.fr, ...paymentCopy.fr }) }, pt: { translation: withRecovery(pt, { ...recoveryCopy.pt, ...notificationCopy.pt, ...paymentCopy.pt }) } },
   lng: 'es',
   fallbackLng: 'es',
   interpolation: { escapeValue: false },

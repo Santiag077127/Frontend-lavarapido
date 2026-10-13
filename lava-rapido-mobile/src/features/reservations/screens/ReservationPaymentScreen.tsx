@@ -107,6 +107,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   const initialCheckDone = useRef(false);
   const verificationLock = useRef(false);
   const isFinal = payment?.estado === 'aprobado' || payment?.estado === 'rechazado';
+  const approved = payment?.estado === 'aprobado' && payment.intentoActual?.estado !== 'aprobado_duplicado';
 
   const showRequestError = useCallback((requestError: unknown) => {
     // Keep technical/backend details out of the user-facing screen.
@@ -345,7 +346,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           </Text>
         </View>
 
-        {!checkout && (
+        {!checkout && !approved && (
           <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
           </View>
@@ -382,14 +383,19 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               { backgroundColor: theme.card, borderColor: theme.border },
             ]}
           >
-            <View style={[styles.checkoutGlyph, { backgroundColor: theme.primarySoft }]}>
+            <View style={[styles.checkoutGlyph, { backgroundColor: approved ? theme.successBackground : theme.primarySoft }]}>
               <Ionicons
-                name={loading || checking ? 'shield-checkmark-outline' : 'card-outline'}
+                name={approved ? 'checkmark-circle-outline' : loading || checking ? 'shield-checkmark-outline' : 'card-outline'}
                 size={28}
-                color={theme.primary}
+                color={approved ? theme.success : theme.primary}
               />
             </View>
-            {loading || checking ? (
+            {approved ? (
+              <>
+                <Text accessibilityRole="header" style={[styles.approvedTitle, { color: theme.text }]}>{t('mobile.paymentFlow.approvedTitle')}</Text>
+                <Text style={[styles.placeholderText, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.approvedMessage')}</Text>
+              </>
+            ) : loading || checking ? (
               <>
                 <ActivityIndicator color={theme.primary} size="large" />
                 <Text accessibilityLiveRegion="polite" style={[styles.placeholderText, { color: theme.textSecondary }]}>
@@ -447,10 +453,15 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retryPayment')}</Text>
             </Pressable>
           )}
-          {isFinal && payment?.estado === 'aprobado' && (
-            <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Reservas' })}>
-              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.myReservations')}</Text>
-            </Pressable>
+          {approved && (
+            <>
+              <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Mis servicios', params: { initialStatus: 'PENDIENTE' } })}>
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.myServices')}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}>
+                <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.goHome')}</Text>
+              </Pressable>
+            </>
           )}
         </View>}
       </View>
@@ -471,6 +482,7 @@ const styles = StyleSheet.create({
   checkoutPlaceholder: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 14, marginHorizontal: 16, marginBottom: 16, paddingHorizontal: 22, borderWidth: 1, borderRadius: 20, elevation: 1 },
   checkoutGlyph: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   placeholderText: { fontSize: 15, lineHeight: 22, textAlign: 'center', paddingHorizontal: 16, fontWeight: '600' },
+  approvedTitle: { fontSize: 22, lineHeight: 28, textAlign: 'center', fontWeight: '800' },
   footer: { gap: 9, padding: 14, marginHorizontal: 16, marginBottom: 10, borderWidth: 1, borderRadius: 20, elevation: 1 },
   error: { fontSize: 13, textAlign: 'center' },
   hint: { fontSize: 12, textAlign: 'center' },
