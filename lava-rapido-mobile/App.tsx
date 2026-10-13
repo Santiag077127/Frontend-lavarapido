@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState } from 'react-native'
+import { AppState, Linking } from 'react-native'
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
 import * as Notifications from 'expo-notifications'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -15,13 +15,17 @@ import { appAlert } from './src/components/notifications/NotificationProvider'
 import i18n from './src/i18n'
 import type { RootStackParamList } from './src/navigation/types'
 import { registerPush, deactivatePush } from './src/services/pushNotifications'
+import { extractPasswordResetToken } from './src/services/passwordResetLink'
 
 export default function App() {
   const navigationRef = useNavigationContainerRef<RootStackParamList>()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [role, setRole] = useState<UserRole | null>(null)
   const [languageReady, setLanguageReady] = useState(false)
+  const [navigationReady, setNavigationReady] = useState(false)
+  const [pendingResetToken, setPendingResetToken] = useState<string | null>(null)
   const identityRefresh = useRef(false)
+  const lastResetUrl = useRef<string | null>(null)
 
   const refreshIdentity = useCallback(async () => {
     if (identityRefresh.current) return
@@ -49,6 +53,40 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) void refreshIdentity()
   }, [isLoggedIn, refreshIdentity])
+
+  useEffect(() => {
+    if (!pendingResetToken || isLoggedIn || !navigationReady) return
+    navigationRef.navigate('ResetPassword', { token: pendingResetToken })
+    setPendingResetToken(null)
+  }, [isLoggedIn, navigationReady, navigationRef, pendingResetToken])
+
+  useEffect(() => {
+    if (!languageReady) return
+
+    const openPasswordReset = (url: string) => {
+      if (url === lastResetUrl.current) return
+
+      const result = extractPasswordResetToken(
+        url,
+        process.env.EXPO_PUBLIC_PASSWORD_RESET_URL,
+      )
+      lastResetUrl.current = url
+
+      if (!result.valid) {
+        appAlert.alert(i18n.t('forgotPassword.errorTitle'), i18n.t('accessibility.resetError'), undefined, 'error')
+        return
+      }
+
+      if (isLoggedIn) handleLoggedInChange(false)
+      setPendingResetToken(result.token)
+    }
+
+    void Linking.getInitialURL().then((url) => {
+      if (url) openPasswordReset(url)
+    }).catch(() => {})
+    const subscription = Linking.addEventListener('url', ({ url }) => openPasswordReset(url))
+    return () => subscription.remove()
+  }, [isLoggedIn, languageReady])
 
   useEffect(() => {
     if (isLoggedIn) void registerPush().catch(() => {})
@@ -99,7 +137,7 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <NotificationProvider>
-          <NavigationContainer ref={navigationRef}>
+          <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
             <AppNavigator
               isLoggedIn={isLoggedIn}
               setIsLoggedIn={handleLoggedInChange}

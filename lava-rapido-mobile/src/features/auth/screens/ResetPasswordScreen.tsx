@@ -9,12 +9,16 @@ import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
 import { authService } from '../../../services/authService'
 import { isValidPassword, passwordsMatch } from '../../../services/passwordPolicy'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../../navigation/types'
 
-export default function ResetPasswordScreen({ navigation }: any) {
+type Props = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>
+
+export default function ResetPasswordScreen({ navigation, route }: Props) {
   const { theme } = useContext(ThemeContext)
   const { t } = useTranslation()
   const [password, setPassword] = useState('')
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState(route.params?.token ?? '')
   const [saving, setSaving] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)

@@ -28,7 +28,9 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
 
 
-  ResetPassword: undefined;
+  ResetPassword: {
+    token?: string;
+  } | undefined;
 
   ServiceDetail: {
     service: Service;
