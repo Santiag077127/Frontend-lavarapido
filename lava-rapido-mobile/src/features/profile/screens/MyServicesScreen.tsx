@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,8 @@ import { ThemeContext } from '../../../theme/ThemeContext';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import { reservationService } from '../../reservations/services/reservationService';
 import type { ReservationResponse, ReservationStatus } from '../../reservations/types/reservation.types';
+import type { RouteProp } from '@react-navigation/native';
+import type { MainTabParamList } from '../../../navigation/types';
 import { formatCurrency } from '../../../utils/formatters';
 
 interface UserProfile { userId: string }
@@ -23,10 +25,14 @@ const statusColors = (status: ReservationStatus, theme: any) => ({
 
 export default function MyServicesScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<MainTabParamList, 'Mis servicios'>>();
   const { t } = useTranslation();
   const { theme } = useContext(ThemeContext);
   const [reservations, setReservations] = useState<ReservationResponse[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>('EN_PROCESO');
+  React.useEffect(() => {
+    if (route.params?.initialStatus) setSelectedStatus(route.params.initialStatus);
+  }, [route.params?.initialStatus]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<ApiErrorKind | null>(null);

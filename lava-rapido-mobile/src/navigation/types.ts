@@ -1,14 +1,14 @@
 import type { Service } from '../features/services/types/service.types';
 
 import type { ReservationResponse } from '../features/reservations/types/reservation.types';
+import type { ReservationStatus } from '../features/reservations/types/reservation.types';
 
 import type { Vehicle } from '../services/vehicleService';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type MainTabParamList = {
   Home: undefined;
-  Reservas: undefined;
-  'Mis servicios': undefined;
+  'Mis servicios': { initialStatus?: ReservationStatus } | undefined;
   Mapa: undefined;
   Perfil: undefined;
   Notificaciones: undefined;

@@ -1,96 +1,111 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { ThemeContext } from '../../../theme/ThemeContext';
-import { notificationService, type NotificationPage } from '../../../services/notificationService';
-import { reservationService } from '../../reservations/services/reservationService';
-import { useTranslation } from 'react-i18next';
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { ThemeContext } from '../../../theme/ThemeContext'
+import { notificationService, type NotificationItem, type NotificationPage } from '../../../services/notificationService'
+import { reservationService } from '../../reservations/services/reservationService'
+import { useTranslation } from 'react-i18next'
 
-const translations = {
-  es: { title: 'Notificaciones', unread: 'sin leer', all: 'Ver todas', only: 'Solo no leídas', readAll: 'Leer todas', loading: 'Cargando notificaciones', error: 'No se pudieron cargar las notificaciones.', retry: 'Reintentar', empty: 'Aún no hay notificaciones.', read: 'Marcar leída', assignments: 'Ver asignaciones', payment: 'Ver pago', booking: 'Ver reserva', previous: 'Anterior', next: 'Siguiente' },
-  en: { title: 'Notifications', unread: 'unread', all: 'Show all', only: 'Unread only', readAll: 'Mark all read', loading: 'Loading notifications', error: 'Could not load notifications.', retry: 'Retry', empty: 'No notifications yet.', read: 'Mark read', assignments: 'View assignments', payment: 'View payment', booking: 'View booking', previous: 'Previous', next: 'Next' },
-  pt: { title: 'Notificações', unread: 'não lidas', all: 'Ver todas', only: 'Só não lidas', readAll: 'Marcar todas como lidas', loading: 'Carregando notificações', error: 'Não foi possível carregar as notificações.', retry: 'Tentar novamente', empty: 'Ainda não há notificações.', read: 'Marcar como lida', assignments: 'Ver atribuições', payment: 'Ver pagamento', booking: 'Ver reserva', previous: 'Anterior', next: 'Próxima' },
-  fr: { title: 'Notifications', unread: 'non lues', all: 'Tout afficher', only: 'Non lues', readAll: 'Tout marquer comme lu', loading: 'Chargement des notifications', error: 'Impossible de charger les notifications.', retry: 'Réessayer', empty: 'Aucune notification.', read: 'Marquer comme lue', assignments: 'Voir les affectations', payment: 'Voir le paiement', booking: 'Voir la réservation', previous: 'Précédente', next: 'Suivante' },
-};
+const categoryMeta: Record<NotificationItem['tipo'], { icon: keyof typeof Ionicons.glyphMap; color: 'primary' | 'accent' | 'success' | 'textSecondary' }> = {
+  booking: { icon: 'calendar-outline', color: 'primary' },
+  payment: { icon: 'card-outline', color: 'accent' },
+  status: { icon: 'sparkles-outline', color: 'success' },
+  system: { icon: 'notifications-outline', color: 'textSecondary' },
+}
+
+const formatDate = (value: string, language: string) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
 
 export default function NotificationsScreen({ operator = false }: { operator?: boolean }) {
-  const { theme } = useContext(ThemeContext);
-  const { i18n } = useTranslation();
-  const language = (i18n.resolvedLanguage || i18n.language || 'es').slice(0, 2) as keyof typeof translations;
-  const copy = translations[language] || translations.es;
-  const navigation = useNavigation<any>();
-  const [pagina, setPagina] = useState(0);
-  const [soloNoLeidas, setSoloNoLeidas] = useState(false);
-  const [data, setData] = useState<NotificationPage | null>(null);
-  const [count, setCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [opening, setOpening] = useState<string | null>(null);
-  const requestId = useRef(0);
+  const { theme } = useContext(ThemeContext)
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage || i18n.language || 'es'
+  const navigation = useNavigation<any>()
+  const [pagina, setPagina] = useState(0)
+  const [soloNoLeidas, setSoloNoLeidas] = useState(false)
+  const [data, setData] = useState<NotificationPage | null>(null)
+  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [opening, setOpening] = useState<string | null>(null)
+  const requestId = useRef(0)
+
   const load = useCallback(async () => {
-    const currentRequest = ++requestId.current;
-    setLoading(true); setError(false);
+    const currentRequest = ++requestId.current
+    setLoading(true); setError(false)
     try {
-      const [list, unread] = await Promise.all([notificationService.list(pagina, soloNoLeidas), notificationService.count()]);
-      if (currentRequest === requestId.current) { setData(list); setCount(unread); }
-    } catch { if (currentRequest === requestId.current) setError(true); }
-    finally { if (currentRequest === requestId.current) setLoading(false); }
-  }, [pagina, soloNoLeidas]);
+      const [list, unread] = await Promise.all([notificationService.list(pagina, soloNoLeidas), notificationService.count()])
+      if (currentRequest === requestId.current) { setData(list); setCount(unread) }
+    } catch { if (currentRequest === requestId.current) setError(true) }
+    finally { if (currentRequest === requestId.current) setLoading(false) }
+  }, [pagina, soloNoLeidas])
+
   useFocusEffect(useCallback(() => {
-    void load();
-    return () => { requestId.current++; setData(null); setCount(0); };
-  }, [load]));
+    void load()
+    return () => { requestId.current++; setData(null); setCount(0) }
+  }, [load]))
 
-  const openRelated = async (item: NonNullable<NotificationPage['content']>[number]) => {
-    if (!item.reservaId || opening) return;
-    setOpening(item.id);
+  const openRelated = async (item: NotificationItem) => {
+    if (!item.reservaId || opening) return
+    setOpening(item.id)
     try {
-      if (operator) navigation.navigate('Asignaciones');
+      if (operator) navigation.navigate('Asignaciones')
       else {
-        const reservation = await reservationService.getById(item.reservaId);
-        navigation.getParent()?.navigate(item.tipo === 'payment' ? 'ReservationPayment' : 'ServiceDetails', { reservation });
+        const reservation = await reservationService.getById(item.reservaId)
+        navigation.getParent()?.navigate(item.tipo === 'payment' ? 'ReservationPayment' : 'ServiceDetails', { reservation })
       }
-    } catch { setError(true); }
-    finally { setOpening(null); }
-  };
+    } catch { setError(true) }
+    finally { setOpening(null) }
+  }
 
-  return <View style={[styles.screen, { backgroundColor: theme.background }]}>
-    <Text style={[styles.title, { color: theme.text }]}>{copy.title}</Text>
-    <Text style={{ color: theme.text }}>{count} {copy.unread}</Text>
-    <View style={styles.row}>
-      <Pressable onPress={() => { setPagina(0); setSoloNoLeidas(!soloNoLeidas); }} accessibilityRole="button">
-        <Text style={{ color: theme.primary }}>{soloNoLeidas ? copy.all : copy.only}</Text>
-      </Pressable>
-      <Pressable onPress={() => void notificationService.readAll().then(load).catch(() => setError(true))} disabled={count === 0} accessibilityRole="button">
-        <Text style={{ color: theme.primary }}>{copy.readAll}</Text>
-      </Pressable>
+  const markRead = async (id: string) => {
+    try { await notificationService.read(id); await load() } catch { setError(true) }
+  }
+  const markAllRead = async () => {
+    try { await notificationService.readAll(); await load() } catch { setError(true) }
+  }
+  const renderItem = ({ item }: { item: NotificationItem }) => {
+    const meta = categoryMeta[item.tipo]
+    const accent = theme[meta.color]
+    const action = operator ? t('notifications.assignments') : item.tipo === 'payment' ? t('notifications.payment') : t('notifications.booking')
+    return <View style={[styles.card, { backgroundColor: item.leidaAt ? theme.card : theme.interactiveSurface, borderColor: item.leidaAt ? theme.border : theme.primary }]}>
+      <View style={[styles.categoryIcon, { backgroundColor: `${accent}20` }]}><Ionicons name={meta.icon} size={21} color={accent} /></View>
+      <View style={styles.cardContent}>
+        <View style={styles.metaRow}><Text style={[styles.category, { color: accent }]}>{t(`notifications.categories.${item.tipo}`)}</Text>{!item.leidaAt && <View accessibilityLabel={t('notifications.new')} style={[styles.newBadge, { backgroundColor: theme.primary }]}><Text style={[styles.newBadgeText, { color: theme.onPrimary }]}>{t('notifications.new')}</Text></View>}</View>
+        <Text style={[styles.itemTitle, { color: theme.text }]}>{item.titulo}</Text>
+        <Text style={[styles.message, { color: theme.textSecondary }]}>{item.mensaje}</Text>
+        <Text style={[styles.date, { color: theme.textSecondary }]}>{formatDate(item.createdAt, language)}</Text>
+        <View style={styles.actions}>
+          {!item.leidaAt && <Pressable onPress={() => void markRead(item.id)} style={({ pressed }) => [styles.textButton, pressed && styles.pressed]} accessibilityRole="button"><Ionicons name="checkmark" size={17} color={theme.primary} /><Text style={[styles.textButtonLabel, { color: theme.primary }]}>{t('notifications.read')}</Text></Pressable>}
+          {item.reservaId && <Pressable onPress={() => void openRelated(item)} disabled={opening === item.id} style={({ pressed }) => [styles.textButton, pressed && styles.pressed, opening === item.id && styles.disabled]} accessibilityRole="button" accessibilityState={{ disabled: opening === item.id, busy: opening === item.id }}>{opening === item.id ? <ActivityIndicator size="small" color={theme.primary} /> : <Ionicons name="arrow-forward" size={17} color={theme.primary} />}<Text style={[styles.textButtonLabel, { color: theme.primary }]}>{action}</Text></Pressable>}
+        </View>
+      </View>
     </View>
-    {loading ? <ActivityIndicator accessibilityLabel={copy.loading} /> : error ?
-      <View><Text style={{ color: theme.text }}>{copy.error}</Text>
-        <Pressable onPress={() => void load()} accessibilityRole="button"><Text style={{ color: theme.primary }}>{copy.retry}</Text></Pressable></View> :
-      <FlatList data={data?.content ?? []} keyExtractor={item => item.id}
-        ListEmptyComponent={<Text style={{ color: theme.text }}>{copy.empty}</Text>}
-        renderItem={({ item }) => <View style={[styles.item, { borderColor: theme.border }]}>
-          <Text style={[styles.heading, { color: theme.text }]}>{item.leidaAt ? '' : '● '}{item.titulo}</Text>
-          <Text style={{ color: theme.text }}>{item.mensaje}</Text>
-          <Text style={{ color: theme.textSecondary }}>{new Date(item.createdAt).toLocaleString()}</Text>
-          <View style={styles.row}>
-            {!item.leidaAt && <Pressable onPress={() => void notificationService.read(item.id).then(load).catch(() => setError(true))} accessibilityRole="button"><Text style={{ color: theme.primary }}>{copy.read}</Text></Pressable>}
-            {item.reservaId && <Pressable onPress={() => void openRelated(item)} disabled={opening === item.id} accessibilityRole="button"><Text style={{ color: theme.primary }}>{operator ? copy.assignments : item.tipo === 'payment' ? copy.payment : copy.booking}</Text></Pressable>}
-          </View>
-        </View>}
-      />}
-    {!!data?.totalPages && data.totalPages > 1 && <View style={styles.row}>
-      <Pressable disabled={pagina === 0} onPress={() => setPagina(pagina - 1)}><Text style={{ color: theme.primary }}>{copy.previous}</Text></Pressable>
-      <Text style={{ color: theme.text }}>{pagina + 1} / {data.totalPages}</Text>
-      <Pressable disabled={pagina + 1 >= data.totalPages} onPress={() => setPagina(pagina + 1)}><Text style={{ color: theme.primary }}>{copy.next}</Text></Pressable>
-    </View>}
-  </View>;
+  }
+
+  const header = <>
+    <View style={styles.heading}><View><Text accessibilityRole="header" style={[styles.title, { color: theme.text }]}>{t('notifications.title')}</Text><Text style={[styles.unread, { color: theme.textSecondary }]}>{t('notifications.unread', { count })}</Text></View><View style={[styles.bell, { backgroundColor: theme.infoBackground }]}><Ionicons name="notifications-outline" size={24} color={theme.primary} /></View></View>
+    <View style={styles.filters}><Pressable onPress={() => { setPagina(0); setSoloNoLeidas(false) }} style={[styles.filter, { backgroundColor: !soloNoLeidas ? theme.primary : theme.card, borderColor: !soloNoLeidas ? theme.primary : theme.border }]} accessibilityRole="button" accessibilityState={{ selected: !soloNoLeidas }}><Text style={[styles.filterText, { color: !soloNoLeidas ? theme.onPrimary : theme.text }]}>{t('notifications.all')}</Text></Pressable><Pressable onPress={() => { setPagina(0); setSoloNoLeidas(true) }} style={[styles.filter, { backgroundColor: soloNoLeidas ? theme.primary : theme.card, borderColor: soloNoLeidas ? theme.primary : theme.border }]} accessibilityRole="button" accessibilityState={{ selected: soloNoLeidas }}><Text style={[styles.filterText, { color: soloNoLeidas ? theme.onPrimary : theme.text }]}>{t('notifications.only')}</Text></Pressable></View>
+    {count > 0 && <Pressable onPress={() => void markAllRead()} style={styles.readAll} accessibilityRole="button"><Ionicons name="checkmark-done-outline" size={18} color={theme.primary} /><Text style={[styles.readAllText, { color: theme.primary }]}>{t('notifications.readAll')}</Text></Pressable>}
+  </>
+
+  const state = (icon: keyof typeof Ionicons.glyphMap, title: string, description: string, retry?: boolean) => <View style={styles.state}><View style={[styles.stateIcon, { backgroundColor: retry ? theme.errorBackground : theme.infoBackground }]}><Ionicons name={icon} size={38} color={retry ? theme.errorText : theme.primary} /></View><Text style={[styles.stateTitle, { color: theme.text }]}>{title}</Text><Text style={[styles.stateText, { color: theme.textSecondary }]}>{description}</Text>{retry && <Pressable onPress={() => void load()} style={[styles.retryButton, { backgroundColor: theme.primary }]} accessibilityRole="button"><Text style={[styles.retryText, { color: theme.onPrimary }]}>{t('notifications.retry')}</Text></Pressable>}</View>
+
+  return <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: theme.background }]}><View style={styles.screen}>
+    {loading ? <View style={styles.loading}><ActivityIndicator accessibilityLabel={t('notifications.loading')} size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.textSecondary }]}>{t('notifications.loading')}</Text></View> : error ? <FlatList data={[]} renderItem={null} ListHeaderComponent={header} ListEmptyComponent={state('cloud-offline-outline', t('notifications.errorTitle'), t('notifications.error'), true)} contentContainerStyle={styles.listContent} /> : <FlatList data={data?.content ?? []} keyExtractor={item => item.id} renderItem={renderItem} ListHeaderComponent={header} ListEmptyComponent={state('notifications-off-outline', t('notifications.emptyTitle'), t('notifications.empty'))} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} />}
+    {!!data?.totalPages && data.totalPages > 1 && <View style={[styles.pagination, { backgroundColor: theme.card, borderTopColor: theme.border }]}><Pressable disabled={pagina === 0} onPress={() => setPagina(pagina - 1)} style={[styles.pageButton, pagina === 0 && styles.disabled]} accessibilityRole="button"><Ionicons name="chevron-back" size={21} color={theme.primary} /></Pressable><Text style={[styles.pageLabel, { color: theme.text }]}>{t('notifications.page', { current: pagina + 1, total: data.totalPages })}</Text><Pressable disabled={pagina + 1 >= data.totalPages} onPress={() => setPagina(pagina + 1)} style={[styles.pageButton, pagina + 1 >= data.totalPages && styles.disabled]} accessibilityRole="button"><Ionicons name="chevron-forward" size={21} color={theme.primary} /></Pressable></View>}
+  </View></SafeAreaView>
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 18 }, title: { fontSize: 23, fontWeight: '700', marginBottom: 8 },
-  row: { flexDirection: 'row', gap: 18, marginVertical: 12, alignItems: 'center' },
-  item: { padding: 14, borderWidth: 1, borderRadius: 10, marginBottom: 10 },
-  heading: { fontWeight: '700', fontSize: 17, marginBottom: 5 },
-});
+  safeArea: { flex: 1 }, screen: { flex: 1 }, listContent: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 20 }, heading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 18, marginBottom: 18 }, title: { fontSize: 27, fontWeight: '800', letterSpacing: -0.5 }, unread: { fontSize: 14, marginTop: 3 }, bell: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  filters: { flexDirection: 'row', gap: 10, marginBottom: 12 }, filter: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16, borderRadius: 21, borderWidth: 1 }, filterText: { fontSize: 14, fontWeight: '700' }, readAll: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 6, minHeight: 40, marginBottom: 10 }, readAllText: { fontSize: 14, fontWeight: '700' },
+  card: { flexDirection: 'row', alignItems: 'flex-start', borderWidth: 1, borderRadius: 18, padding: 14, marginBottom: 11, shadowColor: '#0F172A', shadowOpacity: 0.045, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 }, categoryIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 12 }, cardContent: { flex: 1, minWidth: 0 }, metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 7, marginBottom: 3 }, category: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.45 }, newBadge: { borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 }, newBadgeText: { fontSize: 11, fontWeight: '800' }, itemTitle: { fontSize: 16, lineHeight: 21, fontWeight: '800', flexShrink: 1 }, message: { fontSize: 14, lineHeight: 20, marginTop: 3, flexShrink: 1 }, date: { fontSize: 12, lineHeight: 17, marginTop: 8 }, actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 7 }, textButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 4 }, textButtonLabel: { fontSize: 13, fontWeight: '800' }, pressed: { opacity: 0.65 }, disabled: { opacity: 0.45 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 }, loadingText: { marginTop: 13, fontSize: 15 }, state: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 40 }, stateIcon: { width: 78, height: 78, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 18 }, stateTitle: { fontSize: 19, fontWeight: '800', textAlign: 'center', marginBottom: 8 }, stateText: { fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 310 }, retryButton: { minHeight: 46, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 20, marginTop: 20 }, retryText: { fontSize: 15, fontWeight: '800' },
+  pagination: { minHeight: 62, borderTopWidth: 1, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, pageButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 13 }, pageLabel: { fontSize: 13, fontWeight: '700' },
+})
