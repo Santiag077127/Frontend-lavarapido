@@ -1,3 +1,4 @@
+// Valida y envía el cambio de contraseña de la cuenta.
 import { useState } from "react";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -49,6 +50,7 @@ export const ChangePasswordPage = () => {
       setError("Completa todos los campos.");
       return;
     }
+    // La validación local da respuesta inmediata; el backend vuelve a comprobarla.
     if (!isValidNewPassword(newPassword)) {
       setError("La nueva contraseña debe tener al menos 8 caracteres, máximo 72 bytes UTF-8 y no puede contener solo espacios.");
       return;

@@ -1,3 +1,4 @@
+// Consulta el perfil y envía cambios de perfil o contraseña a la API.
 import { api } from "@/services/api";
 import type { UserProfile } from "@/features/dashboard/types";
 

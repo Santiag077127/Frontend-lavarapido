@@ -1,3 +1,4 @@
+// Muestra y actualiza los datos del perfil.
 import { useContext, useEffect, useState } from "react";
 import { ArrowLeft, Mail, Phone, Save } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -92,6 +93,7 @@ export const PerfilPage = () => {
     setMensaje(null);
   };
 
+  // Valida en pantalla y envía solo los campos editables del perfil.
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMensaje(null);

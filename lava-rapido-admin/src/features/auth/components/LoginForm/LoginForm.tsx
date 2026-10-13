@@ -1,3 +1,4 @@
+// Valida credenciales, guarda la sesión y dirige según el rol.
 import "./style.css";
 
 import { useContext, useState } from "react";
@@ -36,9 +37,11 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
+      // El backend valida credenciales y devuelve el JWT con el rol vigente.
       const data = await login(email.trim(), password);
       setAuth(data.token, data.user);
 
+      // Un ADMIN vuelve a su destino; otros roles no entran al panel privado.
       const destinoPendiente = consumirDestinoTrasLogin();
       if (data.user.role === "ADMIN" && destinoPendiente) {
         navigate(destinoPendiente, { replace: true });

@@ -1,3 +1,4 @@
+// Define los contratos de servicios, marcas, vehículos y perfil usados por el panel.
 export interface Servicio {
   idServicio: string;
   nombre: string;

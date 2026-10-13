@@ -1,3 +1,4 @@
+/* Define los estilos visuales de avatar del usuario. */
 .avatar-display,
 .avatar-display__fallback {
   display: flex;

@@ -1,3 +1,4 @@
+// Gestiona operadores y asignaciones, adaptando la respuesta del backend a la vista.
 import { api } from "@/services/api";
 
 export interface Operador {

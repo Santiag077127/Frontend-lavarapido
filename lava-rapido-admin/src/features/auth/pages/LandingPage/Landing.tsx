@@ -1,3 +1,4 @@
+// Presenta la web pública y sus accesos a autenticación.
 import { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {

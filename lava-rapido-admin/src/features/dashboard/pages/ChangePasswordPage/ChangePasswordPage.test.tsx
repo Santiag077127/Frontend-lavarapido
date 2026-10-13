@@ -1,3 +1,4 @@
+// Prueba el comportamiento de cambio de contraseña de la cuenta.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";

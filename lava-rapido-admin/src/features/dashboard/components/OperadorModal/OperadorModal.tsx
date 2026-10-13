@@ -1,3 +1,4 @@
+// Recoge correo y documento para crear un operador.
 import "./OperadorModal.css";
 import { useContext, useState } from "react";
 import { ThemeContext } from "@/theme/theme";

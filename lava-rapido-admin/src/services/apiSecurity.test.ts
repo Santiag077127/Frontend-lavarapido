@@ -1,3 +1,4 @@
+// Prueba cómo Axios adjunta el token y responde a errores de acceso.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "./api";
 import { useAuthStore } from "@/store/authStore";

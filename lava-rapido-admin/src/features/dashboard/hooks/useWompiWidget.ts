@@ -1,3 +1,4 @@
+// Carga el widget de Wompi una sola vez y evita abrir pagos simultáneos.
 import { useCallback, useEffect, useState } from "react";
 
 export const WOMPI_SCRIPT_URL = "https://checkout.wompi.co/widget.js";
@@ -46,6 +47,7 @@ export const crearConfiguracionWidget = (pago: {
   redirectUrl: pago.redirectUrl,
 });
 
+// Permite un solo flujo de Wompi abierto; la reserva caduca si la ventana no responde.
 export const reservarFlujoWompi = (idReserva: string) => {
   if (activeFlow && activeFlow.expiresAt > Date.now()) return false;
   activeFlow = { idReserva, expiresAt: Date.now() + FLOW_EXPIRATION_MS };
@@ -56,6 +58,7 @@ export const liberarFlujoWompi = (idReserva: string) => {
   if (activeFlow?.idReserva === idReserva) activeFlow = null;
 };
 
+// Reutiliza la promesa para no insertar varias veces el script externo.
 export const cargarWompiWidget = () => {
   if (window.WidgetCheckout) return Promise.resolve();
   if (scriptPromise) return scriptPromise;

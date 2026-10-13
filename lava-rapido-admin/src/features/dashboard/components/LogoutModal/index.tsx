@@ -1,3 +1,4 @@
+// Confirma el cierre de sesión antes de limpiar la cuenta.
 import "./LogoutModal.css";
 import { useContext } from "react";
 import { ThemeContext } from "@/theme/theme";

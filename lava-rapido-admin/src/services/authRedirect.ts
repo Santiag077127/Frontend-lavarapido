@@ -1,5 +1,7 @@
+// Guarda de forma segura la ruta interna a la que se vuelve después del login.
 const RETURN_PATH_KEY = "auth-return-path";
 
+// Solo conserva destinos internos para impedir redirecciones a sitios externos.
 export const esRutaInternaSegura = (ruta: string) => ruta.startsWith("/") && !ruta.startsWith("//") && !ruta.includes("\\");
 
 export const guardarDestinoTrasLogin = (ruta: string) => {

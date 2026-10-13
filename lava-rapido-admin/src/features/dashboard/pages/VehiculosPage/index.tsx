@@ -1,3 +1,4 @@
+// Lista vehículos y permite revisar o cambiar su estado.
 import { useContext, useEffect, useMemo, useState } from "react";
 import { getVehiculos } from "@/features/dashboard/services/vehiculoService";
 import { ThemeContext } from "@/theme/theme";

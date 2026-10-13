@@ -1,3 +1,4 @@
+// Resume reservas y actividad del panel principal.
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import axios from "axios";
 import { CalendarDays, CheckCircle2, Clock3, DollarSign, TimerReset, XCircle } from "lucide-react";
@@ -69,6 +70,7 @@ export const PanelPrincipalPage = () => {
     void cargarReservas();
   }, []);
 
+  // Los indicadores se calculan con las reservas recibidas del backend.
   const reservasDeHoy = useMemo(
     () => reservas.filter((reserva) => esFechaDeHoy(reserva.fechaReserva)),
     [reservas]

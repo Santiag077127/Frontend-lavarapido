@@ -1,3 +1,4 @@
+// Declara las rutas públicas y privadas y las pantallas asociadas.
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage }          from "../features/auth/pages/LoginPage/LoginPage";
 import { RegisterPage }       from "../features/auth/pages/RegisterPage/RegisterPage"; // ← nuevo
@@ -33,6 +34,7 @@ export const AppRouter = () => {
         <Route path="/reset-password"  element={<ResetPasswordPage />} />   {/* ← nuevo */}
         <Route path="/access-denied" element={<AccessDeniedPage />} />
 
+        {/* La comprobación de ADMIN se aplica a todas las rutas anidadas. */}
         <Route element={<RequireAdmin />}>
         <Route path="/pagos/resultado" element={<PagoResultadoPage />} />
 

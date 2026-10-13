@@ -1,3 +1,4 @@
+// Pide confirmación antes de ejecutar una acción sensible.
 // src/features/dashboard/components/ConfirmModal/index.tsx
 //
 // Modal genérico de confirmación. Reutilizable para cualquier acción

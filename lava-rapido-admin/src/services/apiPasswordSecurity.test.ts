@@ -1,3 +1,4 @@
+// Prueba que las peticiones de contraseña respeten las reglas de seguridad.
 import { expect, it, vi } from "vitest";
 import { api } from "./api";
 import { useAuthStore } from "@/store/authStore";

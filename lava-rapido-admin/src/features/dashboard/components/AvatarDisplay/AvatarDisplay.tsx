@@ -1,3 +1,4 @@
+// Muestra el avatar elegido o uno predeterminado.
 import { UserRound } from "lucide-react";
 
 import type { AvatarId } from "../../types";

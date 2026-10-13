@@ -1,3 +1,4 @@
+// Presenta el formulario de inicio de sesión.
 import "./style.css";
 
 import logo from "../../../../assets/images/Logo.png";

@@ -1,3 +1,4 @@
+// Muestra el menú lateral y la sección privada seleccionada.
 import "./DashboardPage.css";
 
 import { Outlet } from "react-router-dom";

@@ -1,3 +1,4 @@
+// Agrupa las llamadas HTTP de login, registro y recuperación de contraseña.
 import { api } from "../../../services/api";
 import type {
   RegisterPayload,

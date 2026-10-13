@@ -1,3 +1,4 @@
+// Muestra el aviso cuando una cuenta no tiene permiso para entrar al panel.
 import { Link } from "react-router-dom";
 
 export function AccessDeniedPage() {

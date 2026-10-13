@@ -1,3 +1,4 @@
+// Define la reserva y llama a la API para crear, listar, cambiar estado o cancelar.
 import { api } from "@/services/api";
 
 export type EstadoReserva = "PENDIENTE" | "ASIGNADA" | "EN_PROCESO" | "FINALIZADA" | "CANCELADA";

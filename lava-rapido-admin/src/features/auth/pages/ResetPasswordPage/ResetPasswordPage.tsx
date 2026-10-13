@@ -1,3 +1,4 @@
+// Lee el token del enlace y envía la nueva contraseña al backend.
 import "./ResetPasswordPage.css";
 
 import { useContext, useState } from "react";
@@ -43,6 +44,7 @@ export const ResetPasswordPage = () => {
 
     setIsLoading(true);
     try {
+      // El backend comprueba vigencia y uso del token antes de cambiar la contraseña.
       await resetPassword(token, password);
       setSuccess(true);
       // Este sitio es el panel administrativo. Tras actualizar la contraseña,

@@ -1,3 +1,4 @@
+// Prueba las peticiones de perfil y cambio de contraseña.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ put: vi.fn() }));

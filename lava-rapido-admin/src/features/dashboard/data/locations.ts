@@ -1,3 +1,4 @@
+// Guarda los datos de las sedes que aparecen en el mapa.
 export interface Location {
   id:        number;
   name:      string;

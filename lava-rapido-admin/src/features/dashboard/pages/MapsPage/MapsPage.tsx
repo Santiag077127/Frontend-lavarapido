@@ -1,3 +1,4 @@
+// Ubica las sedes en el mapa.
 import "./MapsPage.css";
 import "leaflet/dist/leaflet.css";
 

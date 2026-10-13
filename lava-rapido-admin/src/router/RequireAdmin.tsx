@@ -1,3 +1,4 @@
+// Comprueba en el backend que la sesión conserve el rol ADMIN antes de mostrar rutas privadas.
 import { useEffect, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { api } from "@/services/api";
@@ -19,6 +20,7 @@ export function RequireAdmin() {
   useEffect(() => {
     if (!token) return;
     let active = true;
+    // El backend confirma el rol actual; no basta con el rol guardado en el navegador.
     api.get<Session>("/users/me")
       .then(({ data }) => {
         if (!active) return;
@@ -41,11 +43,13 @@ export function RequireAdmin() {
     return () => { active = false; };
   }, [token, setAuth, attempt]);
 
+  // Recuerda la ruta pedida para volver después de iniciar sesión.
   if (!token) {
     guardarDestinoTrasLogin(`${location.pathname}${location.search}${location.hash}`);
     return <Navigate to="/login" replace />;
   }
   if (checkedToken === token && status === "denied") return <Navigate to="/access-denied" replace />;
+  // Un fallo de red permite reintentar; una cuenta sin rol ADMIN va a acceso denegado.
   if (checkedToken === token && status === "unavailable") return <main role="alert"><p>No se pudo verificar tu sesión.</p><button onClick={() => { setStatus("checking"); setAttempt((value) => value + 1); }}>Reintentar</button><Link to="/">Volver al inicio</Link></main>;
   if (status !== "allowed" || verifiedToken !== token) return <main aria-busy="true">Verificando permisos…</main>;
   return <Outlet />;

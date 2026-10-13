@@ -1,3 +1,4 @@
+// Valida los datos del registro y envía la cuenta nueva al backend.
 import "./RegisterPage.css";
 
 import { useMemo, useState } from "react";
@@ -114,6 +115,7 @@ export const RegisterPage = () => {
 
     setIsLoading(true);
     try {
+      // Envía el formulario validado; el backend crea la cuenta y guarda el hash.
       await register(form); setSuccess(true); setTimeout(() => navigate("/"), 2500);
     } catch (requestError: any) {
       const status = requestError.response?.status;

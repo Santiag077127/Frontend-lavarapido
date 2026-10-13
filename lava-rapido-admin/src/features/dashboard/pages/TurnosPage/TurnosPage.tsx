@@ -1,3 +1,4 @@
+// Lista reservas y permite registrar reservas presenciales y gestionar turnos.
 import { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ThemeContext } from "@/theme/theme";
@@ -27,6 +28,7 @@ export const TurnosPage = () => {
   const actualizar = (reserva: Reserva) => { setReservas(prev => prev.map(item => item.idReserva === reserva.idReserva ? reserva : item)); setSeleccionada(reserva); };
   const cambiar = async (estado: EstadoReserva) => { if (!seleccionada) return; try { actualizar(await cambiarEstado(seleccionada.idReserva, estado)); } catch (e) { setError(errorMessage(e, "No se pudo cambiar el estado.")); } };
   const cancelar = async () => { if (!seleccionada) return; try { actualizar(await cancelarReserva(seleccionada.idReserva)); } catch (e) { setError(errorMessage(e, "No se pudo cancelar la reserva.")); } };
+  // Valida horario y duración antes de registrar una reserva presencial.
   const guardar = async (e: React.FormEvent) => { e.preventDefault(); const servicio = servicios.find(s => s.idServicio === form.servicio); const [h, m] = form.hora.split(":").map(Number); const inicio = h * 60 + m; if (!form.vehiculo || !servicio || !form.fecha) return setFormError("Completa todos los campos de la reserva."); if (inicio < 360 || inicio > 1200 || inicio + servicio.duracionMinutos > 1200) return setFormError("La reserva debe iniciar entre 06:00 y 20:00 y finalizar antes de las 20:00."); setGuardando(true); setFormError(null); try { const nueva = await crearReserva({ fkIdVehiculo: form.vehiculo, fkIdServicio: form.servicio, fechaReserva: form.fecha, horaReserva: form.hora + ":00" }); setReservas(prev => [nueva, ...prev]); setFormAbierto(false); setForm({ vehiculo: "", servicio: "", fecha: "", hora: "06:00" }); } catch (err) { setFormError(errorMessage(err, "No se pudo registrar la reserva.")); } finally { setGuardando(false); } };
   const labelEstado: Record<EstadoReserva, string> = { PENDIENTE: t("common.pending"), ASIGNADA: t("common.assigned"), EN_PROCESO: t("common.inProgress"), FINALIZADA: t("common.finished"), CANCELADA: t("common.cancelled") };
   return <div className="gt-page"><div className="gt-header"><div><h1>{t("turns.title")}</h1><p>{t("turns.subtitle")}</p></div><button className="gt-btn-nuevo" onClick={() => { setFormError(null); setFormAbierto(true); }}>+ {t("turns.newWalkIn")}</button></div>
