@@ -16,7 +16,7 @@ const mockT = (key: string, values?: Record<string, string | number>) => {
 jest.mock('@react-navigation/native', () => ({ useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]), useNavigation: () => ({ navigate: jest.fn(), getParent: () => ({ navigate: jest.fn() }) }) }))
 jest.mock('@expo/vector-icons', () => ({ Ionicons: Object.assign((props: any) => require('react').createElement(require('react-native').Text, props), { glyphMap: {} }) }))
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockT, i18n: { resolvedLanguage: mockLanguage } }) }))
-jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { background: '#F7F9FC', card: '#FFFFFF', interactiveSurface: '#EFF6FF', infoBackground: '#EFF6FF', errorBackground: '#FEE2E2', text: '#0F172A', primary: '#2563EB', accent: '#06B6D4', success: '#16A34A', errorText: '#DC2626', textSecondary: '#64748B', border: '#E2E8F0', onPrimary: '#FFFFFF' } }) }))
+jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { background: '#F7FBFF', card: '#FFFFFF', interactiveSurface: '#E6F1FF', infoBackground: '#E6F1FF', errorBackground: '#DC262612', text: '#0D1B3E', primary: '#1565C0', accentText: '#0E7490', success: '#16A34A', errorText: '#DC2626', textSecondary: '#4A5568', border: '#DDE4EF', onPrimary: '#FFFFFF', shadow: '#0D1B3E' } }) }))
 jest.mock('../../../services/notificationService', () => ({ notificationService: { list: jest.fn(), count: jest.fn(), read: jest.fn(), readAll: jest.fn() } }))
 jest.mock('../../reservations/services/reservationService', () => ({ reservationService: { getById: jest.fn() } }))
 

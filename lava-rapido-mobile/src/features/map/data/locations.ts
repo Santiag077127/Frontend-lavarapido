@@ -1,29 +1,22 @@
-export const locations = [
-  {
-    id: 1,
-    name: 'YAVA LAVA',
-    latitude: 2.9273,
-    longitude: -75.2819,
-    address: 'Calle 4 # 8-26',
-    city: 'Neiva',
-    phone: '3185482109'
-  },
+export type MapLocation = {
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+  address: string
+  city: string
+  phone: string
+}
+
+// Mirrors the location currently listed by the web map (dashboard/data/locations.ts).
+export const locations: MapLocation[] = [
   {
     id: 2,
-    name: 'LAVA EXPRESS',
+    name: 'LAVA RAPIDO VEHICULAR',
     latitude: 2.938,
     longitude: -75.29,
     address: 'Carrera 10 # 12-30',
     city: 'Neiva',
-    phone: '3001234567'
-  },
-  {
-    id: 3,
-    name: 'Santiago Gordo',
-    latitude: 2.887268,
-    longitude: -75.436602,
-    address: 'Cra 8 # 6-71',
-    city: 'Palermo',
-    phone: '3219439171'
+    phone: '3001234567',
   },
 ]
