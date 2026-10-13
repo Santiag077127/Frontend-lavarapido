@@ -1,3 +1,4 @@
+// Solicita un enlace de recuperación sin revelar si el correo existe.
 import "./ForgotPasswordPage.css";
 
 import { useContext, useState } from "react";

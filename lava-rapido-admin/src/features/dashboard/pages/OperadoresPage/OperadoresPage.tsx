@@ -1,3 +1,4 @@
+// Lista operadores y permite crearlos o cambiar su estado.
 import "./OperadoresPage.css";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
@@ -38,6 +39,7 @@ export const OperadoresPage = () => {
     finally { setCambiandoId(null); }
   };
 
+  // Convierte en operador una cuenta ya registrada, identificada por correo y documento.
   const handleAgregar = async (nuevo: { email: string; documentNumber: string }) => {
     try { const creado = await crearOperador(nuevo); setOperadores(prev => [creado, ...prev]); }
     catch (e) { throw new Error(errorMessage(e, "No se pudo crear el operador.")); }

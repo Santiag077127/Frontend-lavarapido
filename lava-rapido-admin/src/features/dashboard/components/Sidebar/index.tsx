@@ -1,3 +1,4 @@
+// Muestra navegación del panel y acceso a notificaciones.
 import "./Sidebar.css";
 
 import { useContext, useEffect, useState } from "react";

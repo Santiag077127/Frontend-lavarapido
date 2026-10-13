@@ -1,3 +1,4 @@
+// Prueba el contrato HTTP de consultas y verificaciones de pago.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const apiMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));

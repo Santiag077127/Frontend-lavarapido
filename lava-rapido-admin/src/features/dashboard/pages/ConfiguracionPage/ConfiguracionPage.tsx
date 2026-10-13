@@ -1,3 +1,4 @@
+// Permite cambiar idioma, tema y acceder a acciones de cuenta.
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {

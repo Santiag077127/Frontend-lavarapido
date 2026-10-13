@@ -1,3 +1,4 @@
+// Define los datos que la web envía y recibe en los flujos de autenticación.
 // Datos enviados al backend para login
 export interface LoginRequest {
   email:    string;

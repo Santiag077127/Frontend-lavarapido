@@ -1,3 +1,4 @@
+// Prueba la carga del widget y el control de pagos simultáneos.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cargarWompiWidget, crearConfiguracionWidget, WOMPI_SCRIPT_URL } from "./useWompiWidget";
 

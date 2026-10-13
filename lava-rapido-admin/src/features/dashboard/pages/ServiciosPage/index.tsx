@@ -1,3 +1,4 @@
+// Lista servicios y permite crearlos, editarlos o cambiar su estado.
 import { useContext, useEffect, useMemo, useState } from "react";
 import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
 import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
@@ -54,6 +55,7 @@ export const ServiciosPage = () => {
     setModalAbierto(true);
   };
 
+  // El mismo modal crea o actualiza según exista un servicio en edición.
   const handleGuardar = async (form: ServicioForm) => {
     setError(null);
     try {

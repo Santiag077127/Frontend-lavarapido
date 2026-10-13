@@ -1,3 +1,4 @@
+// Muestra las notificaciones, filtros de lectura y acciones para marcarlas.
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { notificacionesApi, type PaginaNotificaciones } from "../../services/notificacionService";
@@ -14,6 +15,7 @@ export function NotificacionesPage() {
   const cargar = useCallback(async () => {
     setCargando(true); setError(false);
     try {
+      // Trae la página y el contador de no leídas en paralelo.
       const [lista, pendientes] = await Promise.all([
         notificacionesApi.listar(pagina, soloNoLeidas), notificacionesApi.contar(),
       ]);

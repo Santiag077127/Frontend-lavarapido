@@ -1,3 +1,4 @@
+/* Adapta los colores y componentes al tema oscuro. */
 /* Ajustes compartidos para las pantallas y diálogos del panel. */
 :root[data-theme="dark"] .dashboard-content :is(
   .stat-card, .tabla-wrapper, .servicios-table-container,

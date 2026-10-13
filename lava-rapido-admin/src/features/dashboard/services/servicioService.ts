@@ -1,3 +1,4 @@
+// Consulta, crea, actualiza y cambia el estado de servicios en la API.
 import { api } from "@/services/api";
 import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 

@@ -1,3 +1,4 @@
+// Consulta y modifica marcas del catálogo mediante la API.
 import { api } from "@/services/api";
 import type { Marca, MarcaForm } from "@/features/dashboard/types";
 

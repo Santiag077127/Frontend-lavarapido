@@ -1,8 +1,10 @@
+// Configura Vite, el proxy local y la URL segura de la API en producción.
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url'
 
 export default defineConfig(({ mode }) => {
+  // Impide generar una versión pública apuntando a una API insegura o mal formada.
   if (mode === 'production') {
     const apiUrl = loadEnv(mode, process.cwd(), 'VITE_').VITE_API_URL
     if (!apiUrl) throw new Error('VITE_API_URL is required for the production build')

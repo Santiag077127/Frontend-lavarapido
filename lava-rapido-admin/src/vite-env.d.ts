@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+// Declara los tipos de Vite, los recursos importados y la variable pública de la API.
 
 declare module "*.png";
 declare module "*.jpg";

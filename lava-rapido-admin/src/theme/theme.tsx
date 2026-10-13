@@ -1,3 +1,4 @@
+// Mantiene el tema oscuro, el idioma y las traducciones compartidas por la web.
 import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type LanguageOption = "es" | "en" | "fr" | "pt";
@@ -733,6 +734,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    // Aplica el tema al documento y recuerda la elección entre visitas.
     document.documentElement.dataset.theme = darkMode ? "dark" : "light";
     localStorage.setItem("lava-dark-mode", String(darkMode));
   }, [darkMode]);

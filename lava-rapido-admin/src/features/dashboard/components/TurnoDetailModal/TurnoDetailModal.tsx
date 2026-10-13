@@ -1,3 +1,4 @@
+// Muestra detalles de la reserva y acciones de estado, asignación y pago.
 import { useState } from "react";
 import axios from "axios";
 import { CobrarReservaButton } from "../CobrarReservaButton/CobrarReservaButton";

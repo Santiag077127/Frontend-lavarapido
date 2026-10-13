@@ -1,3 +1,4 @@
+// Presenta servicios y sus acciones en una tabla.
 import { useContext } from "react";
 import type { Servicio } from "@/features/dashboard/types";
 import { ThemeContext } from "@/theme/theme";

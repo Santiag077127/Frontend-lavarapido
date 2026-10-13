@@ -1,3 +1,4 @@
+// Inicia Wompi y consulta el estado del pago hasta obtener confirmación.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
@@ -121,6 +122,7 @@ export const CobrarReservaButton = ({
     return guardarPago(resultado);
   }, [guardarPago, idReserva]);
 
+  // Consulta al backend hasta obtener un estado final o agotar el tiempo de espera.
   const iniciarVerificacion = useCallback(() => {
     detenerPolling();
     const run = pollRunRef.current;
@@ -204,6 +206,7 @@ export const CobrarReservaButton = ({
     } finally { if (mountedRef.current) setConsultando(false); }
   };
 
+  // El backend prepara la referencia y la firma antes de abrir el widget.
   const cobrar = async () => {
     if (!listo || iniciando) return;
     if (!reservarFlujoWompi(idReserva)) {
@@ -218,6 +221,7 @@ export const CobrarReservaButton = ({
       if (!Checkout) throw new Error("Wompi no está disponible.");
       guardarContextoPago({ idReserva, referencia: config.referencia });
       const checkout = new Checkout(crearConfiguracionWidget(config));
+      // El resultado del widget inicia la verificación; no confirma el pago por sí solo.
       checkout.open((result) => {
         liberarFlujoWompi(idReserva);
         const transactionId = result?.transaction?.id;

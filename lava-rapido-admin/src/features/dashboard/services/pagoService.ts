@@ -1,3 +1,4 @@
+// Define los datos de pago y llama a la API para iniciar, consultar y verificar cobros.
 import { api } from "@/services/api";
 
 export type EstadoPago = "pendiente" | "aprobado" | "rechazado";
@@ -48,6 +49,7 @@ export const consultarPago = async (idReserva: string, signal?: AbortSignal): Pr
 export const reconciliarPago = async (idReserva: string): Promise<Pago> =>
   (await api.post<Pago>(`/pagos/reserva/${idReserva}/reconciliar`)).data;
 
+// El backend consulta Wompi y decide el estado real; la web no aprueba pagos.
 export const verificarTransaccion = async (
   idReserva: string,
   referencia: string,

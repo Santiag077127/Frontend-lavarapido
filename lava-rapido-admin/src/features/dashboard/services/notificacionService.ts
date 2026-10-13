@@ -1,3 +1,4 @@
+// Consulta, cuenta y marca como leídas las notificaciones del usuario.
 import { api } from "@/services/api";
 
 export type Notificacion = {

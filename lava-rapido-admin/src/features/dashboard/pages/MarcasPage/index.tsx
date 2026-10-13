@@ -1,3 +1,4 @@
+// Lista y filtra marcas y permite registrar nuevas marcas.
 import { useContext, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getMarcas, createMarca } from "@/features/dashboard/services/marcaService";
 import { ThemeContext } from "@/theme/theme";
@@ -13,6 +14,7 @@ const FILTROS: { label: string; value: FiltroEstado }[] = [
 ];
 
 const limpiarNombre = (valor: string) => valor.trim().replace(/\s+/g, " ");
+// Compara nombres sin acentos ni mayúsculas para detectar duplicados visibles.
 const compararNombre = (valor: string) => limpiarNombre(valor)
   .normalize("NFD")
   .replace(/\p{M}/gu, "")

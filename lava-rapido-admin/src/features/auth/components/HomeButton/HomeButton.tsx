@@ -1,3 +1,4 @@
+// Ofrece un enlace reutilizable para volver al inicio.
 import { Link } from "react-router-dom";
 import "./HomeButton.css";
 

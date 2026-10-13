@@ -1,3 +1,4 @@
+// Consulta y administra los vehículos mediante la API.
 import { api } from "@/services/api";
 import type { Vehiculo, VehiculoForm } from "@/features/dashboard/types";
 

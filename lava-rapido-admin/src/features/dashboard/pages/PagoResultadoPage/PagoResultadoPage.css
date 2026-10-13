@@ -1,3 +1,4 @@
+/* Define los estilos visuales de resultado de un pago. */
 .resultado-pago-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f3f4f6; }
 .resultado-pago-card { width: min(100%, 580px); padding: 30px; border-radius: 16px; background: #fff; box-shadow: 0 18px 45px rgba(17, 24, 39, .13); }
 .resultado-pago-card h1 { margin: 0 0 8px; color: #111827; font-size: 1.6rem; }

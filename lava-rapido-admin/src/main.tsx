@@ -1,3 +1,4 @@
+// Inicia React, aplica los estilos globales y monta el tema y las rutas.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AppRouter } from "./router/AppRouter";

@@ -1,3 +1,4 @@
+// Verifica con el backend el retorno de Wompi y muestra el estado del pago.
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -22,6 +23,7 @@ export const PagoResultadoPage = () => {
   }, [location.hash, location.pathname, location.search, token]);
 
   useEffect(() => {
+    // El ID del retorno se verifica junto con la reserva y referencia guardadas.
     if (!token || !idReserva || !referencia || !transactionId || verificadoRef.current === transactionId) return;
     verificadoRef.current = transactionId;
     void verificarTransaccion(idReserva, referencia, transactionId)

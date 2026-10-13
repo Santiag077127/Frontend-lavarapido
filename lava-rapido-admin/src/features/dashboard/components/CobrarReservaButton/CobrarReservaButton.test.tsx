@@ -1,3 +1,4 @@
+// Prueba el comportamiento de cobro y estado de pago de una reserva.
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";

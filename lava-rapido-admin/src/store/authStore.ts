@@ -1,3 +1,4 @@
+// Guarda la sesión en Zustand y sessionStorage y la limpia al cerrar sesión.
 // Crear store global con Zustand
 import { create } from "zustand";
 
@@ -18,7 +19,7 @@ const readStoredUser = (): User | null => {
   }
 };
 
-// Discard tokens left by earlier builds that persisted credentials across browser sessions.
+// Borra tokens de versiones anteriores que persistían entre sesiones del navegador.
 localStorage.removeItem("token");
 localStorage.removeItem("user");
 

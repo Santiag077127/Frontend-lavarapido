@@ -1,3 +1,4 @@
+// Configura Vitest con React, jsdom y limpieza compartida de pruebas.
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";

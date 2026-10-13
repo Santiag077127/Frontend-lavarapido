@@ -1,3 +1,4 @@
+// Configura Axios, agrega el JWT a rutas protegidas y maneja respuestas 401 y 403.
 // Librería para peticiones HTTP
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
@@ -33,6 +34,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Una sesión vencida borra el token; un 403 conserva la sesión y muestra falta de permisos.
 api.interceptors.response.use(
   (response) => response,
   (error) => {

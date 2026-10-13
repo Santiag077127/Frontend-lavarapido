@@ -1,3 +1,4 @@
+// Escucha errores de autorización de la API y redirige a login o acceso denegado.
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 

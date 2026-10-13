@@ -1,3 +1,4 @@
+// Prueba el acceso al panel según token y rol vigentes.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
