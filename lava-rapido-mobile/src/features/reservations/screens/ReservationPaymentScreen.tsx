@@ -345,14 +345,17 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           </Text>
         </View>
 
-        <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
-        </View>
+        {!checkout && (
+          <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
+          </View>
+        )}
 
         {checkout && !isFinal ? (
           <View
             style={[
               styles.webViewContainer,
+              styles.webViewContainerCheckout,
               { backgroundColor: theme.card, borderColor: theme.border },
             ]}
           >
@@ -463,6 +466,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
   paymentStatus: { fontSize: 13, lineHeight: 19, marginTop: 4 },
   webViewContainer: { flex: 1, minHeight: 0, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderRadius: 20, overflow: 'hidden', elevation: 2 },
+  webViewContainerCheckout: { marginHorizontal: 0, marginBottom: 0, borderWidth: 0, borderRadius: 0, elevation: 0 },
   webview: { flex: 1 },
   checkoutPlaceholder: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: 14, marginHorizontal: 16, marginBottom: 16, paddingHorizontal: 22, borderWidth: 1, borderRadius: 20, elevation: 1 },
   checkoutGlyph: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },

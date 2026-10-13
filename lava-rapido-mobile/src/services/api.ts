@@ -6,6 +6,9 @@
 
 import axios from 'axios';
 import { resolveApiUrl } from './apiUrl';
+import { shouldAttachAuthorization } from './passwordResetRequest';
+
+export { shouldAttachAuthorization } from './passwordResetRequest';
 
 export type ApiErrorKind =
   | 'network'
@@ -58,7 +61,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    if (token && !config.headers.Authorization) {
+    if (token && shouldAttachAuthorization(config.url) && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 

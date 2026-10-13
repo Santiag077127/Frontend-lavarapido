@@ -3,13 +3,18 @@
     "name": "Lava Rápido Vehicular",
     "slug": "lava-rapido-vehicular",
     "version": "1.0.0",
+    "icon": "./src/assets/app-icon.png",
     "orientation": "portrait",
     "platforms": [
       "android"
     ],
     "android": {
       "package": "com.lavarapido.vehicular",
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/app-icon.png",
+        "backgroundColor": "#071525"
+      }
     },
     "plugins": [
       "expo-font",
