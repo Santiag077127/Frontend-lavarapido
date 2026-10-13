@@ -12,7 +12,7 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) =>
 jest.mock('@expo/vector-icons', () => ({ Ionicons: (props: any) => require('react').createElement(require('react-native').Text, props) }))
 jest.mock('react-native-webview', () => ({ WebView: (props: any) => require('react').createElement(require('react-native').View, props) }))
 jest.mock('../../../components/common/BackButton', () => ({ __esModule: true, default: () => null }))
-jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { background: '#F7F9FC', card: '#FFFFFF', border: '#E2E8F0', text: '#0F172A', textSecondary: '#64748B', primary: '#2563EB', primarySoft: '#EFF6FF', onPrimary: '#FFFFFF', success: '#16A34A', successBackground: '#DCFCE7', errorText: '#DC2626' } }) }))
+jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { background: '#F7FBFF', card: '#FFFFFF', border: '#DDE4EF', text: '#0D1B3E', textSecondary: '#4A5568', primary: '#1565C0', primarySoft: '#E6F1FF', onPrimary: '#FFFFFF', success: '#16A34A', successBackground: '#16A34A12', errorText: '#DC2626' } }) }))
 jest.mock('../../../services/paymentService', () => ({ paymentService: { getByReservation: jest.fn(), start: jest.fn(), verify: jest.fn() } }))
 
 const reservation = { idReserva: 'res-1' }

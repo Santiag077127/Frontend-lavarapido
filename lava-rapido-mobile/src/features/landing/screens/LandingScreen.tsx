@@ -43,9 +43,8 @@ export default function LandingScreen() {
       >
 
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            🚗 {t('landing.badge')}
-          </Text>
+          <Ionicons name="car-sport-outline" size={18} color={theme.primary} />
+          <Text style={styles.badgeText}>{t('landing.badge')}</Text>
         </View>
 
         <Text style={styles.title}>
@@ -91,7 +90,7 @@ export default function LandingScreen() {
         <View style={styles.phone}>
 
           <LinearGradient
-            colors={[theme.primaryDark, theme.primary, theme.primaryDark]}
+            colors={[theme.primaryDark, theme.primary]}
             style={styles.phoneGradient}
           >
 
@@ -228,7 +227,7 @@ export default function LandingScreen() {
 
       {/* 🚀 CTA */}
       <LinearGradient
-        colors={[theme.primaryDark, theme.primary, theme.primaryDark]}
+        colors={[theme.primaryDark, theme.primary]}
         style={styles.cta}
       >
 
@@ -269,6 +268,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
 
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: theme.primaryContainer,
     borderWidth: 1,
     borderColor: theme.border,

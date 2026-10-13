@@ -7,7 +7,7 @@ import { paymentCopy } from '../../../i18n/paymentCopy'
 jest.mock('@react-navigation/bottom-tabs', () => ({ createBottomTabNavigator: () => ({ Navigator: ({ children }: any) => <>{children}</>, Screen: ({ name }: any) => name === 'Mis servicios' || name === 'Reservas' ? require('react').createElement(require('react-native').Text, null, name) : null }) }))
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }))
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ i18n: { resolvedLanguage: 'es' } }) }))
-jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { card: '#fff', border: '#ddd', primary: '#2563EB', textSecondary: '#64748B' }, darkMode: false }) }))
+jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { card: '#FFFFFF', border: '#DDE4EF', primary: '#1565C0', textSecondary: '#4A5568' }, darkMode: false }) }))
 jest.mock('../../../features/home/screens/HomeScreen', () => () => null)
 jest.mock('../../../features/profile/screens/ProfileScreen', () => () => null)
 jest.mock('../../../features/map/screens/MapScreen', () => () => null)

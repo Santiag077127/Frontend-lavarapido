@@ -266,7 +266,7 @@ export default function ServiceDetailsScreen({
   )
 }
 
-function SectionHeading({icon,title,theme}:{icon:React.ComponentProps<typeof Ionicons>['name'];title:string;theme:any}) { return <View style={styles.sectionHeading}><View style={[styles.sectionIcon,{backgroundColor:theme.primaryLight}]}><Ionicons name={icon} size={19} color={theme.primary}/></View><Text style={[styles.sectionTitle,{color:theme.text}]}>{title}</Text></View> }
+function SectionHeading({icon,title,theme}:{icon:React.ComponentProps<typeof Ionicons>['name'];title:string;theme:any}) { return <View style={styles.sectionHeading}><View style={[styles.sectionIcon,{backgroundColor:theme.primarySoft}]}><Ionicons name={icon} size={19} color={theme.primary}/></View><Text style={[styles.sectionTitle,{color:theme.text}]}>{title}</Text></View> }
 function InfoTile({icon,label,value,theme}:{icon:React.ComponentProps<typeof Ionicons>['name'];label:string;value:string;theme:any}) { return <View style={[styles.infoTile,{backgroundColor:theme.inputBackground,borderColor:theme.border}]}><View style={styles.tileLabelRow}><Ionicons name={icon} size={16} color={theme.primary}/><Text style={[styles.label,{color:theme.textSecondary}]} numberOfLines={1}>{label}</Text></View><Text style={[styles.value,{color:theme.text}]}>{value}</Text></View> }
 function TimelineStep({label,active,color,theme}:{label:string;active:boolean;color:string;theme:any}) { return <View style={styles.step}><View style={[styles.dot,{backgroundColor:active?color:theme.border}]}/><Text style={[styles.stepText,{color:active?theme.text:theme.textSecondary}]}>{label}</Text>{active&&<Ionicons name="checkmark-circle" size={18} color={color}/>}</View> }
 
