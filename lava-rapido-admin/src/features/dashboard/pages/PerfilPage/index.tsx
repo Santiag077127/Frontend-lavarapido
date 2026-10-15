@@ -4,7 +4,7 @@ import { ArrowLeft, Mail, Phone, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useAuthStore } from "../../../../store/authStore";
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
 import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
 import { getProfile, updateProfile } from "../../services/userService";
 import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
@@ -29,17 +29,17 @@ const validateProfileField = (name: keyof ProfileFieldErrors, value: string) => 
   if (name === "phoneNumber") {
     return /^\d{10}$/.test(value)
       ? ""
-      : "El teléfono solo puede contener números y debe tener 10 dígitos.";
+      : "ui.el.telefono.solo.puede.contener.numeros.y.debe.tener.10.digitos";
   }
 
-  if (!value.trim()) return "Este campo es obligatorio.";
-  if (!NAME_REGEX.test(value)) return "El nombre no puede contener números ni símbolos.";
-  return value.trim().length < 3 ? "Debe tener mínimo 3 caracteres." : "";
+  if (!value.trim()) return "ui.este.campo.es.obligatorio";
+  if (!NAME_REGEX.test(value)) return "ui.el.nombre.no.puede.contener.numeros.ni.simbolos";
+  return value.trim().length < 3 ? "ui.debe.tener.minimo.3.caracteres" : "";
 };
 
 export const PerfilPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const loggedUser = useAuthStore((state) => state.user);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
@@ -65,7 +65,7 @@ export const PerfilPage = () => {
         });
         setFieldErrors({});
       } catch {
-        setError("No se pudo cargar tu perfil. Intenta de nuevo.");
+        setError("ui.no.se.pudo.cargar.tu.perfil.intenta.de.nuevo");
       } finally {
         setCargando(false);
       }
@@ -86,8 +86,8 @@ export const PerfilPage = () => {
       ...current,
       [fieldName]: sanitizedValue !== value
         ? fieldName === "phoneNumber"
-          ? "El teléfono solo puede contener números."
-          : "El nombre no puede contener números ni símbolos."
+          ? "ui.el.telefono.solo.puede.contener.numeros"
+          : "ui.el.nombre.no.puede.contener.numeros.ni.simbolos"
         : validateProfileField(fieldName, sanitizedValue),
     }));
     setMensaje(null);
@@ -107,7 +107,7 @@ export const PerfilPage = () => {
     setFieldErrors(errors);
 
     if (Object.values(errors).some(Boolean)) {
-      setError("Corrige los campos marcados antes de guardar.");
+      setError("ui.corrige.los.campos.marcados.antes.de.guardar");
       return;
     }
 
@@ -128,15 +128,15 @@ export const PerfilPage = () => {
         phoneNumber: currentProfile.phoneNumber,
         profilePicture: currentProfile.profilePicture,
       });
-      setMensaje("Perfil actualizado correctamente.");
+      setMensaje("ui.perfil.actualizado.correctamente");
     } catch {
-      setError("No se pudo actualizar tu perfil. Intenta de nuevo.");
+      setError("ui.no.se.pudo.actualizar.tu.perfil.intenta.de.nuevo");
     } finally {
       setGuardando(false);
     }
   };
 
-  const email = profile?.email || loggedUser?.email || "No disponible";
+  const email = profile?.email || loggedUser?.email || "ui.no.disponible";
 
   return (
     <div className="page-perfil">
@@ -151,13 +151,13 @@ export const PerfilPage = () => {
         </div>
       </div>
 
-      {error && <p className="page-error" role="alert">{error}</p>}
-      {mensaje && <p className="page-success" role="status">{mensaje}</p>}
+      {error && <p className="page-error" role="alert">{localizeMessage(error, t)}</p>}
+      {mensaje && <p className="page-success" role="status">{localizeMessage(mensaje, t)}</p>}
 
       {cargando ? (
-        <p className="page-loading">Cargando perfil...</p>
+        <p className="page-loading">{t("ui.cargando.perfil")}</p>
       ) : (
-        <section className="perfil-card" aria-label="Información del perfil">
+        <section className="perfil-card" aria-label={t("ui.informacion.del.perfil")}>
           <div className="perfil-avatar" aria-hidden="true">
             <AvatarDisplay avatarId={form.profilePicture} />
           </div>
@@ -168,29 +168,25 @@ export const PerfilPage = () => {
 
             <dl className="perfil-details">
               <div>
-                <dt><Mail size={17} aria-hidden="true" /> Correo electrónico</dt>
-                <dd>{email}</dd>
+                <dt><Mail size={17} aria-hidden="true" />{" " + t("auth.email")}</dt>
+                <dd>{localizeMessage(email, t)}</dd>
               </div>
             </dl>
 
             <form className="perfil-form" onSubmit={handleSubmit}>
-              <label>
-                Nombre
-                <input className={fieldErrors.firstName ? "perfil-input--error" : ""} name="firstName" value={form.firstName} onChange={handleChange} required />
-                {fieldErrors.firstName && <small className="perfil-field-error">{fieldErrors.firstName}</small>}
+              <label>{t("services.name")}<input className={fieldErrors.firstName ? "perfil-input--error" : ""} name="firstName" value={form.firstName} onChange={handleChange} required />
+                {fieldErrors.firstName && <small className="perfil-field-error">{localizeMessage(fieldErrors.firstName, t)}</small>}
+              </label>
+              <label>{t("ui.apellido")}<input className={fieldErrors.lastName ? "perfil-input--error" : ""} name="lastName" value={form.lastName} onChange={handleChange} required />
+                {fieldErrors.lastName && <small className="perfil-field-error">{localizeMessage(fieldErrors.lastName, t)}</small>}
               </label>
               <label>
-                Apellido
-                <input className={fieldErrors.lastName ? "perfil-input--error" : ""} name="lastName" value={form.lastName} onChange={handleChange} required />
-                {fieldErrors.lastName && <small className="perfil-field-error">{fieldErrors.lastName}</small>}
-              </label>
-              <label>
-                <span><Phone size={16} aria-hidden="true" /> Teléfono</span>
+                <span><Phone size={16} aria-hidden="true" />{" " + t("ui.telefono")}</span>
                 <input className={fieldErrors.phoneNumber ? "perfil-input--error" : ""} name="phoneNumber" type="tel" inputMode="numeric" value={form.phoneNumber} onChange={handleChange} maxLength={10} required />
-                {fieldErrors.phoneNumber && <small className="perfil-field-error">{fieldErrors.phoneNumber}</small>}
+                {fieldErrors.phoneNumber && <small className="perfil-field-error">{localizeMessage(fieldErrors.phoneNumber, t)}</small>}
               </label>
               <fieldset className="perfil-avatar-selector">
-                <legend>Foto de perfil</legend>
+                <legend>{t("ui.foto.de.perfil")}</legend>
                 <div className="perfil-avatar-options">
                   {AVATAR_OPTIONS.map((avatarId) => (
                     <button
@@ -209,7 +205,7 @@ export const PerfilPage = () => {
                     </button>
                   ))}
                 </div>
-                <small>Selecciona un avatar predeterminado.</small>
+                <small>{t("ui.selecciona.un.avatar.predeterminado")}</small>
               </fieldset>
 
               <button className="perfil-save" type="submit" disabled={guardando}>

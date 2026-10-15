@@ -67,6 +67,6 @@ describe("ChangePasswordPage", () => {
     const error = new AxiosError("bad request", "ERR_BAD_REQUEST", undefined, undefined, {
       data: { error: "CURRENT_PASSWORD_INVALID" }, status: 400, statusText: "Bad Request", headers: {}, config: {} as never,
     });
-    expect(passwordChangeErrorMessage(error)).toBe("La contraseña actual no es correcta.");
+    expect(passwordChangeErrorMessage(error)).toBe("ui.la.contrasena.actual.no.es.correcta");
   });
 });

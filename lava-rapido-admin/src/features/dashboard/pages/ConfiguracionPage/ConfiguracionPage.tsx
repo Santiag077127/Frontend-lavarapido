@@ -68,13 +68,9 @@ export const ConfiguracionPage = () => {
             <p>{t("settings.password.desc")}</p>
           </div>
           <Link to="/dashboard/cambiar-contrasena">
-            <LockKeyhole size={16} />
-            Cambiar contraseña
-          </Link>
+            <LockKeyhole size={16} />{t("ui.cambiar.contrasena")}</Link>
           <Link to="/forgot-password" state={{ fromDashboard: true }}>
-            <ArrowLeft size={16} />
-            Recuperar por correo
-          </Link>
+            <ArrowLeft size={16} />{t("ui.recuperar.por.correo")}</Link>
         </article>
 
         <article className="config-card">

@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { useContext, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, useTranslations } from "@/theme/theme";
 
 import { locations, type Location } from "../../data/locations";
 
@@ -26,7 +26,7 @@ L.Marker.prototype.options.icon = defaultIcon;
 
 export const MapsPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [selected, setSelected] = useState<Location | null>(null);
 
   return (

@@ -1,3 +1,4 @@
+import { localizeMessage, useTranslations } from "@/theme/theme";
 // Pide confirmación antes de ejecutar una acción sensible.
 // src/features/dashboard/components/ConfirmModal/index.tsx
 //
@@ -18,22 +19,23 @@ interface ConfirmModalProps {
 export const ConfirmModal = ({
   titulo,
   mensaje,
-  textoConfirmar = "Confirmar",
-  textoVolver = "Cancelar",
+  textoConfirmar,
+  textoVolver,
   onConfirmar,
   onCancelar,
 }: ConfirmModalProps) => {
+  const t = useTranslations();
   return (
     <div className="confirm-overlay" onClick={onCancelar}>
       <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
         <h3 className="confirm-titulo">{titulo}</h3>
-        <p className="confirm-mensaje">{mensaje}</p>
+        <p className="confirm-mensaje">{localizeMessage(mensaje, t)}</p>
         <div className="confirm-acciones">
           <button className="confirm-btn-volver" onClick={onCancelar}>
-            {textoVolver}
+            {textoVolver ?? t("common.cancel")}
           </button>
           <button className="confirm-btn-confirmar" onClick={onConfirmar}>
-            {textoConfirmar}
+            {textoConfirmar ?? t("common.confirm")}
           </button>
         </div>
       </div>

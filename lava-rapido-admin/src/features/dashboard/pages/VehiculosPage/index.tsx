@@ -1,7 +1,7 @@
 // Lista vehículos y permite revisar o cambiar su estado.
 import { useContext, useEffect, useMemo, useState } from "react";
 import { getVehiculos } from "@/features/dashboard/services/vehiculoService";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import type { Vehiculo } from "@/features/dashboard/types";
 import "./VehiculosPage.css";
 
@@ -15,7 +15,7 @@ const FILTROS: { label: string; value: FiltroEstado }[] = [
 
 export const VehiculosPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export const VehiculosPage = () => {
       const data = await getVehiculos();
       setVehiculos(data);
     } catch {
-      setError("No se pudieron cargar los vehículos. Verifica que tu sesión tenga rol ADMIN.");
+      setError("ui.no.se.pudieron.cargar.los.vehiculos.verifica.que.tu.sesion.tenga");
     } finally {
       setCargando(false);
     }
@@ -109,7 +109,7 @@ export const VehiculosPage = () => {
         />
       </div>
 
-      {error && <p className="page-error">{error}</p>}
+      {error && <p className="page-error">{localizeMessage(error, t)}</p>}
 
       {cargando ? (
         <p>{t("vehicles.loading")}</p>
@@ -120,12 +120,12 @@ export const VehiculosPage = () => {
           <table className="tabla">
             <thead>
               <tr>
-                <th>Placa</th>
-                <th>Tipo</th>
-                <th>Marca</th>
-                <th>Propietario</th>
-                <th>Email</th>
-                <th>Color</th>
+                <th>{t("ui.placa")}</th>
+                <th>{t("ui.tipo")}</th>
+                <th>{t("ui.marca")}</th>
+                <th>{t("ui.propietario")}</th>
+                <th>{t("ui.email")}</th>
+                <th>{t("ui.color")}</th>
                 <th>{t("common.status")}</th>
               </tr>
             </thead>
@@ -137,9 +137,7 @@ export const VehiculosPage = () => {
                   <td>
                     {vehiculo.nombreMarca}
                     {!vehiculo.marcaAprobada && (
-                      <span className="badge badge--pendiente" style={{ marginLeft: 6 }}>
-                        No aprobada
-                      </span>
+                      <span className="badge badge--pendiente" style={{ marginLeft: 6 }}>{t("ui.no.aprobada")}</span>
                     )}
                   </td>
                   <td>{vehiculo.nombreUsuario}</td>

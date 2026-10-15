@@ -11,8 +11,8 @@ describe("validación de acceso", () => {
   it("muestra errores por campo y habilita el login cuando hay correo válido y contraseña", () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>);
     const email = screen.getByRole("textbox");
-    const password = screen.getByLabelText("auth.password");
-    const submit = screen.getByRole("button", { name: "auth.signIn" });
+    const password = screen.getByLabelText("Contraseña");
+    const submit = screen.getByRole("button", { name: "Iniciar sesión" });
 
     expect(submit.hasAttribute("disabled")).toBe(true);
     fireEvent.change(email, { target: { value: "correo-invalido" } });
@@ -25,7 +25,7 @@ describe("validación de acceso", () => {
   it("valida el correo antes de permitir solicitar el restablecimiento", () => {
     render(<MemoryRouter><ForgotPasswordPage /></MemoryRouter>);
     const email = screen.getByRole("textbox");
-    const submit = screen.getByRole("button", { name: "auth.sendReset" });
+    const submit = screen.getByRole("button", { name: "Enviar enlace de restablecimiento" });
 
     expect(submit.hasAttribute("disabled")).toBe(true);
     fireEvent.change(email, { target: { value: "sin-arroba" } });

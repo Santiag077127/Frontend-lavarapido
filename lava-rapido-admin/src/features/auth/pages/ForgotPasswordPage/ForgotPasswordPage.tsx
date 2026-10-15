@@ -10,11 +10,11 @@ import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { forgotPassword } from "../../services/authService";
 import type { ForgotPasswordErrorResponse } from "../../types";
 import { useAuthStore } from "../../../../store/authStore";
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
 
 export const ForgotPasswordPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const location = useLocation();
   const token = useAuthStore((state) => state.token);
   const [email, setEmail]         = useState("");
@@ -26,7 +26,7 @@ export const ForgotPasswordPage = () => {
     (location.state as { fromDashboard?: boolean } | null)?.fromDashboard || token
   );
 
-  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "Ingresa un correo electrónico válido.";
+  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "ui.ingresa.un.correo.electronico.valido";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,9 +42,9 @@ export const ForgotPasswordPage = () => {
       setSuccess(true);
     } catch (error: unknown) {
       if (axios.isAxiosError<ForgotPasswordErrorResponse>(error) && error.response) {
-        setError(error.response.data.error);
+        setError("ui.error.del.servidor.intentalo.de.nuevo.mas.tarde.2");
       } else {
-        setError("Error de conexión. Verifica tu internet.");
+        setError("ui.error.de.conexion.verifica.tu.internet.2");
       }
     } finally {
       setIsLoading(false);
@@ -59,11 +59,7 @@ export const ForgotPasswordPage = () => {
         <div className="fpp-success-box">
           <span className="fpp-success-icon">✓</span>
           <h2 className="fpp-success-title">{t("auth.checkEmail")}</h2>
-          <p className="fpp-success-msg">
-            Si <strong>{email}</strong> está registrado, te enviamos un enlace
-            para restablecer tu contraseña.<br />
-            El enlace vence en 30 minutos.
-          </p>
+          <p className="fpp-success-msg">{t("ui.si") + " "}<strong>{email}</strong>{" " + t("ui.esta.registrado.te.enviamos.un.enlace.para.restablecer.tu.contra")}<br />{t("ui.el.enlace.vence.en.30.minutos")}</p>
         </div>
       </div>
     );
@@ -85,7 +81,7 @@ export const ForgotPasswordPage = () => {
         {error && (
           <div className="fpp-error" role="alert" aria-live="polite">
             <span className="fpp-error-icon">⚠</span>
-            {error}
+            {localizeMessage(error, t)}
           </div>
         )}
 
@@ -97,7 +93,7 @@ export const ForgotPasswordPage = () => {
             <input
               id="fpp-email"
               type="email"
-              placeholder="ejemplo@correo.com"
+              placeholder={t("form.emailExample")}
               value={email}
               onChange={(e) => { setEmail(e.target.value); setEmailTocado(true); setError(""); }}
               onBlur={() => setEmailTocado(true)}
@@ -108,7 +104,7 @@ export const ForgotPasswordPage = () => {
               aria-describedby={emailTocado && emailError ? "fpp-email-error" : undefined}
               autoFocus
             />
-            {emailTocado && emailError && <p className="fpp-field-error" id="fpp-email-error">{emailError}</p>}
+            {emailTocado && emailError && <p className="fpp-field-error" id="fpp-email-error">{localizeMessage(emailError, t)}</p>}
           </div>
 
           <button

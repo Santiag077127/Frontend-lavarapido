@@ -2,7 +2,7 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
 import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import {
   getServicios,
   createServicio,
@@ -14,7 +14,7 @@ import "./ServiciosPage.css";
 
 export const ServiciosPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -29,7 +29,7 @@ export const ServiciosPage = () => {
       const data = await getServicios();
       setServicios(data);
     } catch {
-      setError("No se pudieron cargar los servicios. Intenta de nuevo.");
+      setError("ui.no.se.pudieron.cargar.los.servicios.intenta.de.nuevo");
     } finally {
       setCargando(false);
     }
@@ -67,7 +67,7 @@ export const ServiciosPage = () => {
       setModalAbierto(false);
       await cargarServicios();
     } catch {
-      setError("No se pudo guardar el servicio. Verifica los datos.");
+      setError("ui.no.se.pudo.guardar.el.servicio.verifica.los.datos");
     }
   };
 
@@ -77,7 +77,7 @@ export const ServiciosPage = () => {
       await cambiarEstadoServicio(servicio.idServicio, true);
       await cargarServicios();
     } catch {
-      setError("No se pudo cambiar el estado del servicio.");
+      setError("ui.no.se.pudo.cambiar.el.estado.del.servicio");
     }
   };
 
@@ -99,7 +99,7 @@ export const ServiciosPage = () => {
         />
       </div>
 
-      {error && <p className="page-error">{error}</p>}
+      {error && <p className="page-error">{localizeMessage(error, t)}</p>}
 
       {cargando ? (
         <p>{t("services.loading")}</p>

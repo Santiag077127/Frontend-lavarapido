@@ -1,6 +1,7 @@
 // Verifica con el backend el retorno de Wompi y muestra el estado del pago.
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { useTranslations, localizeMessage } from "@/theme/theme";
 import { useAuthStore } from "@/store/authStore";
 import { guardarDestinoTrasLogin } from "@/services/authRedirect";
 import { CobrarReservaButton } from "../../components/CobrarReservaButton/CobrarReservaButton";
@@ -9,6 +10,7 @@ import { verificarTransaccion } from "../../services/pagoService";
 import "./PagoResultadoPage.css";
 
 export const PagoResultadoPage = () => {
+  const t = useTranslations();
   const token = useAuthStore((state) => state.token);
   const location = useLocation();
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export const PagoResultadoPage = () => {
     if (!token || !idReserva || !referencia || !transactionId || verificadoRef.current === transactionId) return;
     verificadoRef.current = transactionId;
     void verificarTransaccion(idReserva, referencia, transactionId)
-      .catch(() => setMensaje("No se pudo verificar la transacción con Wompi. Consulta el estado del pago más tarde."));
+      .catch(() => setMensaje("ui.no.se.pudo.verificar.la.transaccion.con.wompi.consulta.el.estado"));
   }, [idReserva, referencia, token, transactionId]);
 
   if (!token) return <Navigate to="/login" replace />;
@@ -35,17 +37,17 @@ export const PagoResultadoPage = () => {
   return <main className="resultado-pago-page">
     <section className="resultado-pago-card">
       <p className="resultado-pago-eyebrow">Wompi</p>
-      <h1>Resultado del pago</h1>
-      <p className="resultado-pago-intro">La confirmación que ves aquí proviene del backend. El retorno de Wompi solo inició esta consulta.</p>
-      {mensaje && <p className="page-error" role="alert">{mensaje}</p>}
+      <h1>{t("ui.resultado.del.pago")}</h1>
+      <p className="resultado-pago-intro">{t("ui.la.confirmacion.que.ves.aqui.proviene.del.backend.el.retorno.de")}</p>
+      {mensaje && <p className="page-error" role="alert">{localizeMessage(mensaje, t)}</p>}
       {contexto ? <>
-        <p className="resultado-pago-referencia">Referencia esperada: <code>{contexto.referencia}</code></p>
+        <p className="resultado-pago-referencia">{t("ui.referencia.esperada") + " "}<code>{contexto.referencia}</code></p>
         <CobrarReservaButton idReserva={contexto.idReserva} habilitado={false} autoVerificar onPagoAprobado={() => undefined} onError={setMensaje} />
       </> : <div className="resultado-pago-sin-contexto">
-        <h2>No pudimos identificar la reserva</h2>
-        <p>El ID recibido en el retorno pertenece a la transacción de Wompi y no se usa como ID de reserva. Vuelve a reservas para consultar el pago correspondiente.</p>
+        <h2>{t("ui.no.pudimos.identificar.la.reserva")}</h2>
+        <p>{t("ui.el.id.recibido.en.el.retorno.pertenece.a.la.transaccion.de.wompi")}</p>
       </div>}
-      <Link className="resultado-pago-volver" to="/dashboard/turnos">Volver a reservas</Link>
+      <Link className="resultado-pago-volver" to="/dashboard/turnos">{t("ui.volver.a.reservas")}</Link>
     </section>
   </main>;
 };

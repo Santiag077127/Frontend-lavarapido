@@ -2,6 +2,7 @@
 import "./style.css";
 
 import logo from "../../../../assets/images/Logo.png";
+import { useTranslations } from "@/theme/theme";
 
 import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { LoginForm } from "../../components/LoginForm/LoginForm";
@@ -10,6 +11,7 @@ import { LoginForm } from "../../components/LoginForm/LoginForm";
  * Contiene branding (panel izquierdo) + formulario (panel derecho)
  */
 export const LoginPage = () => {
+  const t = useTranslations();
   return (
 
     <main className="lp-bg">
@@ -26,10 +28,8 @@ export const LoginPage = () => {
             className="lp-logo"
           />
 
-          <p className="lp-tagline">
-            Tu vehículo,
-            <br />
-            <strong>siempre impecable.</strong>
+          <p className="lp-tagline">{t("ui.tu.vehiculo")}<br />
+            <strong>{t("ui.siempre.impecable")}</strong>
           </p>
 
         </div>

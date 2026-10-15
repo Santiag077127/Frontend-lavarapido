@@ -1,7 +1,7 @@
 // Confirma el cierre de sesión antes de limpiar la cuenta.
 import "./LogoutModal.css";
 import { useContext } from "react";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, useTranslations } from "@/theme/theme";
 
 interface Props {
   onConfirmar: () => void;
@@ -10,7 +10,7 @@ interface Props {
 
 export const LogoutModal = ({ onConfirmar, onCancelar }: Props) => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
 
   return (
     // Clic en el fondo oscuro cancela

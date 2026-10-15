@@ -4,11 +4,13 @@ import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { api } from "@/services/api";
 import { guardarDestinoTrasLogin } from "@/services/authRedirect";
 import { useAuthStore } from "@/store/authStore";
+import { useTranslations } from "@/theme/theme";
 
 type Session = { userId: string; firstName: string; email: string; role: string };
 type Status = "checking" | "allowed" | "denied" | "unavailable";
 
 export function RequireAdmin() {
+  const t = useTranslations();
   const token = useAuthStore((state) => state.token);
   const setAuth = useAuthStore((state) => state.setAuth);
   const location = useLocation();
@@ -50,7 +52,7 @@ export function RequireAdmin() {
   }
   if (checkedToken === token && status === "denied") return <Navigate to="/access-denied" replace />;
   // Un fallo de red permite reintentar; una cuenta sin rol ADMIN va a acceso denegado.
-  if (checkedToken === token && status === "unavailable") return <main role="alert"><p>No se pudo verificar tu sesión.</p><button onClick={() => { setStatus("checking"); setAttempt((value) => value + 1); }}>Reintentar</button><Link to="/">Volver al inicio</Link></main>;
-  if (status !== "allowed" || verifiedToken !== token) return <main aria-busy="true">Verificando permisos…</main>;
+  if (checkedToken === token && status === "unavailable") return <main role="alert"><p>{t("ui.no.se.pudo.verificar.tu.sesion")}</p><button onClick={() => { setStatus("checking"); setAttempt((value) => value + 1); }}>{t("ui.reintentar")}</button><Link to="/">{t("ui.volver.al.inicio.2")}</Link></main>;
+  if (status !== "allowed" || verifiedToken !== token) return <main aria-busy="true">{t("ui.verificando.permisos")}</main>;
   return <Outlet />;
 }

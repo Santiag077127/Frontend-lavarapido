@@ -20,9 +20,9 @@ describe("ServiciosTable", () => {
     const cambiarEstado = vi.fn();
     render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} onCambiarEstado={cambiarEstado} />);
 
-    expect(screen.queryByRole("button", { name: "common.deactivate" })).toBeNull();
-    expect(screen.getAllByRole("button", { name: "common.edit" })).toHaveLength(2);
-    fireEvent.click(screen.getByRole("button", { name: "common.activate" }));
+    expect(screen.queryByRole("button", { name: "Desactivar" })).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Activar" }));
     expect(cambiarEstado).toHaveBeenCalledWith(expect.objectContaining({ idServicio: "Inactivo", estado: false }));
   });
 });

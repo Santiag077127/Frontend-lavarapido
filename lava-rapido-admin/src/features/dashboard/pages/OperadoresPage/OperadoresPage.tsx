@@ -2,21 +2,22 @@
 import "./OperadoresPage.css";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, formatTranslation, localizeMessage, useLocale, useTranslations } from "@/theme/theme";
 import { OperadorModal } from "../../components/OperadorModal/OperadorModal";
 import { ConfirmModal } from "../../components/ConfirmModal/ConfirmModal";
 import { cambiarEstadoOperador, crearOperador, desactivarTodosOperadores, listarOperadores, type Operador } from "../../services/operadorService";
 
-const errorMessage = (error: unknown, fallback: string) => axios.isAxiosError(error) ? error.response?.data?.error ?? fallback : fallback;
+const errorMessage = (error: unknown, fallback: string) => axios.isAxiosError(error) && error.response?.status === 403 ? "ui.no.tienes.permiso.para.realizar.esta.accion" : fallback;
 
 export const OperadoresPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
+  const locale = useLocale();
   const [operadores, setOperadores] = useState<Operador[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [exito, setExito] = useState<string | null>(null);
+  const [exito, setExito] = useState<number | null>(null);
   const [cambiandoId, setCambiandoId] = useState<string | null>(null);
   const [confirmarDesactivarTodos, setConfirmarDesactivarTodos] = useState(false);
   const [desactivandoTodos, setDesactivandoTodos] = useState(false);
@@ -24,7 +25,7 @@ export const OperadoresPage = () => {
   const cargarOperadores = async () => {
     setCargando(true); setError(null);
     try { setOperadores(await listarOperadores()); }
-    catch (e) { setError(errorMessage(e, "No se pudieron cargar los operadores.")); }
+    catch (e) { setError(errorMessage(e, "ui.no.se.pudieron.cargar.los.operadores")); }
     finally { setCargando(false); }
   };
 
@@ -35,14 +36,14 @@ export const OperadoresPage = () => {
     try {
       const actualizado = await cambiarEstadoOperador(operador.idOperador, !operador.estado);
       setOperadores(prev => prev.map(op => op.idOperador === operador.idOperador ? actualizado : op));
-    } catch (e) { setError(errorMessage(e, "No se pudo cambiar el estado del operador.")); }
+    } catch (e) { setError(errorMessage(e, "ui.no.se.pudo.cambiar.el.estado.del.operador")); }
     finally { setCambiandoId(null); }
   };
 
   // Convierte en operador una cuenta ya registrada, identificada por correo y documento.
   const handleAgregar = async (nuevo: { email: string; documentNumber: string }) => {
     try { const creado = await crearOperador(nuevo); setOperadores(prev => [creado, ...prev]); }
-    catch (e) { throw new Error(errorMessage(e, "No se pudo crear el operador.")); }
+    catch (e) { throw new Error(errorMessage(e, "ui.no.se.pudo.crear.el.operador")); }
     setModalVisible(false);
   };
 
@@ -58,21 +59,21 @@ export const OperadoresPage = () => {
       const actualizados = await listarOperadores();
       setOperadores(actualizados);
       const desactivados = Math.max(0, activosAntes - actualizados.filter(op => op.estado).length);
-      setExito(`Se desactivaron ${desactivados} operador${desactivados === 1 ? "" : "es"}.`);
+      setExito(desactivados);
       setConfirmarDesactivarTodos(false);
-    } catch (e) { setError(errorMessage(e, "No se pudieron desactivar los operadores.")); }
+    } catch (e) { setError(errorMessage(e, "ui.no.se.pudieron.desactivar.los.operadores")); }
     finally { setDesactivandoTodos(false); }
   };
 
   return <div className="op-page">
     <div className="op-header"><div><h2 className="op-titulo">{t("operators.title")}</h2><p className="op-subtitulo">{t("operators.subtitle")}</p></div><div className="op-header__actions"><button className="op-btn-desactivar-todos" onClick={() => setConfirmarDesactivarTodos(true)} disabled={activos === 0 || cargando}>{t("operators.disableAll")}</button><button className="op-btn-nuevo" onClick={() => setModalVisible(true)}>+ {t("operators.new")}</button></div></div>
-    {error && <p className="page-error">{error}</p>}
-    {exito && <p className="op-success">{exito}</p>}
+    {error && <p className="page-error">{localizeMessage(error, t)}</p>}
+    {exito !== null && <p className="op-success">{formatTranslation(t(exito === 1 ? "operators.deactivatedOne" : "operators.deactivatedMany"), { count: exito })}</p>}
     <div className="op-stats"><div className="op-stat"><p className="op-stat__valor">{operadores.length}</p><p className="op-stat__label">{t("common.total")}</p></div><div className="op-stat op-stat--activo"><p className="op-stat__valor">{activos}</p><p className="op-stat__label">{t("common.activePlural")}</p></div><div className="op-stat op-stat--inactivo"><p className="op-stat__valor">{inactivos}</p><p className="op-stat__label">{t("common.inactivePlural")}</p></div></div>
     <div className="op-tabla-wrapper"><table className="op-tabla"><thead><tr>{["#", t("common.name"), t("common.lastName"), t("common.email"), t("common.created"), t("common.status"), t("common.actions")].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>
-      {cargando ? <tr><td colSpan={7} className="op-col-dato">{t("operators.loading")}</td></tr> : operadores.length === 0 ? <tr><td colSpan={7} className="op-col-dato">{t("operators.empty")}</td></tr> : operadores.map((op, i) => <tr key={op.idOperador}><td className="op-col-num">{i + 1}</td><td className="op-col-nombre">{op.nombre}</td><td className="op-col-dato">{op.apellidos}</td><td className="op-col-dato">{op.email}</td><td className="op-col-dato">{op.createdAt ? new Date(op.createdAt).toLocaleDateString("es-CO") : "—"}</td><td><span className={`op-badge ${op.estado ? "op-badge--activo" : "op-badge--inactivo"}`}>{op.estado ? t("common.active") : t("common.inactive")}</span></td><td><button className={`op-btn-toggle ${op.estado ? "op-btn-toggle--desactivar" : "op-btn-toggle--activar"}`} onClick={() => toggleEstado(op)} disabled={cambiandoId === op.idOperador}>{cambiandoId === op.idOperador ? t("profile.saving") : op.estado ? t("common.deactivate") : t("common.activate")}</button></td></tr>)}
+      {cargando ? <tr><td colSpan={7} className="op-col-dato">{t("operators.loading")}</td></tr> : operadores.length === 0 ? <tr><td colSpan={7} className="op-col-dato">{t("operators.empty")}</td></tr> : operadores.map((op, i) => <tr key={op.idOperador}><td className="op-col-num">{i + 1}</td><td className="op-col-nombre">{op.nombre}</td><td className="op-col-dato">{op.apellidos}</td><td className="op-col-dato">{op.email}</td><td className="op-col-dato">{op.createdAt ? new Date(op.createdAt).toLocaleDateString(locale) : "—"}</td><td><span className={`op-badge ${op.estado ? "op-badge--activo" : "op-badge--inactivo"}`}>{op.estado ? t("common.active") : t("common.inactive")}</span></td><td><button className={`op-btn-toggle ${op.estado ? "op-btn-toggle--desactivar" : "op-btn-toggle--activar"}`} onClick={() => toggleEstado(op)} disabled={cambiandoId === op.idOperador}>{cambiandoId === op.idOperador ? t("profile.saving") : op.estado ? t("common.deactivate") : t("common.activate")}</button></td></tr>)}
     </tbody></table></div>
     {modalVisible && <OperadorModal onGuardar={handleAgregar} onCancelar={() => setModalVisible(false)} />}
-    {confirmarDesactivarTodos && <ConfirmModal titulo="Desactivar todos los operadores" mensaje="¿Seguro que querés desactivar a todos los operadores activos?" textoConfirmar={desactivandoTodos ? "Desactivando..." : "Sí, desactivar"} textoVolver="Cancelar" onConfirmar={desactivarTodos} onCancelar={() => !desactivandoTodos && setConfirmarDesactivarTodos(false)} />}
+    {confirmarDesactivarTodos && <ConfirmModal titulo={t("ui.desactivar.todos.los.operadores")} mensaje={t("ui.seguro.que.queres.desactivar.a.todos.los.operadores.activos")} textoConfirmar={desactivandoTodos ? t("ui.desactivando") : t("ui.si.desactivar")} textoVolver={t("common.cancel")} onConfirmar={desactivarTodos} onCancelar={() => !desactivandoTodos && setConfirmarDesactivarTodos(false)} />}
   </div>;
 };

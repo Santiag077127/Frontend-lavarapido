@@ -1,6 +1,7 @@
 // Inicia Wompi y consulta el estado del pago hasta obtener confirmación.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { useTranslations, useLocale, localizeMessage } from "@/theme/theme";
 import { useAuthStore } from "@/store/authStore";
 import {
   consultarPago,
@@ -34,42 +35,42 @@ const POLL_INTERVAL_MS = 4_000;
 const POLL_MAX_DURATION_MS = 120_000;
 
 const mensajePagoError = (error: unknown, accion: "consultar" | "iniciar" | "reconciliar") => {
-  if (!axios.isAxiosError(error)) return `No se pudo ${accion} el pago.`;
-  if (!error.response) return "No hay conexión con el servidor. Conservamos el pago como pendiente hasta poder verificarlo.";
+  if (!axios.isAxiosError(error)) return "payments.failedAction";
+  if (!error.response) return "ui.no.hay.conexion.con.el.servidor.conservamos.el.pago.como.pendient";
   switch (error.response.status) {
-    case 401: return "Tu sesión expiró. Inicia sesión para continuar la consulta del pago.";
-    case 403: return accion === "reconciliar" ? "Solo un administrador puede verificar el pago con Wompi." : "No tienes acceso a este pago.";
-    case 404: return "No se encontró información de pago para esta reserva.";
+    case 401: return "ui.tu.sesion.expiro.inicia.sesion.para.continuar.la.consulta.del.pag";
+    case 403: return accion === "reconciliar" ? "ui.solo.un.administrador.puede.verificar.el.pago.con.wompi" : "ui.no.tienes.acceso.a.este.pago";
+    case 404: return "ui.no.se.encontro.informacion.de.pago.para.esta.reserva";
     case 409: return accion === "reconciliar"
-      ? "No existe un intento pendiente elegible para verificar con Wompi."
-      : "El pago no se puede iniciar en el estado actual de la reserva o el precio cambió.";
-    case 422: return "Wompi devolvió datos incompatibles. El pago requiere revisión administrativa.";
-    case 502: return "Wompi no está disponible en este momento. Intenta verificar más tarde.";
-    default: return "No fue posible completar la operación de pago. Intenta de nuevo más tarde.";
+      ? "ui.no.existe.un.intento.pendiente.elegible.para.verificar.con.wompi"
+      : "ui.el.pago.no.se.puede.iniciar.en.el.estado.actual.de.la.reserva.o.e";
+    case 422: return "ui.wompi.devolvio.datos.incompatibles.el.pago.requiere.revision.admi";
+    case 502: return "ui.wompi.no.esta.disponible.en.este.momento.intenta.verificar.mas.ta";
+    default: return "ui.no.fue.posible.completar.la.operacion.de.pago.intenta.de.nuevo.ma";
   }
 };
 
-const formatoDinero = (valor: number) => new Intl.NumberFormat("es-CO", {
+const formatoDinero = (valor: number, locale: string) => new Intl.NumberFormat(locale, {
   style: "currency",
   currency: "COP",
   maximumFractionDigits: 0,
 }).format(valor);
 
-const formatoFecha = (valor: string | null | undefined) => valor
-  ? new Date(valor).toLocaleString("es-CO")
-  : "Sin confirmar";
+const formatoFecha = (valor: string | null | undefined, locale: string) => valor
+  ? new Date(valor).toLocaleString(locale)
+  : "ui.sin.confirmar";
 
 const etiquetaMetodo = (valor: string | null | undefined) => {
-  if (!valor) return "Por confirmar";
-  const conocidos: Record<string, string> = { CARD: "Tarjeta", NEQUI: "Nequi", PSE: "PSE", BANCOLOMBIA_TRANSFER: "Transferencia Bancolombia" };
+  if (!valor) return "ui.por.confirmar";
+  const conocidos: Record<string, string> = { CARD: "ui.tarjeta", NEQUI: "Nequi", PSE: "PSE", BANCOLOMBIA_TRANSFER: "ui.transferencia.bancolombia" };
   return conocidos[valor.toUpperCase()] ?? valor.replace(/_/g, " ");
 };
 
 const etiquetaIntento = (intento: PagoIntento) => ({
-  pendiente: "Pendiente",
-  aprobado: "Aprobado",
-  rechazado: "Rechazado",
-  aprobado_duplicado: "Posible cobro duplicado",
+  pendiente: "payments.status.pending",
+  aprobado: "payments.status.approved",
+  rechazado: "payments.status.rejected",
+  aprobado_duplicado: "ui.posible.cobro.duplicado",
 }[intento.estado]);
 
 export const CobrarReservaButton = ({
@@ -81,6 +82,8 @@ export const CobrarReservaButton = ({
   onPagoAprobado,
   onError,
 }: Props) => {
+  const t = useTranslations();
+  const locale = useLocale();
   const { listo, cargando: cargandoScript, error: errorScript, reintentar: reintentarScript } = useWompiWidget();
   const esAdmin = useAuthStore((state) => state.user?.role === "ADMIN");
   const [pago, setPago] = useState<Pago | null>(null);
@@ -210,7 +213,7 @@ export const CobrarReservaButton = ({
   const cobrar = async () => {
     if (!listo || iniciando) return;
     if (!reservarFlujoWompi(idReserva)) {
-      onErrorRef.current("Ya hay un pago de Wompi abierto o iniciándose. Finalízalo o espera antes de abrir otro.");
+      onErrorRef.current("ui.ya.hay.un.pago.de.wompi.abierto.o.iniciandose.finalizalo.o.espera");
       return;
     }
     setIniciando(true);
@@ -218,7 +221,7 @@ export const CobrarReservaButton = ({
     try {
       const config = await iniciarPago(idReserva);
       const Checkout = window.WidgetCheckout;
-      if (!Checkout) throw new Error("Wompi no está disponible.");
+      if (!Checkout) throw new Error("ui.wompi.no.esta.disponible");
       guardarContextoPago({ idReserva, referencia: config.referencia });
       const checkout = new Checkout(crearConfiguracionWidget(config));
       // El resultado del widget inicia la verificación; no confirma el pago por sí solo.
@@ -263,43 +266,43 @@ export const CobrarReservaButton = ({
   const intentoPendiente = pago ? [...pago.intentos].reverse().find((intento) => intento.estado === "pendiente") ?? null : null;
   const puedePagar = habilitado && (!pago || pago.estado === "rechazado" || pago.estado === "pendiente");
 
-  if (consultando && !pago) return <span className="pago-estado">Consultando pago…</span>;
-  if (consultaError && !pago) return <span className="pago-error">{consultaError} <button type="button" className="pago-refrescar" onClick={refrescarUnaVez}>Reintentar consulta</button></span>;
-  if (errorScript && puedePagar) return <span className="pago-error">No se pudo cargar Wompi. <button type="button" className="pago-refrescar" onClick={reintentarScript}>Reintentar</button></span>;
+  if (consultando && !pago) return <span className="pago-estado">{t("ui.consultando.pago")}</span>;
+  if (consultaError && !pago) return <span className="pago-error">{localizeMessage(consultaError, t)} <button type="button" className="pago-refrescar" onClick={refrescarUnaVez}>{t("ui.reintentar.consulta")}</button></span>;
+  if (errorScript && puedePagar) return <span className="pago-error">{t("ui.no.se.pudo.cargar.wompi") + " "}<button type="button" className="pago-refrescar" onClick={reintentarScript}>{t("ui.reintentar")}</button></span>;
 
   if (compacto) {
     return <div className="pago-compacto">
-      {pago?.estado === "aprobado" && <span className="badge pago-aprobado">Pagado</span>}
-      {pago?.estado === "rechazado" && <span className="badge pago-rechazado">Rechazado</span>}
-      {pago?.estado === "pendiente" && <span className="badge pago-pendiente">Pendiente</span>}
-      {tieneDuplicado && <span className="pago-incidencia-mini" title="Posible doble cobro">Revisar</span>}
-      {pago?.estado === "pendiente" && <button type="button" className="pago-refrescar" disabled={verificando} onClick={iniciarVerificacion}>{verificando ? "Verificando…" : "Consultar"}</button>}
-      {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn pago-btn--compacto" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? "Abriendo…" : pago ? "Continuar" : "Cobrar"}</button>}
+      {pago?.estado === "aprobado" && <span className="badge pago-aprobado">{t("ui.pagado")}</span>}
+      {pago?.estado === "rechazado" && <span className="badge pago-rechazado">{t("ui.rechazado")}</span>}
+      {pago?.estado === "pendiente" && <span className="badge pago-pendiente">{t("common.pending")}</span>}
+      {tieneDuplicado && <span className="pago-incidencia-mini" title={t("ui.posible.doble.cobro")}>{t("ui.revisar")}</span>}
+      {pago?.estado === "pendiente" && <button type="button" className="pago-refrescar" disabled={verificando} onClick={iniciarVerificacion}>{verificando ? t("payments.verifying") : t("payments.check")}</button>}
+      {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn pago-btn--compacto" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? t("payments.opening") : pago ? t("payments.continue") : t("payments.charge")}</button>}
     </div>;
   }
 
   return <div className="pago-panel">
     <div className="pago-resumen">
-      <div><span className="pago-label">Estado financiero</span><strong className={`pago-valor pago-valor--${pago?.estado ?? "sin-pago"}`}>{pago ? pago.estado : "Sin iniciar"}</strong></div>
-      <div><span className="pago-label">Estado operativo</span><strong className="pago-valor">{estadoReserva?.replace(/_/g, " ") ?? "Consultar reserva"}</strong></div>
-      {pago && <div><span className="pago-label">Monto</span><strong className="pago-valor">{formatoDinero(pago.monto)}</strong></div>}
-      {pago && <div><span className="pago-label">Método real</span><strong className="pago-valor">{etiquetaMetodo(pago.intentoActual?.wompiPaymentMethodType)}</strong></div>}
+      <div><span className="pago-label">{t("ui.estado.financiero")}</span><strong className={`pago-valor pago-valor--${pago?.estado ?? "sin-pago"}`}>{pago ? t(`payments.status.${pago.estado === "aprobado" ? "approved" : pago.estado === "rechazado" ? "rejected" : "pending"}`) : t("ui.sin.iniciar")}</strong></div>
+      <div><span className="pago-label">{t("ui.estado.operativo")}</span><strong className="pago-valor">{estadoReserva ? t(({ PENDIENTE: "common.pending", ASIGNADA: "common.assigned", EN_PROCESO: "common.inProgress", FINALIZADA: "common.finished", CANCELADA: "common.cancelled" } as Record<EstadoReserva, string>)[estadoReserva]) : t("ui.consultar.reserva")}</strong></div>
+      {pago && <div><span className="pago-label">{t("ui.monto")}</span><strong className="pago-valor">{formatoDinero(pago.monto, locale)}</strong></div>}
+      {pago && <div><span className="pago-label">{t("ui.metodo.real")}</span><strong className="pago-valor">{localizeMessage(etiquetaMetodo(pago.intentoActual?.wompiPaymentMethodType), t)}</strong></div>}
     </div>
 
-    {pago?.intentoActual && <p className="pago-detalle">Referencia: <code>{pago.intentoActual.referencia}</code><br />Confirmación: {formatoFecha(pago.fechaPago ?? pago.intentoActual.fechaConfirmacion)}</p>}
-    {pago?.estado === "aprobado" && estadoReserva === "PENDIENTE" && <p className="pago-aviso">Pago confirmado. La reserva sigue pendiente de asignación.</p>}
-    {pago?.estado === "aprobado" && estadoReserva === "CANCELADA" && <p className="pago-incidencia">La reserva continúa cancelada, pero recibió una aprobación tardía. Requiere revisión.</p>}
-    {tieneDuplicado && <p className="pago-incidencia">Posible doble cobro detectado. Revisa los intentos; no se ha prometido ni ejecutado un reembolso automático.</p>}
-    {esperaAgotada && <p className="pago-aviso">Pago pendiente de confirmación. Puedes consultar de nuevo sin iniciar otro cobro.</p>}
-    {verificando && <p className="pago-estado">Consultando confirmación del backend…</p>}
+    {pago?.intentoActual && <p className="pago-detalle">{t("ui.referencia") + " "}<code>{pago.intentoActual.referencia}</code><br />{t("ui.confirmacion") + " "}{localizeMessage(formatoFecha(pago.fechaPago ?? pago.intentoActual.fechaConfirmacion, locale), t)}</p>}
+    {pago?.estado === "aprobado" && estadoReserva === "PENDIENTE" && <p className="pago-aviso">{t("ui.pago.confirmado.la.reserva.sigue.pendiente.de.asignacion")}</p>}
+    {pago?.estado === "aprobado" && estadoReserva === "CANCELADA" && <p className="pago-incidencia">{t("ui.la.reserva.continua.cancelada.pero.recibio.una.aprobacion.tardia")}</p>}
+    {tieneDuplicado && <p className="pago-incidencia">{t("ui.posible.doble.cobro.detectado.revisa.los.intentos.no.se.ha.prome")}</p>}
+    {esperaAgotada && <p className="pago-aviso">{t("ui.pago.pendiente.de.confirmacion.puedes.consultar.de.nuevo.sin.ini")}</p>}
+    {verificando && <p className="pago-estado">{t("ui.consultando.confirmacion.del.backend")}</p>}
 
     <div className="pago-acciones">
-      {pago?.estado === "pendiente" && <button type="button" className="pago-btn-secundario" disabled={verificando || consultando} onClick={iniciarVerificacion}>{verificando ? "Verificando…" : esperaAgotada ? "Consultar de nuevo" : "Actualizar estado"}</button>}
-      {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? "Abriendo Wompi…" : pago?.estado === "rechazado" ? "Reintentar pago" : pago?.estado === "pendiente" ? "Continuar en Wompi" : "Pagar con Wompi"}</button>}
-      {esAdmin && intentoPendiente?.wompiTransactionId && <button type="button" className="pago-btn-secundario" disabled={reconciliando} onClick={reconciliar}>{reconciliando ? "Verificando…" : "Verificar con Wompi"}</button>}
+      {pago?.estado === "pendiente" && <button type="button" className="pago-btn-secundario" disabled={verificando || consultando} onClick={iniciarVerificacion}>{verificando ? t("payments.verifying") : esperaAgotada ? t("ui.consultar.de.nuevo") : t("ui.actualizar.estado")}</button>}
+      {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? t("ui.abriendo.wompi") : pago?.estado === "rechazado" ? t("ui.reintentar.pago") : pago?.estado === "pendiente" ? t("ui.continuar.en.wompi") : t("ui.pagar.con.wompi")}</button>}
+      {esAdmin && intentoPendiente?.wompiTransactionId && <button type="button" className="pago-btn-secundario" disabled={reconciliando} onClick={reconciliar}>{reconciliando ? t("payments.verifying") : t("ui.verificar.con.wompi")}</button>}
     </div>
-    {esAdmin && intentoPendiente && !intentoPendiente.wompiTransactionId && <p className="pago-ayuda">La verificación automática no está disponible hasta que exista un ID de transacción.</p>}
+    {esAdmin && intentoPendiente && !intentoPendiente.wompiTransactionId && <p className="pago-ayuda">{t("ui.la.verificacion.automatica.no.esta.disponible.hasta.que.exista.u")}</p>}
 
-    {pago && pago.intentos.length > 0 && <details className="pago-historial"><summary>Historial de intentos ({pago.intentos.length})</summary><ol>{pago.intentos.map((intento) => <li key={intento.idIntento} className={intento.estado === "aprobado_duplicado" ? "pago-intento--incidencia" : ""}><strong>{etiquetaIntento(intento)}</strong> · {etiquetaMetodo(intento.wompiPaymentMethodType)}<br /><span>{intento.referencia} · {formatoFecha(intento.fechaConfirmacion ?? intento.createdAt)}</span></li>)}</ol></details>}
+    {pago && pago.intentos.length > 0 && <details className="pago-historial"><summary>{t("ui.historial.de.intentos")}{pago.intentos.length})</summary><ol>{pago.intentos.map((intento) => <li key={intento.idIntento} className={intento.estado === "aprobado_duplicado" ? "pago-intento--incidencia" : ""}><strong>{localizeMessage(etiquetaIntento(intento), t)}</strong> · {localizeMessage(etiquetaMetodo(intento.wompiPaymentMethodType), t)}<br /><span>{intento.referencia} · {localizeMessage(formatoFecha(intento.fechaConfirmacion ?? intento.createdAt, locale), t)}</span></li>)}</ol></details>}
   </div>;
 };

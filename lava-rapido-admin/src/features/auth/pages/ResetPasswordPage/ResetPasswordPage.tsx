@@ -6,13 +6,13 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 import { resetPassword } from "../../services/authService";
 import { HomeButton } from "../../components/HomeButton/HomeButton";
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export const ResetPasswordPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -28,17 +28,17 @@ export const ResetPasswordPage = () => {
     setError("");
 
     if (!token) {
-      setError("El enlace no es válido o ya expiró.");
+      setError("ui.el.enlace.no.es.valido.o.ya.expiro");
       return;
     }
 
     if (!PASSWORD_REGEX.test(password)) {
-      setError("La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número.");
+      setError("ui.la.contrasena.debe.tener.minimo.8.caracteres.una.mayuscula.una.mi");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError("ui.las.contrasenas.no.coinciden");
       return;
     }
 
@@ -55,15 +55,15 @@ export const ResetPasswordPage = () => {
       const backendMsg: string | undefined = err.response?.data?.message;
 
       if (backendMsg?.includes("expirado")) {
-        setError("El enlace ha expirado. Solicita uno nuevo.");
+        setError("ui.el.enlace.ha.expirado.solicita.uno.nuevo");
       } else if (backendMsg?.includes("utilizado")) {
-        setError("Este enlace ya fue utilizado. Solicita uno nuevo.");
+        setError("ui.este.enlace.ya.fue.utilizado.solicita.uno.nuevo");
       } else if (status === 400 || status === 404) {
-        setError("El enlace no es válido. Solicita uno nuevo.");
+        setError("ui.el.enlace.no.es.valido.solicita.uno.nuevo");
       } else if (status >= 500) {
-        setError("Error del servidor. Inténtalo de nuevo más tarde.");
+        setError("ui.error.del.servidor.intentalo.de.nuevo.mas.tarde.2");
       } else {
-        setError("Error de conexión. Verifica tu internet.");
+        setError("ui.error.de.conexion.verifica.tu.internet.2");
       }
     } finally {
       setIsLoading(false);
@@ -78,10 +78,7 @@ export const ResetPasswordPage = () => {
         <div className="rsp-success-box">
           <span className="rsp-success-icon">✓</span>
           <h2 className="rsp-success-title">{t("auth.passwordUpdated")}</h2>
-          <p className="rsp-success-msg">
-            Tu contraseña se actualizó correctamente.<br />
-            Serás redirigido…
-          </p>
+          <p className="rsp-success-msg">{t("ui.tu.contrasena.se.actualizo.correctamente")}<br />{t("ui.seras.redirigido")}</p>
         </div>
       </div>
     );
@@ -93,13 +90,9 @@ export const ResetPasswordPage = () => {
       <div className="rsp-page">
         <HomeButton />
         <div className="rsp-success-box">
-          <h2 className="rsp-success-title">Enlace inválido</h2>
-          <p className="rsp-success-msg">
-            Este enlace no tiene un token válido o ya fue usado.
-          </p>
-          <Link to="/forgot-password" className="rsp-btn-link">
-            Solicitar un nuevo enlace
-          </Link>
+          <h2 className="rsp-success-title">{t("ui.enlace.invalido")}</h2>
+          <p className="rsp-success-msg">{t("ui.este.enlace.no.tiene.un.token.valido.o.ya.fue.usado")}</p>
+          <Link to="/forgot-password" className="rsp-btn-link">{t("ui.solicitar.un.nuevo.enlace")}</Link>
         </div>
       </div>
     );
@@ -121,7 +114,7 @@ export const ResetPasswordPage = () => {
         {error && (
           <div className="rsp-error" role="alert" aria-live="polite">
             <span className="rsp-error-icon">⚠</span>
-            {error}
+            {localizeMessage(error, t)}
           </div>
         )}
 
@@ -133,7 +126,7 @@ export const ResetPasswordPage = () => {
             <input
               id="rsp-password"
               type="password"
-              placeholder="Mín. 8 caracteres"
+              placeholder={t("ui.min.8.caracteres")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="rsp-input"
@@ -150,7 +143,7 @@ export const ResetPasswordPage = () => {
             <input
               id="rsp-confirm"
               type="password"
-              placeholder="Repite la contraseña"
+              placeholder={t("ui.repite.la.contrasena")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="rsp-input"

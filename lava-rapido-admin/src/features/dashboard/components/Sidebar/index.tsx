@@ -1,10 +1,9 @@
-// Muestra navegación del panel y acceso a notificaciones.
+// Muestra la navegación del panel administrativo.
 import "./Sidebar.css";
 
 import { useContext, useEffect, useState } from "react";
 import {
   Car,
-  Bell,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -17,25 +16,15 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, useTranslations } from "../../../../theme/theme";
 import logo from "../../../../assets/images/Logo.png";
-import { notificacionesApi } from "../../services/notificacionService";
 
 export const Sidebar = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [colapsado, setColapsado] = useState<boolean>(() => {
     return localStorage.getItem("sidebar-colapsado") === "true";
   });
-  const [pendientes, setPendientes] = useState(0);
-  useEffect(() => {
-    let activo = true;
-    const actualizar = () => { void notificacionesApi.contar().then(n => { if (activo) setPendientes(n); }).catch(() => {}); };
-    actualizar();
-    window.addEventListener("notificaciones:actualizadas", actualizar);
-    return () => { activo = false; window.removeEventListener("notificaciones:actualizadas", actualizar); };
-  }, []);
-
   useEffect(() => {
     localStorage.setItem("sidebar-colapsado", String(colapsado));
   }, [colapsado]);
@@ -47,8 +36,8 @@ export const Sidebar = () => {
           className="sidebar-collapse"
           type="button"
           onClick={() => setColapsado(!colapsado)}
-          aria-label={colapsado ? "Expandir menú lateral" : "Colapsar menú lateral"}
-          title={colapsado ? "Expandir menú lateral" : "Colapsar menú lateral"}
+          aria-label={colapsado ? t("ui.expandir.menu.lateral") : t("ui.colapsar.menu.lateral")}
+          title={colapsado ? t("ui.expandir.menu.lateral") : t("ui.colapsar.menu.lateral")}
         >
           {colapsado ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
@@ -58,9 +47,6 @@ export const Sidebar = () => {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/dashboard/notificaciones" className={({ isActive }) => isActive ? "sidebar-link sidebar-link--active" : "sidebar-link"}>
-            <Bell size={18} aria-hidden="true" /><span>Notificaciones {pendientes > 0 ? `(${pendientes})` : ""}</span>
-          </NavLink>
           <NavLink to="/dashboard/panel" className={({ isActive }) => isActive ? "sidebar-link sidebar-link--active" : "sidebar-link"}>
             <Home size={18} aria-hidden="true" />
             <span>{t("nav.home")}</span>

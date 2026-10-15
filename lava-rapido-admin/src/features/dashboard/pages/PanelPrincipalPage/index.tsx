@@ -2,15 +2,13 @@
 import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import axios from "axios";
 import { CalendarDays, CheckCircle2, Clock3, DollarSign, TimerReset, XCircle } from "lucide-react";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, localizeMessage, useLocale, useTranslations } from "@/theme/theme";
 import { listarReservas, type EstadoReserva, type Reserva } from "../../services/reservaService";
 import "./PanelPrincipalPage.css";
 
 const errorMessage = (error: unknown, fallback: string) =>
-  axios.isAxiosError(error)
-    ? error.response?.data?.error ||
-      (error.response?.status === 403 ? "No tienes permiso para realizar esta acción." : fallback)
-    : fallback;
+  axios.isAxiosError(error) && error.response?.status === 403
+    ? "ui.no.tienes.permiso.para.realizar.esta.accion" : fallback;
 
 const esFechaDeHoy = (fechaReserva: string) => {
   const [year, month, day] = fechaReserva.split("-").map(Number);
@@ -31,23 +29,21 @@ const esFechaDelMesActual = (fechaReserva: string) => {
   return year === hoy.getFullYear() && month === hoy.getMonth() + 1;
 };
 
-const formatoCOP = new Intl.NumberFormat("es-CO", {
-  style: "currency",
-  currency: "COP",
-  maximumFractionDigits: 0,
-});
-
 const estadoConfig: Record<EstadoReserva, { className: string; label: string }> = {
-  PENDIENTE: { className: "badge badge--pendiente", label: "Pendiente" },
-  ASIGNADA: { className: "badge badge--pendiente", label: "Asignada" },
-  EN_PROCESO: { className: "badge badge--en-proceso", label: "En proceso" },
-  FINALIZADA: { className: "badge badge--finalizado", label: "Finalizada" },
-  CANCELADA: { className: "badge badge--cancelada", label: "Cancelada" },
+  PENDIENTE: { className: "badge badge--pendiente", label: "common.pending" },
+  ASIGNADA: { className: "badge badge--pendiente", label: "common.assigned" },
+  EN_PROCESO: { className: "badge badge--en-proceso", label: "common.inProgress" },
+  FINALIZADA: { className: "badge badge--finalizado", label: "common.finished" },
+  CANCELADA: { className: "badge badge--cancelada", label: "common.cancelled" },
 };
 
 export const PanelPrincipalPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
+  const locale = useLocale();
+  const formatoCOP = useMemo(() => new Intl.NumberFormat(locale, {
+    style: "currency", currency: "COP", maximumFractionDigits: 0,
+  }), [locale]);
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +56,7 @@ export const PanelPrincipalPage = () => {
       const data = await listarReservas();
       setReservas(data);
     } catch (e) {
-      setError(errorMessage(e, "No se pudieron cargar las reservas."));
+      setError(errorMessage(e, "ui.no.se.pudieron.cargar.las.reservas"));
     } finally {
       setCargando(false);
     }
@@ -122,7 +118,7 @@ export const PanelPrincipalPage = () => {
         <StatCard label={t("panel.totalToday")} value={total} className="stat--morado" icon={<CalendarDays size={20} />} />
       </div>
 
-      <section className="monthly-summary" aria-label="Estadísticas mensuales">
+      <section className="monthly-summary" aria-label={t("ui.estadisticas.mensuales")}>
         <div className="monthly-card monthly-card--primary">
           <span>{t("panel.monthIncome")}</span>
           <strong>{formatoCOP.format(ingresosMes)}</strong>
@@ -145,7 +141,7 @@ export const PanelPrincipalPage = () => {
         </div>
       </section>
 
-      <section className="admin-strip" aria-label="Indicadores rápidos">
+      <section className="admin-strip" aria-label={t("ui.indicadores.rapidos")}>
         <div>
           <DollarSign size={18} />
           <span>{t("panel.monthIncome")}</span>
@@ -173,7 +169,7 @@ export const PanelPrincipalPage = () => {
           <h3 className="turnos-card__titulo">{t("panel.currentTurns")}</h3>
         </div>
 
-        {error && <p className="page-error">{error}</p>}
+        {error && <p className="page-error">{localizeMessage(error, t)}</p>}
 
         <div className="turnos-tabla-wrapper">
           <table className="turnos-tabla">
@@ -213,11 +209,11 @@ export const PanelPrincipalPage = () => {
                     <td className="col-vehiculo">{reserva.placaVehiculo}</td>
                     <td>{reserva.nombreServicio}</td>
                     <td className={reserva.operadorNombre ? "col-operador" : "col-operador col-operador--muted"}>
-                      {reserva.operadorNombre || "Sin asignar"}
+                      {reserva.operadorNombre || t("ui.sin.asignar")}
                     </td>
                     <td>
                       <span className={estadoConfig[reserva.estado].className}>
-                        {estadoConfig[reserva.estado].label}
+                        {t(estadoConfig[reserva.estado].label)}
                       </span>
                     </td>
                     <td className="col-hora">{reserva.horaReserva}</td>

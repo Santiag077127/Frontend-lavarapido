@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "@/store/authStore";
+import { useContext } from "react";
+import { ThemeContext, ThemeProvider, type LanguageOption } from "@/theme/theme";
 import type { Pago, PagoIntento, PagoWidgetResponse } from "../../services/pagoService";
 
 const pagosMock = vi.hoisted(() => ({ consultar: vi.fn(), iniciar: vi.fn(), reconciliar: vi.fn(), verificar: vi.fn() }));
@@ -78,6 +80,23 @@ const inicio: PagoWidgetResponse = {
 let callbackWidget: ((result: { transaction?: { id?: string } }) => void) | undefined;
 
 describe("CobrarReservaButton", () => {
+  it("updates payment status and actions when the language changes", async () => {
+    pagosMock.consultar.mockResolvedValue(pago({ estado: "pendiente" }));
+    function LanguageControl() {
+      const theme = useContext(ThemeContext)!;
+      return <select aria-label="language" value={theme.language} onChange={(e) => theme.setLanguage(e.target.value as LanguageOption)}>
+        <option value="es">es</option><option value="en">en</option><option value="fr">fr</option>
+      </select>;
+    }
+    render(<ThemeProvider><LanguageControl /><CobrarReservaButton idReserva="reserva-1" habilitado estadoReserva="PENDIENTE" onPagoAprobado={vi.fn()} onError={vi.fn()} /></ThemeProvider>);
+    await screen.findByText("Estado financiero");
+    fireEvent.change(screen.getByLabelText("language"), { target: { value: "en" } });
+    expect(screen.getByText("Payment status")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Continue in Wompi" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("language"), { target: { value: "fr" } });
+    expect(screen.getByText("Statut du paiement")).toBeTruthy();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     callbackWidget = undefined;

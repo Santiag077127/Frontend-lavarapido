@@ -13,7 +13,7 @@ import {
   Sun,
   UsersRound,
 } from "lucide-react";
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, useTranslations } from "../../../../theme/theme";
 import type { LanguageOption } from "../../../../theme/theme";
 import logo from "../../../../assets/images/Logo.png";
 import "./LandingPage.css";
@@ -51,11 +51,11 @@ const featureCards = [
 const LandingPage = () => {
   const navigate = useNavigate();
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
 
   return (
     <main className="landing-root">
-      <nav className="landing-nav" aria-label="Navegación principal">
+      <nav className="landing-nav" aria-label={t("ui.navegacion.principal")}>
         <Link to="/" className="landing-brand" aria-label="Lava Rápido Vehicular">
           <img src={logo} alt="" />
           <span>{t("landing.brand")}</span>
@@ -87,11 +87,11 @@ const LandingPage = () => {
           <button
             className="nav-pill nav-mode"
             type="button"
-            aria-label="Cambiar modo de color"
+            aria-label={t("ui.cambiar.modo.de.color")}
             onClick={() => theme?.setDarkMode(!theme.darkMode)}
           >
             {theme?.darkMode ? <Moon size={16} /> : <Sun size={16} />}
-            <span>{theme?.darkMode ? "Oscuro" : "Claro"}</span>
+            <span>{theme?.darkMode ? t("mode.darkShort") : t("mode.lightShort")}</span>
           </button>
           <button className="admin-access" type="button" onClick={() => navigate("/login")}>
             <LockKeyhole size={16} />
@@ -125,27 +125,27 @@ const LandingPage = () => {
           </p>
         </div>
 
-        <div className="hero-visual" aria-label="Vista previa del panel administrativo">
+        <div className="hero-visual" aria-label={t("ui.vista.previa.del.panel.administrativo")}>
           <div className="dashboard-mockup">
             <div className="mockup-header">
               <div>
-                <span>Panel de hoy</span>
-                <strong>Reservas activas</strong>
+                <span>{t("ui.panel.de.hoy")}</span>
+                <strong>{t("ui.reservas.activas")}</strong>
               </div>
               <CheckCircle2 size={22} />
             </div>
 
             <div className="mockup-stats">
               <article>
-                <span>Turnos</span>
+                <span>{t("turns.title")}</span>
                 <strong>18</strong>
               </article>
               <article>
-                <span>En proceso</span>
+                <span>{t("turns.inProgress")}</span>
                 <strong>06</strong>
               </article>
               <article>
-                <span>Pagos</span>
+                <span>{t("ui.pagos")}</span>
                 <strong>12</strong>
               </article>
             </div>
@@ -154,24 +154,24 @@ const LandingPage = () => {
               <div className="mockup-row">
                 <span className="status-dot active" />
                 <div>
-                  <strong>Camioneta SUV</strong>
-                  <span>Lavado premium</span>
+                  <strong>{t("ui.camioneta.suv")}</strong>
+                  <span>{t("ui.lavado.premium")}</span>
                 </div>
                 <small>09:30</small>
               </div>
               <div className="mockup-row">
                 <span className="status-dot pending" />
                 <div>
-                  <strong>Automóvil</strong>
-                  <span>Pago pendiente</span>
+                  <strong>{t("ui.automovil")}</strong>
+                  <span>{t("ui.pago.pendiente")}</span>
                 </div>
                 <small>10:15</small>
               </div>
               <div className="mockup-row">
                 <span className="status-dot done" />
                 <div>
-                  <strong>Moto</strong>
-                  <span>Servicio finalizado</span>
+                  <strong>{t("ui.moto")}</strong>
+                  <span>{t("ui.servicio.finalizado")}</span>
                 </div>
                 <small>11:00</small>
               </div>
@@ -180,7 +180,7 @@ const LandingPage = () => {
             <div className="mockup-floating-card">
               <MapPin size={18} />
               <div>
-                <strong>Sede activa</strong>
+                <strong>{t("ui.sede.activa")}</strong>
                 <span>Neiva, Huila</span>
               </div>
             </div>
