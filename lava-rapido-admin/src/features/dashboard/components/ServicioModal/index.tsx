@@ -2,7 +2,7 @@
 import "./ServicioModal.css";
 
 import { useContext, useState, useEffect } from "react";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import type { Servicio, ServicioForm } from "../../types";
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ServicioForm, string>>>({});
   const [form, setForm] = useState<ServicioForm>({
     nombre: "",
@@ -41,17 +41,17 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
     const errors: Partial<Record<keyof ServicioForm, string>> = {};
     const nombre = nextForm.nombre.trim();
 
-    if (!nombre) errors.nombre = "El nombre del servicio es obligatorio.";
+    if (!nombre) errors.nombre = "ui.el.nombre.del.servicio.es.obligatorio";
     else if (!/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/.test(nombre)) {
-      errors.nombre = "El nombre del servicio no puede contener números ni símbolos.";
-    } else if (nombre.length < 3) errors.nombre = "El nombre debe tener mínimo 3 caracteres.";
+      errors.nombre = "ui.el.nombre.del.servicio.no.puede.contener.numeros.ni.simbolos";
+    } else if (nombre.length < 3) errors.nombre = "ui.el.nombre.debe.tener.minimo.3.caracteres";
 
     if (!Number.isFinite(nextForm.precio) || nextForm.precio <= 0) {
-      errors.precio = "El precio debe ser mayor que cero.";
+      errors.precio = "ui.el.precio.debe.ser.mayor.que.cero";
     }
 
     if (!Number.isFinite(nextForm.duracionMinutos) || nextForm.duracionMinutos < 15 || nextForm.duracionMinutos > 180) {
-      errors.duracionMinutos = "La duración debe estar entre 15 y 180 minutos.";
+      errors.duracionMinutos = "ui.la.duracion.debe.estar.entre.15.y.180.minutos";
     }
 
     return errors;
@@ -76,7 +76,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
     setFieldErrors((current) => ({
       ...current,
       [name]: sanitizedValue !== value
-        ? "El nombre del servicio no puede contener números ni símbolos."
+        ? "ui.el.nombre.del.servicio.no.puede.contener.numeros.ni.simbolos"
         : errors[name as keyof ServicioForm] || "",
     }));
   };
@@ -108,7 +108,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
               maxLength={100}
               required
             />
-            {fieldErrors.nombre && <p className="modal-field-error">{fieldErrors.nombre}</p>}
+            {fieldErrors.nombre && <p className="modal-field-error">{localizeMessage(fieldErrors.nombre, t)}</p>}
           </div>
           <div className="modal-field">
             <label>{t("common.price")} ($)</label>
@@ -121,10 +121,10 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
               className={fieldErrors.precio ? "modal-input-error" : ""}
               required
             />
-            {fieldErrors.precio && <p className="modal-field-error">{fieldErrors.precio}</p>}
+            {fieldErrors.precio && <p className="modal-field-error">{localizeMessage(fieldErrors.precio, t)}</p>}
           </div>
           <div className="modal-field">
-            <label>{t("common.duration")} (min)</label>
+            <label>{t("common.duration")}{" " + t("ui.min")}</label>
             <input
               name="duracionMinutos"
               type="number"
@@ -135,7 +135,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
               className={fieldErrors.duracionMinutos ? "modal-input-error" : ""}
               required
             />
-            {fieldErrors.duracionMinutos && <p className="modal-field-error">{fieldErrors.duracionMinutos}</p>}
+            {fieldErrors.duracionMinutos && <p className="modal-field-error">{localizeMessage(fieldErrors.duracionMinutos, t)}</p>}
           </div>
           <div className="modal-field">
             <label>{t("common.description")}</label>

@@ -1,5 +1,8 @@
 // Mantiene el tema oscuro, el idioma y las traducciones compartidas por la web.
-import { createContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { uiTranslations } from "./uiTranslations";
+import { dynamicTranslations } from "./dynamicTranslations";
+import { extraTranslations } from "./extraTranslations";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type LanguageOption = "es" | "en" | "fr" | "pt";
 
@@ -13,9 +16,47 @@ interface ThemeContextValue {
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+export const FALLBACK_LANGUAGE: LanguageOption = "es";
+const missingTranslationKeys = new Set<string>();
+export const getMissingTranslationKeys = () => [...missingTranslationKeys];
+
+function translate(language: LanguageOption, key: string): string {
+  const value = translations[language][key];
+  if (value) return value;
+  const identifier = `${language}:${key}`;
+  if (!missingTranslationKeys.has(identifier)) {
+    missingTranslationKeys.add(identifier);
+    console.warn(`[i18n] Missing translation: ${identifier}`);
+  }
+  return translations[FALLBACK_LANGUAGE][key] || key;
+}
+
+export function useTranslations() {
+  const theme = useContext(ThemeContext);
+  return theme?.t ?? ((key: string) => translate(FALLBACK_LANGUAGE, key));
+}
+
+// State may contain a translation key or a message returned by the server.
+// Server and user content stays untouched; keys are resolved at render time.
+export function localizeMessage(value: string, t: (key: string) => string): string {
+  return /^(ui|common|auth|profile|services|vehicles|brands|operators|turns|panel|map|payments|booking|app)\./.test(value)
+    ? t(value)
+    : value;
+}
+
+export function formatTranslation(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) =>
+    Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match);
+}
+
+export function useLocale(): string {
+  const language = useContext(ThemeContext)?.language ?? FALLBACK_LANGUAGE;
+  return { es: "es-CO", en: "en-US", fr: "fr-FR", pt: "pt-BR" }[language];
+}
+
 const getStoredBoolean = (key: string) => localStorage.getItem(key) === "true";
 
-const translations: Record<LanguageOption, Record<string, string>> = {
+export const translations: Record<LanguageOption, Record<string, string>> = {
   es: {
     "nav.home": "Inicio",
     "nav.services": "Servicios",
@@ -192,6 +233,9 @@ const translations: Record<LanguageOption, Record<string, string>> = {
     "map.title": "Ubicaciones",
     "map.subtitle": "Puntos de atención registrados",
     "map.panel": "Autolavados",
+    ...uiTranslations.es,
+    ...dynamicTranslations.es,
+    ...extraTranslations.es,
   },
   en: {
     "nav.home": "Home",
@@ -369,6 +413,9 @@ const translations: Record<LanguageOption, Record<string, string>> = {
     "map.title": "Locations",
     "map.subtitle": "Registered service points",
     "map.panel": "Car washes",
+    ...uiTranslations.en,
+    ...dynamicTranslations.en,
+    ...extraTranslations.en,
   },
   fr: {
     "nav.home": "Accueil",
@@ -546,6 +593,9 @@ const translations: Record<LanguageOption, Record<string, string>> = {
     "map.title": "Emplacements",
     "map.subtitle": "Points de service enregistrés",
     "map.panel": "Lavages auto",
+    ...uiTranslations.fr,
+    ...dynamicTranslations.fr,
+    ...extraTranslations.fr,
   },
   pt: {
     "nav.home": "Início",
@@ -723,6 +773,9 @@ const translations: Record<LanguageOption, Record<string, string>> = {
     "map.title": "Localizações",
     "map.subtitle": "Pontos de atendimento registrados",
     "map.panel": "Lava-rápidos",
+    ...uiTranslations.pt,
+    ...dynamicTranslations.pt,
+    ...extraTranslations.pt,
   },
 };
 
@@ -746,6 +799,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
+    document.title = translate(language, "app.title");
     localStorage.setItem("lava-language", language);
   }, [language]);
 
@@ -755,7 +809,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setDarkMode,
       language,
       setLanguage,
-      t: (key: string) => translations[language][key] || translations.es[key] || key,
+      t: (key: string) => translate(language, key),
     }),
     [darkMode, language]
   );

@@ -1,7 +1,7 @@
 // Lista y filtra marcas y permite registrar nuevas marcas.
 import { useContext, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getMarcas, createMarca } from "@/features/dashboard/services/marcaService";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import type { Marca } from "@/features/dashboard/types";
 import "./MarcasPage.css";
 
@@ -23,7 +23,7 @@ const NOMBRE_VALIDO = /^[\p{L}\p{N} .&'-]+$/u;
 
 export const MarcasPage = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export const MarcasPage = () => {
       const data = await getMarcas();
       setMarcas(data);
     } catch {
-      setError("No se pudieron cargar las marcas.");
+      setError("ui.no.se.pudieron.cargar.las.marcas");
     } finally {
       setCargando(false);
     }
@@ -76,13 +76,13 @@ export const MarcasPage = () => {
   const nombreLimpio = limpiarNombre(nombreNueva);
   const nombreDuplicado = marcas.some((marca) => compararNombre(marca.nombre) === compararNombre(nombreLimpio));
   const nombreError = !nombreLimpio
-    ? "Escribe un nombre de marca."
+    ? "ui.escribe.un.nombre.de.marca"
     : !NOMBRE_VALIDO.test(nombreLimpio)
-      ? "Usa letras, números, espacios, punto, guion, apóstrofo o &."
+      ? "ui.usa.letras.numeros.espacios.punto.guion.apostrofo.o"
     : nombreLimpio.length > 30
-      ? "El nombre no puede superar los 30 caracteres."
+      ? "ui.el.nombre.no.puede.superar.los.30.caracteres"
       : nombreDuplicado
-        ? "Ya existe una marca con ese nombre."
+        ? "ui.ya.existe.una.marca.con.ese.nombre"
         : null;
   const nombresSimilares = nombreLimpio.length >= 2
     ? marcas.filter((marca) => compararNombre(marca.nombre).includes(compararNombre(nombreLimpio))).slice(0, 5)
@@ -92,7 +92,7 @@ export const MarcasPage = () => {
     event.preventDefault();
     const nombre = limpiarNombre(nombreNueva);
     if (!nombre || nombreError) {
-      setError(nombreError || "Escribe un nombre de marca.");
+      setError(nombreError || "ui.escribe.un.nombre.de.marca");
       return;
     }
     try {
@@ -103,11 +103,10 @@ export const MarcasPage = () => {
       setNombreNueva("");
       setNombreTocado(false);
       setFormAbierto(false);
-      setMensaje("Marca creada correctamente.");
+      setMensaje("ui.marca.creada.correctamente");
       await cargarMarcas();
     } catch (error) {
-      const response = (error as { response?: { data?: unknown } }).response?.data;
-      setError(typeof response === "string" && response ? response : "No se pudo crear la marca.");
+      setError("ui.no.se.pudo.crear.la.marca");
     } finally {
       setGuardando(false);
     }
@@ -120,9 +119,7 @@ export const MarcasPage = () => {
           <h1>{t("brands.title")}</h1>
           <p>{t("brands.subtitle")}</p>
         </div>
-        <button className="marca-btn-nueva" type="button" onClick={() => { setError(null); setMensaje(null); setNombreTocado(false); setFormAbierto(true); }}>
-          + Nueva marca
-        </button>
+        <button className="marca-btn-nueva" type="button" onClick={() => { setError(null); setMensaje(null); setNombreTocado(false); setFormAbierto(true); }}>{t("ui.nueva.marca")}</button>
       </div>
 
       <div className="stats-grid">
@@ -161,23 +158,23 @@ export const MarcasPage = () => {
         />
       </div>
 
-      {error && <p className="page-error">{error}</p>}
-      {mensaje && <p className="page-exito" role="status">{mensaje}</p>}
+      {error && <p className="page-error">{localizeMessage(error, t)}</p>}
+      {mensaje && <p className="page-exito" role="status">{localizeMessage(mensaje, t)}</p>}
 
       {formAbierto && (
         <div className="marca-modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget && !guardando) setFormAbierto(false); }}>
           <form className="marca-modal" role="dialog" aria-modal="true" aria-labelledby="marca-modal-titulo" onSubmit={handleCrear}>
-            <h2 id="marca-modal-titulo">Nueva marca</h2>
-            <p>La nueva marca quedará activa en el catálogo.</p>
-            <label htmlFor="marca-nombre">Nombre de la marca</label>
-            <input id="marca-nombre" autoFocus maxLength={30} required value={nombreNueva} onChange={(event) => { setNombreNueva(event.target.value); setNombreTocado(true); setError(null); }} onBlur={() => setNombreTocado(true)} className={nombreTocado && nombreNueva ? nombreError ? "marca-input--error" : "marca-input--valid" : ""} placeholder="Ej. Toyota" aria-invalid={nombreTocado && Boolean(nombreError)} aria-describedby={nombreTocado && nombreError ? "marca-nombre-ayuda marca-nombre-error" : "marca-nombre-ayuda"} />
-            <p id="marca-nombre-ayuda" className="marca-modal-ayuda">Se permiten nombres como Mercedes-Benz, BMW o Land Rover.</p>
-            {nombresSimilares.length > 0 && <p className="marca-modal-similares">Coincidencias existentes: {nombresSimilares.map((marca) => marca.nombre).join(", ")}</p>}
-            {nombreTocado && nombreError && <p className="page-error" id="marca-nombre-error" role="alert">{nombreError}</p>}
-            {error && <p className="page-error" role="alert">{error}</p>}
+            <h2 id="marca-modal-titulo">{t("ui.nueva.marca.2")}</h2>
+            <p>{t("ui.la.nueva.marca.quedara.activa.en.el.catalogo")}</p>
+            <label htmlFor="marca-nombre">{t("ui.nombre.de.la.marca")}</label>
+            <input id="marca-nombre" autoFocus maxLength={30} required value={nombreNueva} onChange={(event) => { setNombreNueva(event.target.value); setNombreTocado(true); setError(null); }} onBlur={() => setNombreTocado(true)} className={nombreTocado && nombreNueva ? nombreError ? "marca-input--error" : "marca-input--valid" : ""} placeholder={t("form.brandExample")} aria-invalid={nombreTocado && Boolean(nombreError)} aria-describedby={nombreTocado && nombreError ? "marca-nombre-ayuda marca-nombre-error" : "marca-nombre-ayuda"} />
+            <p id="marca-nombre-ayuda" className="marca-modal-ayuda">{t("ui.se.permiten.nombres.como.mercedes.benz.bmw.o.land.rover")}</p>
+            {nombresSimilares.length > 0 && <p className="marca-modal-similares">{t("ui.coincidencias.existentes") + " "}{nombresSimilares.map((marca) => marca.nombre).join(", ")}</p>}
+            {nombreTocado && nombreError && <p className="page-error" id="marca-nombre-error" role="alert">{localizeMessage(nombreError, t)}</p>}
+            {error && <p className="page-error" role="alert">{localizeMessage(error, t)}</p>}
             <div className="marca-modal-acciones">
-              <button type="button" onClick={() => setFormAbierto(false)} disabled={guardando}>Cancelar</button>
-              <button type="submit" disabled={guardando || !nombreLimpio || Boolean(nombreError)}>{guardando ? "Guardando..." : "Crear marca"}</button>
+              <button type="button" onClick={() => setFormAbierto(false)} disabled={guardando}>{t("common.cancel")}</button>
+              <button type="submit" disabled={guardando || !nombreLimpio || Boolean(nombreError)}>{guardando ? t("profile.saving") : t("ui.crear.marca")}</button>
             </div>
           </form>
         </div>

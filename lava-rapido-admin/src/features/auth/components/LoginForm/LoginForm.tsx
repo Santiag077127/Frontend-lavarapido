@@ -7,12 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { login } from "../../services/authService";
 import { useAuthStore } from "../../../../store/authStore"; 
 import type { AuthState } from "../../../../store/authStore";
-import { ThemeContext } from "../../../../theme/theme";
+import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
 import { consumirDestinoTrasLogin } from "../../../../services/authRedirect";
 
 export const LoginForm = () => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +23,8 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const setAuth  = useAuthStore((state: AuthState) => state.setAuth);
 
-  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "Ingresa un correo electrónico válido.";
-  const passwordError = password.trim() ? "" : "Ingresa tu contraseña.";
+  const emailError = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? "" : "ui.ingresa.un.correo.electronico.valido";
+  const passwordError = password.trim() ? "" : "ui.ingresa.tu.contrasena";
   const puedeEnviar = !emailError && !passwordError && !isLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,11 +58,11 @@ export const LoginForm = () => {
 
     } catch (error: any) {
       if (error.response?.status === 401) {
-        setError("Credenciales incorrectas");
+        setError("ui.credenciales.incorrectas");
       } else if (error.response?.status >= 500) {
-        setError("Error del servidor. Inténtalo de nuevo más tarde");
+        setError("ui.error.del.servidor.intentalo.de.nuevo.mas.tarde");
       } else {
-        setError("Error de conexión. Verifica tu internet");
+        setError("ui.error.de.conexion.verifica.tu.internet");
       }
     } finally {
       setIsLoading(false);
@@ -77,7 +77,7 @@ export const LoginForm = () => {
       {error && (
         <div className="lf-error" role="alert" aria-live="polite">
           <span className="lf-error-icon">⚠</span>
-          {error}
+          {localizeMessage(error, t)}
         </div>
       )}
 
@@ -88,7 +88,7 @@ export const LoginForm = () => {
           <input
             id="lf-email"
             type="email"
-            placeholder="ejemplo@correo.com"
+            placeholder={t("form.emailExample")}
             value={email}
             onChange={(e) => { setEmail(e.target.value); setEmailTocado(true); setError(""); }}
             onBlur={() => setEmailTocado(true)}
@@ -98,7 +98,7 @@ export const LoginForm = () => {
             aria-invalid={emailTocado && Boolean(emailError)}
             aria-describedby={emailTocado && emailError ? "lf-email-error" : undefined}
           />
-          {emailTocado && emailError && <p className="lf-field-error" id="lf-email-error">{emailError}</p>}
+          {emailTocado && emailError && <p className="lf-field-error" id="lf-email-error">{localizeMessage(emailError, t)}</p>}
         </div>
 
         <div className="lf-field">
@@ -119,7 +119,7 @@ export const LoginForm = () => {
             aria-invalid={passwordTocada && Boolean(passwordError)}
             aria-describedby={passwordTocada && passwordError ? "lf-password-error" : undefined}
           />
-          {passwordTocada && passwordError && <p className="lf-field-error" id="lf-password-error">{passwordError}</p>}
+          {passwordTocada && passwordError && <p className="lf-field-error" id="lf-password-error">{localizeMessage(passwordError, t)}</p>}
         </div>
 
         <button

@@ -1,7 +1,7 @@
 // Presenta servicios y sus acciones en una tabla.
 import { useContext } from "react";
 import type { Servicio } from "@/features/dashboard/types";
-import { ThemeContext } from "@/theme/theme";
+import { ThemeContext, useLocale, useTranslations } from "@/theme/theme";
 import "./ServiciosTable.css";
 
 interface ServiciosTableProps {
@@ -16,7 +16,8 @@ export const ServiciosTable = ({
   onCambiarEstado,
 }: ServiciosTableProps) => {
   const theme = useContext(ThemeContext);
-  const t = theme?.t ?? ((key: string) => key);
+  const t = useTranslations();
+  const locale = useLocale();
 
   return (
     <table className="tabla-servicios">
@@ -37,7 +38,7 @@ export const ServiciosTable = ({
             <td className="tabla-descripcion" title={servicio.descripcion}>
               {servicio.descripcion || "—"}
             </td>
-            <td>${servicio.precio.toLocaleString("es-CO")}</td>
+            <td>${servicio.precio.toLocaleString(locale)}</td>
             <td>{servicio.duracionMinutos} min</td>
             <td>
               <span

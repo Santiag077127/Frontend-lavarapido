@@ -1,8 +1,0 @@
-/* Define los estilos visuales de bandeja de notificaciones. */
-.notificaciones-page { max-width: 820px; margin: 0 auto; padding: 24px; }
-.notificaciones-actions { display: flex; gap: 16px; align-items: center; margin: 16px 0; }
-.notificaciones-lista { padding: 0; list-style: none; }
-.notificaciones-lista li { padding: 18px; border: 1px solid var(--border-color, #aaa); border-radius: 10px; margin: 10px 0; }
-.notificaciones-lista li.sin-leer { border-left: 4px solid #2367a8; }
-.notificaciones-lista li > div:first-child { display: flex; justify-content: space-between; gap: 12px; }
-.notificaciones-lista time { font-size: .85rem; }
