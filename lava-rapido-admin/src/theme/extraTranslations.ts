@@ -13,6 +13,7 @@ export const extraTranslations = {
     "payments.status.duplicate": "Posible cobro duplicado",
     "booking.cancelTitle": "Cancelar reserva", "booking.cancelPrompt": "¿Seguro que deseas cancelar la reserva de {name}?",
     "booking.yesCancel": "Sí, cancelar", "common.back": "Volver", "common.confirm": "Confirmar",
+    "brands.updated": "Marca actualizada correctamente.", "brands.saveFailed": "No se pudo guardar la marca.", "profile.emailInvalid": "Ingresa un correo electrónico válido de máximo 100 caracteres.", "profile.currentPassword": "Contraseña actual", "profile.passwordRequired": "Ingresa tu contraseña actual para cambiar el correo.", "profile.emailOrPasswordInvalid": "Revisa el correo o la contraseña actual.", "profile.sessionChanged": "La sesión cambió. Vuelve a iniciar sesión con tu nuevo correo.", "turns.pastTime": "La hora elegida ya pasó. Selecciona una fecha y hora futuras.", "turns.occupiedTime": "La hora elegida ya está ocupada para este vehículo.",
     "operators.deactivatedOne": "Se desactivó {count} operador.", "operators.deactivatedMany": "Se desactivaron {count} operadores.",
   },
   en: {
@@ -28,6 +29,7 @@ export const extraTranslations = {
     "payments.status.duplicate": "Possible duplicate charge",
     "booking.cancelTitle": "Cancel booking", "booking.cancelPrompt": "Are you sure you want to cancel {name}'s booking?",
     "booking.yesCancel": "Yes, cancel", "common.back": "Back", "common.confirm": "Confirm",
+    "brands.updated": "Brand updated successfully.", "brands.saveFailed": "Could not save the brand.", "profile.emailInvalid": "Enter a valid email address of at most 100 characters.", "profile.currentPassword": "Current password", "profile.passwordRequired": "Enter your current password to change your email.", "profile.emailOrPasswordInvalid": "Check the email address or current password.", "profile.sessionChanged": "Your session changed. Sign in again with your new email address.", "turns.pastTime": "That time has passed. Choose a future date and time.", "turns.occupiedTime": "That time is already booked for this vehicle.",
     "operators.deactivatedOne": "Deactivated {count} operator.", "operators.deactivatedMany": "Deactivated {count} operators.",
   },
   fr: {
@@ -43,6 +45,7 @@ export const extraTranslations = {
     "payments.status.duplicate": "Double débit possible",
     "booking.cancelTitle": "Annuler la réservation", "booking.cancelPrompt": "Voulez-vous vraiment annuler la réservation de {name} ?",
     "booking.yesCancel": "Oui, annuler", "common.back": "Retour", "common.confirm": "Confirmer",
+    "brands.updated": "Marque modifiée avec succès.", "brands.saveFailed": "Impossible d'enregistrer la marque.", "profile.emailInvalid": "Saisissez une adresse e-mail valide de 100 caractères maximum.", "profile.currentPassword": "Mot de passe actuel", "profile.passwordRequired": "Saisissez votre mot de passe actuel pour changer l'adresse e-mail.", "profile.emailOrPasswordInvalid": "Vérifiez l'adresse e-mail ou le mot de passe actuel.", "profile.sessionChanged": "La session a changé. Reconnectez-vous avec votre nouvelle adresse e-mail.", "turns.pastTime": "Cette heure est passée. Choisissez une date et une heure futures.", "turns.occupiedTime": "Cette heure est déjà réservée pour ce véhicule.",
     "operators.deactivatedOne": "{count} opérateur désactivé.", "operators.deactivatedMany": "{count} opérateurs désactivés.",
   },
   pt: {
@@ -58,6 +61,7 @@ export const extraTranslations = {
     "payments.status.duplicate": "Possível cobrança duplicada",
     "booking.cancelTitle": "Cancelar reserva", "booking.cancelPrompt": "Tem certeza de que deseja cancelar a reserva de {name}?",
     "booking.yesCancel": "Sim, cancelar", "common.back": "Voltar", "common.confirm": "Confirmar",
+    "brands.updated": "Marca atualizada com sucesso.", "brands.saveFailed": "Não foi possível salvar a marca.", "profile.emailInvalid": "Informe um e-mail válido com até 100 caracteres.", "profile.currentPassword": "Senha atual", "profile.passwordRequired": "Informe sua senha atual para alterar o e-mail.", "profile.emailOrPasswordInvalid": "Verifique o e-mail ou a senha atual.", "profile.sessionChanged": "A sessão mudou. Entre novamente com o novo e-mail.", "turns.pastTime": "Esse horário já passou. Escolha uma data e hora futuras.", "turns.occupiedTime": "Esse horário já está ocupado para este veículo.",
     "operators.deactivatedOne": "{count} operador desativado.", "operators.deactivatedMany": "{count} operadores desativados.",
   },
 } as const;

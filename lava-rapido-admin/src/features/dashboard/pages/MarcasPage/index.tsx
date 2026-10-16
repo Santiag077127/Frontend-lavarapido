@@ -1,17 +1,9 @@
 // Lista y filtra marcas y permite registrar nuevas marcas.
 import { useContext, useEffect, useMemo, useState, type FormEvent } from "react";
-import { getMarcas, createMarca } from "@/features/dashboard/services/marcaService";
+import { getMarcas, createMarca, updateMarca } from "@/features/dashboard/services/marcaService";
 import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import type { Marca } from "@/features/dashboard/types";
 import "./MarcasPage.css";
-
-type FiltroEstado = "todos" | "activos" | "inactivos";
-
-const FILTROS: { label: string; value: FiltroEstado }[] = [
-  { label: "common.all", value: "todos" },
-  { label: "common.activePlural", value: "activos" },
-  { label: "common.inactivePlural", value: "inactivos" },
-];
 
 const limpiarNombre = (valor: string) => valor.trim().replace(/\s+/g, " ");
 // Compara nombres sin acentos ni mayúsculas para detectar duplicados visibles.
@@ -27,7 +19,7 @@ export const MarcasPage = () => {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<FiltroEstado>("todos");
+  const [marcaEditando, setMarcaEditando] = useState<Marca | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [formAbierto, setFormAbierto] = useState(false);
   const [nombreNueva, setNombreNueva] = useState("");
@@ -55,17 +47,12 @@ export const MarcasPage = () => {
   const marcasFiltradas = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
     return marcas.filter((marca) => {
-      const coincideEstado =
-        filtro === "todos" ||
-        (filtro === "activos" && marca.estado) ||
-        (filtro === "inactivos" && !marca.estado);
-
       const coincideBusqueda =
         texto === "" || marca.nombre.toLowerCase().includes(texto);
 
-      return coincideEstado && coincideBusqueda;
+      return coincideBusqueda;
     });
-  }, [marcas, filtro, busqueda]);
+  }, [marcas, busqueda]);
 
   const stats = useMemo(() => ({
     activos: marcas.filter((m) => m.estado).length,
@@ -74,7 +61,7 @@ export const MarcasPage = () => {
   }), [marcas]);
 
   const nombreLimpio = limpiarNombre(nombreNueva);
-  const nombreDuplicado = marcas.some((marca) => compararNombre(marca.nombre) === compararNombre(nombreLimpio));
+  const nombreDuplicado = marcas.some((marca) => marca.idMarca !== marcaEditando?.idMarca && compararNombre(marca.nombre) === compararNombre(nombreLimpio));
   const nombreError = !nombreLimpio
     ? "ui.escribe.un.nombre.de.marca"
     : !NOMBRE_VALIDO.test(nombreLimpio)
@@ -99,14 +86,16 @@ export const MarcasPage = () => {
       setGuardando(true);
       setError(null);
       setMensaje(null);
-      await createMarca({ nombre });
+      if (marcaEditando) await updateMarca(marcaEditando.idMarca, { nombre });
+      else await createMarca({ nombre });
       setNombreNueva("");
+      setMarcaEditando(null);
       setNombreTocado(false);
       setFormAbierto(false);
-      setMensaje("ui.marca.creada.correctamente");
+      setMensaje(marcaEditando ? "brands.updated" : "ui.marca.creada.correctamente");
       await cargarMarcas();
     } catch (error) {
-      setError("ui.no.se.pudo.crear.la.marca");
+      setError(marcaEditando ? "brands.saveFailed" : "ui.no.se.pudo.crear.la.marca");
     } finally {
       setGuardando(false);
     }
@@ -119,7 +108,7 @@ export const MarcasPage = () => {
           <h1>{t("brands.title")}</h1>
           <p>{t("brands.subtitle")}</p>
         </div>
-        <button className="marca-btn-nueva" type="button" onClick={() => { setError(null); setMensaje(null); setNombreTocado(false); setFormAbierto(true); }}>{t("ui.nueva.marca")}</button>
+        <button className="marca-btn-nueva" type="button" onClick={() => { setError(null); setMensaje(null); setNombreTocado(false); setMarcaEditando(null); setNombreNueva(""); setFormAbierto(true); }}>{t("ui.nueva.marca")}</button>
       </div>
 
       <div className="stats-grid">
@@ -138,17 +127,6 @@ export const MarcasPage = () => {
       </div>
 
       <div className="page-filtros">
-        <div className="filtros-group">
-          {FILTROS.map((f) => (
-            <button
-              key={f.value}
-              className={`filtro-btn ${filtro === f.value ? "filtro-activo" : ""}`}
-              onClick={() => setFiltro(f.value)}
-            >
-              {t(f.label)}
-            </button>
-          ))}
-        </div>
         <input
           className="page-buscador"
           type="text"
@@ -164,8 +142,7 @@ export const MarcasPage = () => {
       {formAbierto && (
         <div className="marca-modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget && !guardando) setFormAbierto(false); }}>
           <form className="marca-modal" role="dialog" aria-modal="true" aria-labelledby="marca-modal-titulo" onSubmit={handleCrear}>
-            <h2 id="marca-modal-titulo">{t("ui.nueva.marca.2")}</h2>
-            <p>{t("ui.la.nueva.marca.quedara.activa.en.el.catalogo")}</p>
+            <h2 id="marca-modal-titulo">{marcaEditando ? t("common.edit") : t("ui.nueva.marca.2")}</h2>
             <label htmlFor="marca-nombre">{t("ui.nombre.de.la.marca")}</label>
             <input id="marca-nombre" autoFocus maxLength={30} required value={nombreNueva} onChange={(event) => { setNombreNueva(event.target.value); setNombreTocado(true); setError(null); }} onBlur={() => setNombreTocado(true)} className={nombreTocado && nombreNueva ? nombreError ? "marca-input--error" : "marca-input--valid" : ""} placeholder={t("form.brandExample")} aria-invalid={nombreTocado && Boolean(nombreError)} aria-describedby={nombreTocado && nombreError ? "marca-nombre-ayuda marca-nombre-error" : "marca-nombre-ayuda"} />
             <p id="marca-nombre-ayuda" className="marca-modal-ayuda">{t("ui.se.permiten.nombres.como.mercedes.benz.bmw.o.land.rover")}</p>
@@ -174,7 +151,7 @@ export const MarcasPage = () => {
             {error && <p className="page-error" role="alert">{localizeMessage(error, t)}</p>}
             <div className="marca-modal-acciones">
               <button type="button" onClick={() => setFormAbierto(false)} disabled={guardando}>{t("common.cancel")}</button>
-              <button type="submit" disabled={guardando || !nombreLimpio || Boolean(nombreError)}>{guardando ? t("profile.saving") : t("ui.crear.marca")}</button>
+              <button type="submit" disabled={guardando || !nombreLimpio || Boolean(nombreError)}>{guardando ? t("profile.saving") : marcaEditando ? t("common.save") : t("ui.crear.marca")}</button>
             </div>
           </form>
         </div>
@@ -190,18 +167,14 @@ export const MarcasPage = () => {
             <thead>
               <tr>
                 <th>{t("common.name")}</th>
-                <th>{t("common.status")}</th>
+                <th>{t("common.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {marcasFiltradas.map((marca) => (
                 <tr key={marca.idMarca}>
                   <td>{marca.nombre}</td>
-                  <td>
-                    <span className={`badge ${marca.estado ? "badge--activo" : "badge--inactivo"}`}>
-                      {marca.estado ? t("common.active") : t("common.inactive")}
-                    </span>
-                  </td>
+                  <td><button className="marca-btn-editar" type="button" onClick={() => { setMarcaEditando(marca); setNombreNueva(marca.nombre); setNombreTocado(false); setError(null); setMensaje(null); setFormAbierto(true); }}>{t("common.edit")}</button></td>
                 </tr>
               ))}
             </tbody>

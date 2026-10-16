@@ -3,10 +3,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Marca } from "@/features/dashboard/types";
 
-const marcasMock = vi.hoisted(() => ({ listar: vi.fn(), crear: vi.fn() }));
+const marcasMock = vi.hoisted(() => ({ listar: vi.fn(), crear: vi.fn(), editar: vi.fn() }));
 vi.mock("@/features/dashboard/services/marcaService", () => ({
   getMarcas: marcasMock.listar,
   createMarca: marcasMock.crear,
+  updateMarca: marcasMock.editar,
 }));
 
 import { MarcasPage } from "./index";
@@ -20,12 +21,13 @@ describe("MarcasPage", () => {
     vi.clearAllMocks();
     marcasMock.listar.mockResolvedValue([marca]);
     marcasMock.crear.mockResolvedValue(marca);
+    marcasMock.editar.mockResolvedValue({ ...marca, nombre: "MAZDA" });
   });
 
-  it("permite crear una marca sin mostrar una columna de acciones", async () => {
+  it("permite crear una marca y muestra la accion editar", async () => {
     render(<MarcasPage />);
     expect(await screen.findByText("TOYOTA")).toBeTruthy();
-    expect(screen.queryByRole("columnheader", { name: "common.actions" })).toBeNull();
+    expect(screen.getByRole("columnheader", { name: "Acciones" })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /Nueva marca/i }));
     fireEvent.change(screen.getByLabelText("Nombre de la marca"), { target: { value: "Mazda" } });
@@ -33,6 +35,15 @@ describe("MarcasPage", () => {
 
     await waitFor(() => expect(marcasMock.crear).toHaveBeenCalledWith({ nombre: "Mazda" }));
     expect(await screen.findByText("Marca creada correctamente.")).toBeTruthy();
+  });
+
+  it("permite corregir el nombre de una marca", async () => {
+    render(<MarcasPage />);
+    await screen.findByText("TOYOTA");
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+    fireEvent.change(screen.getByLabelText("Nombre de la marca"), { target: { value: "Mazda" } });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+    await waitFor(() => expect(marcasMock.editar).toHaveBeenCalledWith("marca-1", { nombre: "Mazda" }));
   });
 
   it("filtra nombres repetidos y caracteres no admitidos antes de guardar", async () => {

@@ -1,5 +1,5 @@
 // Prueba el comportamiento de tabla de servicios.
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Servicio } from "@/features/dashboard/types";
 import { ServiciosTable } from "./index";
@@ -17,12 +17,11 @@ const servicio = (id: string, estado: boolean): Servicio => ({
 
 describe("ServiciosTable", () => {
   it("solo permite activar servicios inactivos y mantiene la edición", () => {
-    const cambiarEstado = vi.fn();
-    render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} onCambiarEstado={cambiarEstado} />);
+    render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} />);
 
     expect(screen.queryByRole("button", { name: "Desactivar" })).toBeNull();
     expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
-    fireEvent.click(screen.getByRole("button", { name: "Activar" }));
-    expect(cambiarEstado).toHaveBeenCalledWith(expect.objectContaining({ idServicio: "Inactivo", estado: false }));
+    expect(screen.queryByRole("button", { name: "Activar" })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Estado" })).toBeNull();
   });
 });

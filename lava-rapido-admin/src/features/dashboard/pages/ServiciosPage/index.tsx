@@ -7,7 +7,6 @@ import {
   getServicios,
   createServicio,
   updateServicio,
-  cambiarEstadoServicio,
 } from "@/features/dashboard/services/servicioService";
 import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
@@ -71,16 +70,6 @@ export const ServiciosPage = () => {
     }
   };
 
-  const handleCambiarEstado = async (servicio: Servicio) => {
-    setError(null);
-    try {
-      await cambiarEstadoServicio(servicio.idServicio, true);
-      await cargarServicios();
-    } catch {
-      setError("ui.no.se.pudo.cambiar.el.estado.del.servicio");
-    }
-  };
-
   return (
     <div className="page-servicios">
       <div className="page-header">
@@ -110,7 +99,6 @@ export const ServiciosPage = () => {
           <ServiciosTable
             servicios={serviciosFiltrados}
             onEditar={handleEditar}
-            onCambiarEstado={handleCambiarEstado}
           />
         </div>
       )}
