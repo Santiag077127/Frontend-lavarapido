@@ -20,6 +20,7 @@ import BackButton from '../../../components/common/BackButton';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
+import { classifyApiError } from '../../../services/api';
 import { isValidPassword, passwordsMatch } from '../../../services/passwordPolicy';
 import type { RootStackParamList } from '../../../navigation/types';
 
@@ -84,15 +85,19 @@ export default function ChangePasswordScreen() {
     } catch (requestError: any) {
       const status = requestError?.response?.status;
       const code = requestError?.response?.data?.error;
+      const kind = classifyApiError(requestError);
       if (status === 401) return; // The shared interceptor ends an expired session.
       if (status === 400 && code === 'CURRENT_PASSWORD_INVALID') {
         setError(t('changePassword.incorrectCurrentPassword'));
-      } else if (status === 400) {
+      } else if (status === 400 || status === 422) {
         setError(t('changePassword.invalidPassword'));
       } else if (status === 403) {
         setError(t('changePassword.forbidden'));
       } else if (status === 404) {
         setError(t('changePassword.notFound'));
+      } else if (['network', 'server_unavailable', 'timeout', 'server'].includes(kind)) {
+        setError(t(`apiErrors.${kind}`));
+        setRetryableError(true);
       } else if (status >= 500) {
         setError(t('changePassword.serverError'));
         setRetryableError(true);

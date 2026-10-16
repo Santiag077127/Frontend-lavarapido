@@ -30,6 +30,10 @@ export default function MapScreen() {
   const mapSource = useMemo(() => ({ html: buildMapHtml(available, {
     primary: theme.primary, primaryDark: theme.primaryDark, card: theme.card,
     onPrimary: theme.onPrimary, text: theme.text, border: theme.border,
+    attributionBackground: theme.mapAttributionBackground,
+    attributionText: theme.mapAttributionText,
+    attributionLink: theme.mapAttributionLink,
+    shadow: theme.mapShadow,
   }, i18n.resolvedLanguage || i18n.language || 'es') }), [available, theme, i18n.resolvedLanguage, i18n.language])
   const hasLocations = available.length > 0
 

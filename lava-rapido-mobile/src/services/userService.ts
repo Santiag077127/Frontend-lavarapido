@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api.ts';
 
 export type UserProfile = {
   userId: string;
@@ -14,6 +14,11 @@ export type CurrentUser = {
   firstName: string;
   email: string;
   role: 'USER' | 'OPERATOR' | 'ADMIN';
+};
+
+export type ChangeEmailRequest = {
+  currentPassword: string;
+  newEmail: string;
 };
 
 export const userService = {
@@ -47,6 +52,11 @@ export const userService = {
         data
       );
 
+    return response.data;
+  },
+
+  changeEmail: async (data: ChangeEmailRequest): Promise<UserProfile> => {
+    const response = await api.put<UserProfile>('/api/users/email', data);
     return response.data;
   },
 

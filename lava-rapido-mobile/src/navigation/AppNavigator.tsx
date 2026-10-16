@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import {
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
 
-import LandingScreen from '../features/landing/screens/LandingScreen';
 import TabNavigator from './TabNavigator';
 import OperatorNavigator from './OperatorNavigator';
 
@@ -28,6 +27,7 @@ import AddVehicleScreen from '../features/vehicles/screens/AddVehicleScreen';
 
 import type { RootStackParamList } from './types';
 import type { UserRole } from '../services/authService';
+import { ThemeContext } from '../theme/ThemeContext';
 
 const Stack =
   createNativeStackNavigator<RootStackParamList>();
@@ -48,20 +48,19 @@ export default function AppNavigator({
   setRole,
 }: Props) {
   const isOperator = role === 'OPERATOR';
+  const { theme } = useContext(ThemeContext);
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        contentStyle: {
+          backgroundColor: theme.background,
+        },
       }}
     >
       {!isLoggedIn ? (
         <>
-          <Stack.Screen
-            name="Landing"
-            component={LandingScreen}
-          />
-
           <Stack.Screen name="Login">
             {() => (
               <LoginScreen

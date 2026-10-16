@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AppState,
   Modal,
   Pressable,
   StyleSheet,
@@ -11,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { ThemeContext } from '../../theme/ThemeContext';
+import { notificationService } from '../../services/notificationService';
 
 type AlertButton = {
   text?: string;
@@ -29,6 +31,11 @@ type Notification = {
 
 type NotificationContextValue = {
   show: (title: string, message?: string, buttons?: AlertButton[], type?: NotificationType) => void;
+  unreadCount: number;
+  hasUnreadNotifications: boolean;
+  refreshUnreadNotifications: () => Promise<void>;
+  setUnreadCount: (count: number) => void;
+  adjustUnreadCount: (delta: number) => void;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -52,18 +59,89 @@ export const appAlert = {
   },
 };
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({ children, isLoggedIn = false }: { children: React.ReactNode; isLoggedIn?: boolean }) {
   const { theme, darkMode } = useContext(ThemeContext);
   const { t } = useTranslation();
   const [notification, setNotification] = useState<Notification | null>(null);
+  const [unreadCount, setUnreadCountState] = useState(0);
+  const requestRef = useRef<Promise<void> | null>(null);
+  const isLoggedInRef = useRef(isLoggedIn);
+  const sessionVersionRef = useRef(0);
 
-  const show = (title: string, message?: string, buttons: AlertButton[] = [], type: NotificationType = 'info') => {
+  useEffect(() => {
+    isLoggedInRef.current = isLoggedIn;
+  }, [isLoggedIn]);
+
+  const show = useCallback((title: string, message?: string, buttons: AlertButton[] = [], type: NotificationType = 'info') => {
     setNotification({ title, message, buttons, type });
-  };
+  }, []);
+
+  const setUnreadCount = useCallback((count: number) => {
+    setUnreadCountState(Math.max(0, count));
+  }, []);
+
+  const adjustUnreadCount = useCallback((delta: number) => {
+    setUnreadCountState((current) => Math.max(0, current + delta));
+  }, []);
+
+  const refreshUnreadNotifications = useCallback(async () => {
+    if (!isLoggedInRef.current) {
+      setUnreadCountState(0);
+      return;
+    }
+
+    if (requestRef.current) return requestRef.current;
+
+    const requestVersion = sessionVersionRef.current;
+    const baseRequest = notificationService.count()
+      .then((count) => {
+        if (isLoggedInRef.current && sessionVersionRef.current === requestVersion) setUnreadCount(count);
+      })
+      .catch(() => {
+        // Keep the last confirmed value when the count cannot be refreshed.
+      });
+    const request = baseRequest.finally(() => {
+      if (requestRef.current === request) requestRef.current = null;
+    });
+
+    requestRef.current = request;
+    return request;
+  }, [setUnreadCount]);
+
+  useEffect(() => {
+    sessionVersionRef.current += 1;
+
+    if (!isLoggedIn) {
+      setUnreadCountState(0);
+      return;
+    }
+
+    void refreshUnreadNotifications();
+    const { subscribeToPushNotifications } = require('../../services/pushNotifications') as typeof import('../../services/pushNotifications');
+    const unsubscribeFromPush = subscribeToPushNotifications(() => {
+      void refreshUnreadNotifications();
+    });
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refreshUnreadNotifications();
+    });
+
+    return () => {
+      unsubscribeFromPush();
+      appStateSubscription.remove();
+      requestRef.current = null;
+    };
+  }, [isLoggedIn, refreshUnreadNotifications]);
 
   showGlobalNotification = show;
 
-  const value = useMemo(() => ({ show }), []);
+  const value = useMemo(() => ({
+    show,
+    unreadCount,
+    hasUnreadNotifications: unreadCount > 0,
+    refreshUnreadNotifications,
+    setUnreadCount,
+    adjustUnreadCount,
+  }), [adjustUnreadCount, refreshUnreadNotifications, setUnreadCount, show, unreadCount]);
   const alertStyles = {
     success: { background: theme.successBackground, foreground: theme.successText, border: theme.successBorder, icon: 'checkmark-circle-outline' as const },
     error: { background: theme.errorBackground, foreground: theme.errorText, border: theme.errorBorder, icon: 'alert-circle-outline' as const },
@@ -96,7 +174,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           onPress={() => dismiss()}
         >
           <Pressable
-            style={[styles.card, { backgroundColor: theme.card, shadowColor: theme.shadow }]}
+            style={[styles.card, { backgroundColor: theme.modalBackground, shadowColor: theme.shadow }]}
             onPress={(event) => event.stopPropagation()}
             accessibilityViewIsModal
           >

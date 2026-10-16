@@ -48,6 +48,14 @@ export function subscribeToPushResponses(onResponse: () => void): () => void {
   return () => subscription.remove()
 }
 
+export function subscribeToPushNotifications(onReceived: () => void): () => void {
+  const notifications = notificationsModule()
+  if (!notifications) return () => {}
+  configureHandler(notifications)
+  const subscription = notifications.addNotificationReceivedListener(onReceived)
+  return () => subscription.remove()
+}
+
 export function clearLastPushResponse(): void {
   notificationsModule()?.clearLastNotificationResponse()
 }

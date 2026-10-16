@@ -6,6 +6,7 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
 import { authService } from '../../../services/authService'
+import { classifyApiError } from '../../../services/api'
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
@@ -27,8 +28,11 @@ export default function ForgotPasswordScreen({ navigation }: any) {
     try {
       await authService.requestPasswordReset(normalizedEmail)
       setSent(true)
-    } catch {
-      setError(t('forgotPassword.sendError'))
+    } catch (requestError) {
+      const kind = classifyApiError(requestError)
+      setError(['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : t('forgotPassword.sendError'))
     } finally {
       setSending(false)
     }

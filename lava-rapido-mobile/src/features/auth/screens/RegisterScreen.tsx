@@ -18,6 +18,7 @@ import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
+import { classifyApiError } from '../../../services/api';
 import { getPasswordUtf8ByteLength, isValidPassword, passwordsMatch } from '../../../services/passwordPolicy';
 import { useTranslation } from 'react-i18next';
 
@@ -193,13 +194,20 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
       }, 1000);
     } catch (err: any) {
       const status = err?.response?.status;
-      const message = !err?.response
-        ? t('register.connectionError')
-        : status === 400
+      const kind = classifyApiError(err);
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : status === 400 || status === 422
           ? t('register.badRequest')
-          : status === 409
-            ? t('register.conflict')
-            : t('register.genericError');
+          : status === 401
+            ? t('apiErrors.unauthorized')
+            : status === 403
+              ? t('apiErrors.forbidden')
+              : status === 404
+                ? t('apiErrors.not_found')
+                : status === 409
+                  ? t('register.conflict')
+                  : t('register.genericError');
 
       setError(message);
     } finally {
@@ -216,7 +224,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
     <View style={[styles.root, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           style={styles.scroll}
@@ -225,9 +233,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             { backgroundColor: theme.background },
           ]}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
-          }
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
           automaticallyAdjustContentInsets={false}
           contentInsetAdjustmentBehavior="never"
@@ -249,7 +255,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.email')}
                 placeholder={t('register.email')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={email}
                 onChangeText={(text) => {
@@ -273,7 +279,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.firstName')}
                 placeholder={t('register.firstName')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={firstName}
                 onChangeText={setFirstName}
@@ -291,7 +297,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.lastName')}
                 placeholder={t('register.lastName')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={lastName}
                 onChangeText={setLastName}
@@ -309,7 +315,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.phone')}
                 placeholder={t('register.phone')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={phoneNumber}
                 onChangeText={(text) => {
@@ -372,7 +378,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.documentNumber')}
                 placeholder={t('register.documentNumber')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={documentNumber}
                 onChangeText={(text) => {
@@ -393,7 +399,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.password')}
                 placeholder={t('register.password')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 secureTextEntry={!showPassword}
                 style={[styles.input, { color: theme.text }]}
                 value={password}
@@ -441,13 +447,13 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 successColor={theme.successText}
                 errorColor={theme.errorText}
               />
-              <PasswordRequirement
-                valid={passwordBytes <= 72}
-                text={t('register.maxUtf8Bytes', { count: passwordBytes })}
+              {passwordBytes > 72 && <PasswordRequirement
+                valid={false}
+                text={t('register.passwordTooLong')}
                 textColor={theme.textSecondary}
                 successColor={theme.successText}
                 errorColor={theme.errorText}
-              />
+              />}
             </View>
 
             {/* CONFIRMAR CONTRASEÑA */}
@@ -459,7 +465,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               <TextInput
                 accessibilityLabel={t('register.confirmPassword')}
                 placeholder={t('register.confirmPassword')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 secureTextEntry={!showConfirmPassword}
                 style={[styles.input, { color: theme.text }]}
                 value={confirmPassword}

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState, Linking } from 'react-native'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { AppState, Linking, StatusBar } from 'react-native'
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -10,11 +10,65 @@ import type { UserRole } from './src/services/authService'
 import { initializeLanguage } from './src/i18n'
 import { setLogoutHandler, setToken } from './src/services/api'
 import { userService } from './src/services/userService'
+import { pendingCheckoutRecovery } from './src/services/pendingCheckoutRecovery'
 import { appAlert } from './src/components/notifications/NotificationProvider'
 import i18n from './src/i18n'
 import type { RootStackParamList } from './src/navigation/types'
 import { clearLastPushResponse, deactivatePush, registerPush, subscribeToPushResponses } from './src/services/pushNotifications'
 import { extractPasswordResetToken } from './src/services/passwordResetLink'
+import { ThemeContext } from './src/theme/ThemeContext'
+
+type AppNavigationProps = {
+  navigationRef: ReturnType<typeof useNavigationContainerRef<RootStackParamList>>
+  navigationReady: () => void
+  isLoggedIn: boolean
+  setIsLoggedIn: (value: boolean) => void
+  role: UserRole | null
+  setRole: (role: UserRole) => void
+}
+
+function AppNavigation({
+  navigationRef,
+  navigationReady,
+  isLoggedIn,
+  setIsLoggedIn,
+  role,
+  setRole,
+}: AppNavigationProps) {
+  const { darkMode, theme } = useContext(ThemeContext)
+
+  return (
+    <>
+      <StatusBar
+        barStyle={darkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background}
+        translucent={false}
+      />
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={navigationReady}
+        theme={{
+          dark: darkMode,
+          colors: {
+            primary: theme.primary,
+            background: theme.background,
+            card: theme.tabBarBackground,
+            text: theme.text,
+            border: theme.border,
+            notification: theme.error,
+          },
+        }}
+      >
+        <AppNavigator
+          isLoggedIn={isLoggedIn}
+          setIsLoggedIn={setIsLoggedIn}
+          role={role}
+          setRole={setRole}
+        />
+      </NavigationContainer>
+    </>
+  )
+}
 
 export default function App() {
   const navigationRef = useNavigationContainerRef<RootStackParamList>()
@@ -24,34 +78,56 @@ export default function App() {
   const [navigationReady, setNavigationReady] = useState(false)
   const [pendingResetToken, setPendingResetToken] = useState<string | null>(null)
   const identityRefresh = useRef(false)
+  const recoveryInProgress = useRef(false)
   const lastResetUrl = useRef<string | null>(null)
 
   const refreshIdentity = useCallback(async () => {
-    if (identityRefresh.current) return
+    if (identityRefresh.current) return null
     identityRefresh.current = true
     try {
       const current = await userService.getCurrent()
       setRole(current.role)
+      return current
     } catch {
       // The API interceptor handles 401. A 403 keeps the current session intact.
+      return null
     } finally {
       identityRefresh.current = false
     }
   }, [])
 
-  useEffect(() => {
-    setLogoutHandler(() => {
+  const recoverPendingCheckouts = useCallback(async () => {
+    if (!isLoggedIn || recoveryInProgress.current) return
+    recoveryInProgress.current = true
+    try {
+      const current = await refreshIdentity()
+      if (current) await pendingCheckoutRecovery.recover(current.userId)
+    } finally {
+      recoveryInProgress.current = false
+    }
+  }, [isLoggedIn, refreshIdentity])
+
+  const handleLoggedInChange = useCallback((value: boolean) => {
+    setIsLoggedIn(value)
+
+    if (!value) {
+      void deactivatePush().catch(() => {})
       setToken(null)
-      setIsLoggedIn(false)
       setRole(null)
-      appAlert.alert(i18n.t('profile.sessionExpired'), i18n.t('profile.loginAgain'))
-    })
-    return () => setLogoutHandler(() => {})
+    }
   }, [])
 
   useEffect(() => {
-    if (isLoggedIn) void refreshIdentity()
-  }, [isLoggedIn, refreshIdentity])
+    setLogoutHandler(() => {
+      handleLoggedInChange(false)
+      appAlert.alert(i18n.t('profile.sessionExpired'), i18n.t('profile.loginAgain'))
+    })
+    return () => setLogoutHandler(null)
+  }, [handleLoggedInChange])
+
+  useEffect(() => {
+    if (isLoggedIn) void recoverPendingCheckouts()
+  }, [isLoggedIn, recoverPendingCheckouts])
 
   useEffect(() => {
     if (!pendingResetToken || isLoggedIn || !navigationReady) return
@@ -104,26 +180,16 @@ export default function App() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active' && isLoggedIn) {
-        void refreshIdentity()
+        void recoverPendingCheckouts()
         void registerPush().catch(() => {})
       }
     })
     return () => subscription.remove()
-  }, [isLoggedIn, refreshIdentity])
+  }, [isLoggedIn, recoverPendingCheckouts])
 
   useEffect(() => {
     initializeLanguage().finally(() => setLanguageReady(true))
   }, [])
-
-  const handleLoggedInChange = (value: boolean) => {
-    setIsLoggedIn(value)
-
-    if (!value) {
-      void deactivatePush().catch(() => {})
-      setToken(null)
-      setRole(null)
-    }
-  }
 
   if (!languageReady) {
     return null
@@ -132,15 +198,15 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <NotificationProvider>
-          <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>
-            <AppNavigator
-              isLoggedIn={isLoggedIn}
-              setIsLoggedIn={handleLoggedInChange}
-              role={role}
-              setRole={setRole}
-            />
-          </NavigationContainer>
+        <NotificationProvider isLoggedIn={isLoggedIn}>
+          <AppNavigation
+            navigationRef={navigationRef}
+            navigationReady={() => setNavigationReady(true)}
+            isLoggedIn={isLoggedIn}
+            setIsLoggedIn={handleLoggedInChange}
+            role={role}
+            setRole={setRole}
+          />
         </NotificationProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '../../../utils/formatters'
 import { reservationService } from '../../reservations/services/reservationService'
 import { ratingService, type RatingResponse } from '../../../services/ratingService'
+import { paymentService, type ReservationPayment } from '../../../services/paymentService'
 
 import type { RootStackParamList } from '../../../navigation/types'
 
@@ -54,7 +55,13 @@ export default function ServiceDetailsScreen({
   const [submitting, setSubmitting] = useState(false)
   const [ratingError, setRatingError] = useState<string | null>(null)
   const [ratingSuccess, setRatingSuccess] = useState(false)
+  const [payment, setPayment] = useState<ReservationPayment | null>(null)
+  const [paymentLoading, setPaymentLoading] = useState(true)
+  const [paymentLoadError, setPaymentLoadError] = useState(false)
+  const [openingPayment, setOpeningPayment] = useState(false)
   const submitLock = useRef(false)
+  const paymentLoadLock = useRef(false)
+  const paymentNavigationLock = useRef(false)
 
   const loadRatingState = useCallback(async (isActive: () => boolean) => {
     setRatingLoading(true)
@@ -98,6 +105,34 @@ export default function ServiceDetailsScreen({
     void loadRatingState(() => active)
     return () => { active = false }
   }, [loadRatingState]))
+
+  const loadPaymentState = useCallback(async (isActive: () => boolean) => {
+    if (paymentLoadLock.current) return
+    paymentLoadLock.current = true
+    setPaymentLoading(true)
+    setPaymentLoadError(false)
+    try {
+      const currentPayment = await paymentService.getByReservation(reservation.idReserva)
+      if (isActive()) setPayment(currentPayment)
+    } catch (error) {
+      if (!isActive()) return
+      if ((error as { response?: { status?: number } }).response?.status === 404) {
+        // No Pago row means the reservation is still eligible to start one.
+        setPayment(null)
+      } else {
+        setPaymentLoadError(true)
+      }
+    } finally {
+      if (isActive()) setPaymentLoading(false)
+      paymentLoadLock.current = false
+    }
+  }, [reservation.idReserva])
+
+  useFocusEffect(useCallback(() => {
+    let active = true
+    void loadPaymentState(() => active)
+    return () => { active = false }
+  }, [loadPaymentState]))
 
   const canRate = reservation.estado === 'FINALIZADA' && !rating && !ratingLoading && !ratingLoadError
 
@@ -215,6 +250,19 @@ export default function ServiceDetailsScreen({
   const isFinished =
     reservation.estado === 'FINALIZADA'
   const statusColors = renderStatusColors(reservation.estado)
+  const canRetryPayment = reservation.estado === 'PENDIENTE'
+    && !paymentLoading
+    && !paymentLoadError
+    && payment?.estado !== 'aprobado'
+
+  const openPayment = () => {
+    if (!canRetryPayment || paymentNavigationLock.current) return
+    paymentNavigationLock.current = true
+    setOpeningPayment(true)
+    // ReservationPaymentScreen performs the authoritative GET/POST sequence
+    // before rendering Wompi. This navigation never creates a reservation.
+    navigation.navigate('ReservationPayment', { reservation })
+  }
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -244,6 +292,21 @@ export default function ServiceDetailsScreen({
           <SectionHeading icon="git-branch-outline" title={t('mobile.reservationDetail.processStatus')} theme={theme} />
           <View style={styles.timeline}><TimelineStep label={t('mobile.reservationDetail.confirmed')} active color={theme.success} theme={theme} /><View style={[styles.line, { backgroundColor: theme.border }]} /><TimelineStep label={t('mobile.reservationDetail.inService')} active={isInProcess} color={theme.inProgress} theme={theme} /><View style={[styles.line, { backgroundColor: theme.border }]} /><TimelineStep label={t('mobile.reservationDetail.finished')} active={isFinished} color={theme.success} theme={theme} /></View>
         </View>
+        {reservation.estado === 'PENDIENTE' && <View style={[styles.paymentCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <SectionHeading icon="card-outline" title={t('mobile.paymentFlow.status')} theme={theme} />
+          {paymentLoading ? <ActivityIndicator color={theme.primary} /> : paymentLoadError ? <>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.paymentMessage, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>
+            <TouchableOpacity accessibilityRole="button" style={[styles.paymentButton, { borderColor: theme.primary }]} onPress={() => { void loadPaymentState(() => true) }}>
+              <Text style={[styles.paymentButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
+            </TouchableOpacity>
+          </> : payment?.estado === 'aprobado' ? <Text accessibilityLiveRegion="polite" style={[styles.paymentMessage, { color: theme.success }]}>{t('mobile.paymentFlow.approved')}</Text> : <>
+            {payment?.estado === 'pendiente' && <Text style={[styles.paymentMessage, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.pendingHint')}</Text>}
+            {payment?.estado === 'rechazado' && <Text style={[styles.paymentMessage, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.declined')}</Text>}
+            <TouchableOpacity accessibilityRole="button" accessibilityState={{ disabled: openingPayment, busy: openingPayment }} style={[styles.paymentButton, { backgroundColor: theme.primary, opacity: openingPayment ? 0.65 : 1 }]} onPress={openPayment} disabled={openingPayment}>
+              {openingPayment ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.paymentButtonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retryPayment')}</Text>}
+            </TouchableOpacity>
+          </>}
+        </View>}
         {reservation.estado === 'FINALIZADA' && <View style={[styles.ratingCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <SectionHeading icon="star-outline" title={t('ratingFlow.rateService')} theme={theme} />
           {ratingLoading ? <ActivityIndicator color={theme.primary} /> : ratingLoadError ? <><Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.ratingMessage, { color: theme.textSecondary }]}>{t('ratingFlow.loadError')}</Text><TouchableOpacity accessibilityRole="button" style={[styles.ratingButton, { backgroundColor: theme.primary }]} onPress={() => { void loadRatingState(() => true) }}><Text style={[styles.ratingButtonText, { color: theme.onPrimary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity></> : rating ? <><Text accessibilityLiveRegion="polite" style={[styles.ratingMessage, { color: theme.text }]}>{ratingSuccess ? t('ratingFlow.success') : t('ratingFlow.alreadyRatedLabel')}</Text><View style={styles.ratingStars}>{[1,2,3,4,5].map(star => <Ionicons key={star} name={star <= rating.puntuacion ? 'star' : 'star-outline'} size={25} color={theme.warning} />)}<Text style={[styles.ratingValue,{color:theme.text}]}>{rating.puntuacion}/5</Text></View>{!!rating.comentario && <Text style={[styles.ratingComment,{color:theme.textSecondary}]}>{rating.comentario}</Text>}</> : canRate ? <><Text style={[styles.ratingMessage,{color:theme.textSecondary}]}>{t('ratingFlow.question')}</Text><TouchableOpacity accessibilityRole="button" style={[styles.ratingButton,styles.fullButton,{backgroundColor:theme.primary}]} onPress={() => {setSelectedRating(0);setComment('');setRatingError(null);setRatingModalVisible(true)}} activeOpacity={0.85}><Ionicons name="star" size={19} color={theme.onPrimary}/><Text style={[styles.ratingButtonText,{color:theme.onPrimary}]}>{t('ratingFlow.rateService')}</Text></TouchableOpacity></> : null}
@@ -274,6 +337,6 @@ const styles=StyleSheet.create({
  safeArea:{flex:1},pageContent:{paddingHorizontal:18,paddingTop:10,paddingBottom:32,gap:14},topBar:{minHeight:74,borderWidth:1,borderRadius:18,padding:12,flexDirection:'row',alignItems:'center',gap:12},topBarText:{flex:1,minWidth:0},pageTitle:{fontSize:20,fontWeight:'800'},pageSubtitle:{fontSize:13,marginTop:3},
  hero:{borderWidth:1,borderRadius:20,padding:16,flexDirection:'row',alignItems:'center',gap:12},heroIcon:{width:52,height:52,borderRadius:16,alignItems:'center',justifyContent:'center'},heroText:{flex:1,minWidth:0},heroTitle:{fontSize:17,fontWeight:'800'},reservationId:{fontSize:11,marginTop:5},statusBadge:{paddingHorizontal:11,paddingVertical:8,borderRadius:20,maxWidth:'42%'},statusText:{fontWeight:'700',fontSize:11,textAlign:'center'},serviceDescription:{fontSize:14,lineHeight:20,paddingHorizontal:3},
  card:{borderWidth:1,borderRadius:20,padding:16},sectionHeading:{flexDirection:'row',alignItems:'center',gap:10,marginBottom:14},sectionIcon:{width:34,height:34,borderRadius:11,alignItems:'center',justifyContent:'center'},sectionTitle:{flex:1,fontSize:16,fontWeight:'800'},infoGrid:{flexDirection:'row',flexWrap:'wrap',gap:10},infoTile:{width:'48%',minWidth:130,flexGrow:1,borderWidth:1,borderRadius:14,padding:11,minHeight:78,justifyContent:'center'},tileLabelRow:{flexDirection:'row',alignItems:'center',gap:6,marginBottom:7},label:{flex:1,fontSize:11,fontWeight:'600'},value:{fontSize:14,fontWeight:'700',flexShrink:1},
- timeline:{paddingLeft:5},step:{minHeight:30,flexDirection:'row',alignItems:'center'},dot:{width:13,height:13,borderRadius:7},line:{width:2,height:18,marginLeft:5.5,marginVertical:2},stepText:{marginLeft:13,fontSize:14,flex:1},ratingCard:{borderWidth:1,borderRadius:20,padding:16,gap:10},ratingButton:{minHeight:50,borderRadius:14,paddingHorizontal:18,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:9},fullButton:{alignSelf:'stretch',marginTop:3},ratingButtonText:{fontSize:15,fontWeight:'800'},ratingMessage:{fontSize:14,lineHeight:20,fontWeight:'600',textAlign:'center'},ratingStars:{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3},ratingValue:{marginLeft:7,fontWeight:'800'},ratingComment:{fontSize:14,alignSelf:'stretch',lineHeight:20},
+ timeline:{paddingLeft:5},step:{minHeight:30,flexDirection:'row',alignItems:'center'},dot:{width:13,height:13,borderRadius:7},line:{width:2,height:18,marginLeft:5.5,marginVertical:2},stepText:{marginLeft:13,fontSize:14,flex:1},paymentCard:{borderWidth:1,borderRadius:20,padding:16,gap:10},paymentMessage:{fontSize:14,lineHeight:20,fontWeight:'600',textAlign:'center'},paymentButton:{minHeight:50,borderRadius:14,paddingHorizontal:18,borderWidth:1,alignItems:'center',justifyContent:'center'},paymentButtonText:{fontSize:15,fontWeight:'800'},ratingCard:{borderWidth:1,borderRadius:20,padding:16,gap:10},ratingButton:{minHeight:50,borderRadius:14,paddingHorizontal:18,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:9},fullButton:{alignSelf:'stretch',marginTop:3},ratingButtonText:{fontSize:15,fontWeight:'800'},ratingMessage:{fontSize:14,lineHeight:20,fontWeight:'600',textAlign:'center'},ratingStars:{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3},ratingValue:{marginLeft:7,fontWeight:'800'},ratingComment:{fontSize:14,alignSelf:'stretch',lineHeight:20},
  modalBackdrop:{flex:1,justifyContent:'flex-end'},ratingModal:{maxHeight:'92%',borderWidth:1,borderTopLeftRadius:26,borderTopRightRadius:26,paddingHorizontal:20,paddingTop:10,paddingBottom:28},modalHandle:{alignSelf:'center',width:38,height:4,borderRadius:4,marginBottom:16},modalHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:12},modalTitleWrap:{flex:1,minWidth:0},modalTitle:{fontSize:21,fontWeight:'800'},modalSubtitle:{fontSize:13,marginTop:3},closeButton:{width:40,height:40,borderRadius:13,alignItems:'center',justifyContent:'center'},ratingQuestion:{textAlign:'center',marginTop:4,fontSize:15,lineHeight:21},starSelector:{flexDirection:'row',alignItems:'center',justifyContent:'space-evenly',borderWidth:1,borderRadius:18,paddingHorizontal:7,paddingVertical:12,marginVertical:16},starPressable:{flex:1,alignItems:'center',paddingVertical:3},inputLabel:{fontSize:14,fontWeight:'700',marginBottom:8},commentInput:{minHeight:116,maxHeight:180,borderWidth:1,borderRadius:15,padding:14,fontSize:15,lineHeight:21},characterCount:{textAlign:'right',fontSize:12,marginTop:6},formError:{fontSize:13,textAlign:'center',marginTop:10},submitButton:{marginTop:16,marginBottom:5}
 })

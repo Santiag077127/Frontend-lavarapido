@@ -6,6 +6,7 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
 import { authService } from '../../../services/authService'
+import { classifyApiError } from '../../../services/api'
 import { getPasswordUtf8ByteLength, isValidPassword, passwordsMatch } from '../../../services/passwordPolicy'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../../navigation/types'
@@ -35,8 +36,11 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
     try {
       await authService.resetPassword(token.trim(), password)
       setSuccess(true)
-    } catch {
-      setError(t('resetPassword.resetError'))
+    } catch (requestError) {
+      const kind = classifyApiError(requestError)
+      setError(['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : t('resetPassword.resetError'))
     } finally {
       setSaving(false)
     }
@@ -63,7 +67,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
               <Text style={[styles.subtitle, { color: theme.textSecondary }]}>{t('resetPassword.subtitle')}</Text>
               <View style={styles.field}><Text style={[styles.label, { color: theme.text }]}>{t('resetPassword.token')}</Text><View style={[styles.inputWrapper, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}><Ionicons name="key-outline" size={20} color={theme.primary} /><TextInput placeholder={t('resetPassword.token')} accessibilityLabel={t('resetPassword.token')} placeholderTextColor={theme.placeholder} value={token} onChangeText={(value) => { setToken(value); setError(null) }} autoCapitalize="none" autoCorrect={false} style={[styles.input, { color: theme.text }]} /></View></View>
               {passwordField(t('resetPassword.newPassword'), password, setPassword, showPassword, () => setShowPassword(!showPassword), 'lock-closed-outline', !passwordValid)}
-              <View style={[styles.policy, { backgroundColor: theme.infoBackground }]}><Ionicons name={passwordValid ? 'checkmark-circle' : 'information-circle-outline'} size={19} color={passwordValid ? theme.success : theme.infoText} /><View style={styles.policyCopy}><Text style={[styles.policyText, { color: theme.text }]}>{t('resetPassword.passwordRequirements')}</Text><Text style={[styles.counter, { color: theme.textSecondary }]}>{t('resetPassword.passwordByteCount', { count: getPasswordUtf8ByteLength(password) })}</Text></View></View>
+              <View style={[styles.policy, { backgroundColor: theme.infoBackground }]}><Ionicons name={passwordValid ? 'checkmark-circle' : 'information-circle-outline'} size={19} color={passwordValid ? theme.success : theme.infoText} /><View style={styles.policyCopy}><Text style={[styles.policyText, { color: theme.text }]}>{t('resetPassword.passwordRequirements')}</Text>{getPasswordUtf8ByteLength(password) > 72 ? <Text style={[styles.counter, { color: theme.errorText }]}>{t('resetPassword.passwordTooLong')}</Text> : null}</View></View>
               {passwordField(t('resetPassword.confirmPassword'), confirmPassword, setConfirmPassword, showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword), 'shield-checkmark-outline', !confirmationValid)}
               {error ? <Text accessibilityLiveRegion="polite" style={[styles.error, { color: theme.errorText }]}>{error}</Text> : null}
               <TouchableOpacity style={[styles.button, { backgroundColor: theme.primary, opacity: saving ? 0.7 : 1 }]} onPress={handleReset} disabled={saving} accessibilityRole="button" accessibilityLabel={saving ? `${t('resetPassword.save')}, ${t('accessibility.inProgress')}` : t('resetPassword.save')} accessibilityState={{ disabled: saving, busy: saving }} activeOpacity={0.8}>{saving ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('resetPassword.save')}</Text>}</TouchableOpacity>

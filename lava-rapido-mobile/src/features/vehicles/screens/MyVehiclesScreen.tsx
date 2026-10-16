@@ -107,7 +107,11 @@ export default function MyVehiclesScreen({
         'Error cambiando estado:',
         error?.response?.status || error?.message,
       );
-      Alert.alert(t('vehicles.errors.title'), t('vehicles.errors.status'));
+      const kind = classifyApiError(error);
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : t('vehicles.errors.status');
+      Alert.alert(t('vehicles.errors.title'), message);
     }
   };
 

@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ThemeContext } from '../../theme/ThemeContext';
 
 export type ConfirmationVariant = 'danger' | 'warning' | 'normal';
-type Props = { visible: boolean; title: string; message: string; confirmLabel: string; cancelLabel: string; onConfirm: () => void; onCancel: () => void; variant?: ConfirmationVariant };
+type Props = { visible: boolean; title: string; message: string; confirmLabel: string; cancelLabel: string; onConfirm: () => void; onCancel: () => void; variant?: ConfirmationVariant; busy?: boolean; busyLabel?: string };
 
-export default function ConfirmationModal({ visible, title, message, confirmLabel, cancelLabel, onConfirm, onCancel, variant = 'normal' }: Props) {
+export default function ConfirmationModal({ visible, title, message, confirmLabel, cancelLabel, onConfirm, onCancel, variant = 'normal', busy = false, busyLabel }: Props) {
   const { theme, darkMode } = useContext(ThemeContext);
   const { t } = useTranslation();
   const accents = {
@@ -17,20 +17,29 @@ export default function ConfirmationModal({ visible, title, message, confirmLabe
   }[variant];
 
   return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
-      <Pressable accessible={false} style={[styles.backdrop, { backgroundColor: theme.overlay }]} onPress={onCancel}>
-        <Pressable style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]} onPress={(event) => event.stopPropagation()} accessible={false} accessibilityViewIsModal>
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={busy ? undefined : onCancel}>
+      <Pressable accessible={false} style={[styles.backdrop, { backgroundColor: theme.overlay }]} onPress={busy ? undefined : onCancel}>
+        <Pressable style={[styles.card, { backgroundColor: theme.modalBackground, borderColor: theme.border, shadowColor: theme.shadow }]} onPress={(event) => event.stopPropagation()} accessible={false} accessibilityViewIsModal>
           <View style={[styles.icon, { backgroundColor: accents.background, borderColor: accents.border }]}>
             <Ionicons name={accents.icon} size={30} color={accents.foreground} />
           </View>
           <Text accessibilityRole="alert" style={[styles.title, { color: theme.text }]}>{title}</Text>
           <Text style={[styles.message, { color: theme.textSecondary }]}>{message}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel={confirmLabel} accessibilityHint={t('accessibility.confirmAction')} style={({ pressed }) => [styles.button, { backgroundColor: accents.confirmBackground, opacity: pressed ? 0.82 : 1 }]} onPress={onConfirm}>
-            <Text style={[styles.confirmText, { color: variant === 'danger' ? theme.errorOnAction : theme.onPrimary }]}>{confirmLabel}</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel={cancelLabel} style={({ pressed }) => [styles.button, styles.cancelButton, { borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]} onPress={onCancel}>
-            <Text style={[styles.cancelText, { color: theme.text }]}>{cancelLabel}</Text>
-          </Pressable>
+          {busy ? (
+            <View style={styles.busy} accessibilityLiveRegion="polite">
+              <ActivityIndicator color={accents.foreground} />
+              <Text style={[styles.busyText, { color: theme.textSecondary }]}>{busyLabel}</Text>
+            </View>
+          ) : (
+            <>
+              <Pressable accessibilityRole="button" accessibilityLabel={confirmLabel} accessibilityHint={t('accessibility.confirmAction')} style={({ pressed }) => [styles.button, { backgroundColor: accents.confirmBackground, opacity: pressed ? 0.82 : 1 }]} onPress={onConfirm}>
+                <Text style={[styles.confirmText, { color: variant === 'danger' ? theme.errorOnAction : theme.onPrimary }]}>{confirmLabel}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel={cancelLabel} style={({ pressed }) => [styles.button, styles.cancelButton, { borderColor: theme.border, opacity: pressed ? 0.72 : 1 }]} onPress={onCancel}>
+                <Text style={[styles.cancelText, { color: theme.text }]}>{cancelLabel}</Text>
+              </Pressable>
+            </>
+          )}
         </Pressable>
       </Pressable>
     </Modal>
@@ -44,6 +53,8 @@ const styles = StyleSheet.create({
   title: { width: '100%', fontSize: 19, lineHeight: 25, fontWeight: '800', textAlign: 'center' },
   message: { width: '100%', fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 10, marginBottom: 22 },
   button: { width: '100%', minHeight: 50, borderRadius: 13, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  busy: { minHeight: 50, width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  busyText: { fontSize: 14, fontWeight: '600' },
   confirmText: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
   cancelButton: { backgroundColor: 'transparent', borderWidth: 1, marginTop: 10 },
   cancelText: { fontSize: 15, fontWeight: '700', textAlign: 'center' },

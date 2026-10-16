@@ -1,15 +1,22 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { CommonActions, UNSTABLE_usePreventRemove, useFocusEffect } from '@react-navigation/native';
+import type { NavigationAction } from '@react-navigation/routers';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import BackButton from '../../../components/common/BackButton';
+import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
+import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/types';
 import { paymentService, type ReservationPayment, type WompiCheckoutData } from '../../../services/paymentService';
+import { pendingCheckoutRecovery } from '../../../services/pendingCheckoutRecovery';
+import { classifyApiError } from '../../../services/api';
+import { reservationService } from '../services/reservationService';
+import type { ReservationStatus } from '../types/reservation.types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReservationPayment'>;
 
@@ -31,8 +38,18 @@ type TransactionDiagnostic = {
 };
 
 type HttpFailure = {
-  response?: { status?: number; data?: { error?: unknown } };
+  response?: { status?: number; data?: { code?: unknown } };
 };
+
+function cancellationError(error: unknown): { status?: number; code?: string } {
+  if (!error || typeof error !== 'object') return {};
+  const response = (error as HttpFailure).response;
+  const code = response?.data?.code;
+  return {
+    status: response?.status,
+    code: typeof code === 'string' ? code : undefined,
+  };
+}
 
 function makeWidgetHtml(checkout: WompiCheckoutData, loadingText: string): string {
   const config = JSON.stringify({
@@ -103,16 +120,151 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   const [widgetReloadKey, setWidgetReloadKey] = useState(0);
   const [error, setError] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [exitConfirmationVisible, setExitConfirmationVisible] = useState(false);
+  const [exitMode, setExitMode] = useState<'cancel' | 'approved'>('cancel');
+  const [cancellingReservation, setCancellingReservation] = useState(false);
+  const [allowRemoval, setAllowRemoval] = useState(false);
   const requestLock = useRef(false);
+  const cancellationLock = useRef(false);
   const initialCheckDone = useRef(false);
   const verificationLock = useRef(false);
+  const pendingRemovalAction = useRef<NavigationAction | null>(null);
   const isFinal = payment?.estado === 'aprobado' || payment?.estado === 'rechazado';
   const approved = payment?.estado === 'aprobado' && payment.intentoActual?.estado !== 'aprobado_duplicado';
 
+  UNSTABLE_usePreventRemove(!allowRemoval, ({ data }) => {
+    if (cancellationLock.current) return;
+    pendingRemovalAction.current = data.action;
+    setExitMode(payment?.estado === 'aprobado' ? 'approved' : 'cancel');
+    setExitConfirmationVisible(true);
+  });
+
+  React.useEffect(() => {
+    if (!allowRemoval || !pendingRemovalAction.current) return;
+    const action = pendingRemovalAction.current;
+    pendingRemovalAction.current = null;
+    navigation.dispatch(action);
+  }, [allowRemoval, navigation]);
+
+  const continuePayment = useCallback(() => {
+    pendingRemovalAction.current = null;
+    setExitConfirmationVisible(false);
+  }, []);
+
+  const navigateToServices = useCallback((initialStatus: ReservationStatus) => {
+    pendingRemovalAction.current = CommonActions.navigate('MainTabs', {
+      screen: 'Mis servicios',
+      params: { initialStatus },
+    });
+    setExitConfirmationVisible(false);
+    setAllowRemoval(true);
+  }, []);
+
+  const confirmExit = useCallback(async () => {
+    if (payment?.estado === 'aprobado') {
+      setExitMode('approved');
+      if (exitMode !== 'approved') return;
+      navigateToServices('PENDIENTE');
+      return;
+    }
+    if (exitMode === 'approved') {
+      navigateToServices('PENDIENTE');
+      return;
+    }
+    if (cancellationLock.current) return;
+
+    cancellationLock.current = true;
+    setCancellingReservation(true);
+    try {
+      const outcome = await reservationService.cancelForCheckout(reservation.idReserva);
+      await pendingCheckoutRecovery.clear(reservation.idReserva, reservation.idUsuario).catch(() => {});
+      setExitConfirmationVisible(false);
+      if (outcome.result === 'CANCELLED') {
+        appAlert.alert(
+          t('mobile.paymentFlow.cancelledTitle'),
+          t('mobile.paymentFlow.cancelledMessage'),
+          undefined,
+          'success',
+        );
+      } else {
+        appAlert.alert(
+          t('mobile.paymentFlow.alreadyCancelledTitle'),
+          t('mobile.paymentFlow.alreadyCancelledMessage'),
+          undefined,
+          'info',
+        );
+      }
+      navigateToServices('CANCELADA');
+    } catch (requestError) {
+      setExitConfirmationVisible(false);
+      const failure = cancellationError(requestError);
+      if (failure.status === 409 && failure.code === 'PAGO_PENDIENTE') {
+        appAlert.alert(
+          t('mobile.paymentFlow.pendingCancellationTitle'),
+          t('mobile.paymentFlow.pendingCancellationMessage'),
+          [
+            {
+              text: t('mobile.paymentFlow.viewReservations'),
+              style: 'cancel',
+              onPress: () => navigateToServices('PENDIENTE'),
+            },
+            { text: t('mobile.paymentFlow.continuePaying') },
+          ],
+          'warning',
+        );
+      } else if (failure.status === 409 && failure.code === 'PAGO_APROBADO') {
+        appAlert.alert(
+          t('mobile.paymentFlow.approvedExitTitle'),
+          t('mobile.paymentFlow.approvedExitMessage'),
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: () => navigateToServices('PENDIENTE'),
+          }],
+          'info',
+        );
+      } else if (failure.status === 403) {
+        appAlert.alert(
+          t('mobile.paymentFlow.cancellationDeniedTitle'),
+          t('mobile.paymentFlow.cancellationDeniedMessage'),
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: () => navigateToServices('PENDIENTE'),
+          }],
+          'error',
+        );
+      } else if (failure.status === 404) {
+        appAlert.alert(
+          t('mobile.paymentFlow.reservationNotFoundTitle'),
+          t('mobile.paymentFlow.reservationNotFoundMessage'),
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: () => navigateToServices('PENDIENTE'),
+          }],
+          'warning',
+        );
+      } else {
+        appAlert.alert(
+          t('mobile.paymentFlow.cancelUnknownTitle'),
+          t('mobile.paymentFlow.cancelUnknownMessage'),
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: () => navigateToServices('PENDIENTE'),
+          }],
+          'warning',
+        );
+      }
+    } finally {
+      cancellationLock.current = false;
+      setCancellingReservation(false);
+    }
+  }, [exitMode, navigateToServices, payment?.estado, reservation.idReserva, t]);
+
   const showRequestError = useCallback((requestError: unknown) => {
     // Keep technical/backend details out of the user-facing screen.
-    void requestError;
-    setStartError(t('mobile.paymentFlow.startError'));
+    const kind = classifyApiError(requestError);
+    setStartError(['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+      ? t(`apiErrors.${kind}`)
+      : t('mobile.paymentFlow.startError'));
     setError(true);
   }, [t]);
 
@@ -134,6 +286,9 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setError(false);
     setStartError(null);
     try {
+      // Persist before the first request so an Android process death during
+      // checkout can be recovered from the server state on next launch.
+      await pendingCheckoutRecovery.mark(reservation.idReserva, reservation.idUsuario).catch(() => {});
       let existing: ReservationPayment | null = null;
       try {
         existing = await paymentService.getByReservation(reservation.idReserva);
@@ -156,7 +311,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, reservation.idReserva, showRequestError]);
+  }, [requestCheckout, reservation.idReserva, reservation.idUsuario, showRequestError]);
+
+  React.useEffect(() => {
+    if (payment?.estado !== 'aprobado') return;
+    void pendingCheckoutRecovery.clear(reservation.idReserva, reservation.idUsuario).catch(() => {});
+  }, [payment?.estado, reservation.idReserva, reservation.idUsuario]);
 
   const retryPayment = useCallback(async () => {
     if (requestLock.current) return;
@@ -188,13 +348,13 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         setCheckout(null);
         setWidgetOpened(false);
       }
-    } catch {
-      setError(true);
+    } catch (requestError) {
+      showRequestError(requestError);
     } finally {
       setChecking(false);
       requestLock.current = false;
     }
-  }, [reservation.idReserva]);
+  }, [reservation.idReserva, showRequestError]);
 
   const resumePendingCheckout = useCallback(async () => {
     if (requestLock.current) return;
@@ -465,6 +625,24 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           )}
         </View>}
       </View>
+      <ConfirmationModal
+        visible={exitConfirmationVisible}
+        title={exitMode === 'approved'
+          ? t('mobile.paymentFlow.approvedExitTitle')
+          : t('mobile.paymentFlow.exitTitle')}
+        message={exitMode === 'approved'
+          ? t('mobile.paymentFlow.approvedExitMessage')
+          : t('mobile.paymentFlow.exitMessage')}
+        confirmLabel={exitMode === 'approved'
+          ? t('mobile.paymentFlow.viewReservations')
+          : t('mobile.paymentFlow.exitAndCancel')}
+        cancelLabel={t('mobile.paymentFlow.continuePaying')}
+        onConfirm={() => void confirmExit()}
+        onCancel={continuePayment}
+        variant={exitMode === 'approved' ? 'normal' : 'warning'}
+        busy={cancellingReservation}
+        busyLabel={t('mobile.paymentFlow.cancellingReservation')}
+      />
     </SafeAreaView>
   );
 }
