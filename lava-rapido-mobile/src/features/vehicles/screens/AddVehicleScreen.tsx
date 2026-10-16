@@ -21,13 +21,21 @@ import {
 } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import BackButton from '../../../components/common/BackButton';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { classifyApiError } from '../../../services/api';
+import {
+  normalizeVehiclePlateInput,
+  validateVehiclePlate,
+  vehiclePlateBackendValidationMessage,
+} from '../../../services/vehiclePlate';
 
 import {
   Brand,
@@ -85,6 +93,7 @@ export default function AddVehicleScreen({
 }: Props) {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const vehicle: Vehicle | undefined =
     route?.params?.vehicle;
@@ -153,15 +162,15 @@ export default function AddVehicleScreen({
     }
   };
 
-  const normalizePlate = (value: string) => {
-    return value
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, 7);
-  };
+  const plateValidation = validateVehiclePlate(placa, tipoVehiculo);
+  const plateHasValue = placa.trim().length > 0;
+  const invalidPlate = plateHasValue && !plateValidation.isValid;
+  const plateFormatMessage = `${t('vehicles.fields.type')}: ${t(
+    vehicleTypes.find((type) => type.value === tipoVehiculo)?.labelKey ?? 'vehicles.fields.type',
+  )} · ${plateValidation.expectedFormat}`;
 
   const validateForm = () => {
-    const placaNormalizada = normalizePlate(placa);
+    const placaNormalizada = plateValidation.normalized;
 
     if (!placaNormalizada) {
       appAlert.alert(
@@ -173,13 +182,10 @@ export default function AddVehicleScreen({
       return false;
     }
 
-    const plateRegex =
-      /^[A-Z]{3}[0-9]{3}$|^[A-Z]{3}[0-9]{2}[A-Z]$/;
-
-    if (!plateRegex.test(placaNormalizada)) {
+    if (!plateValidation.isValid) {
       appAlert.alert(
         t('vehicles.form.plateInvalidTitle'),
-        t('vehicles.form.plateInvalid'),
+        plateFormatMessage,
         undefined,
         'error',
       );
@@ -229,7 +235,7 @@ export default function AddVehicleScreen({
     }
 
     const data: VehicleRequest = {
-      placa: normalizePlate(placa),
+      placa: plateValidation.normalized,
       color: color.trim(),
       tipoVehiculo,
       fkIdMarca: selectedBrand,
@@ -277,6 +283,7 @@ export default function AddVehicleScreen({
       const responseData: unknown = axios.isAxiosError(error)
         ? error.response?.data
         : undefined;
+      const backendValidationMessage = vehiclePlateBackendValidationMessage(responseData);
       const responseMessages = typeof responseData === 'string'
         ? [responseData]
         : responseData && typeof responseData === 'object'
@@ -293,8 +300,11 @@ export default function AddVehicleScreen({
         message = t(`apiErrors.${errorKind}`);
       } else if (errorKind === 'unauthorized') {
         return;
-      } else if (axios.isAxiosError(error) && error.response?.status === 400 && duplicatePlate) {
+      } else if (axios.isAxiosError(error) && (error.response?.status === 409
+        || (error.response?.status === 400 && duplicatePlate))) {
         message = t('vehicles.errors.conflict');
+      } else if (axios.isAxiosError(error) && error.response?.status === 400 && backendValidationMessage) {
+        message = backendValidationMessage;
       } else if (axios.isAxiosError(error) && [400, 422].includes(error.response?.status ?? 0)) {
         message = t('vehicles.errors.badRequest');
       }
@@ -326,10 +336,10 @@ export default function AddVehicleScreen({
     );
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
       <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <BackButton
@@ -348,9 +358,16 @@ export default function AddVehicleScreen({
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          {
+            flexGrow: 1,
+            paddingBottom: Math.max(insets.bottom + 16, 24),
+          },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
       >
         <View
           style={[
@@ -432,14 +449,14 @@ export default function AddVehicleScreen({
             accessibilityLabel={t('vehicles.fields.plate')}
             value={placa}
             onChangeText={(value) =>
-              setPlaca(normalizePlate(value))
+              setPlaca(normalizeVehiclePlateInput(value))
             }
             placeholder={t('vehicles.form.plateExample')}
             placeholderTextColor={
               theme.textSecondary
             }
             autoCapitalize="characters"
-            maxLength={7}
+            maxLength={6}
             style={[
               styles.input,
               {
@@ -450,14 +467,16 @@ export default function AddVehicleScreen({
         </View>
 
         <Text
+          accessibilityRole={invalidPlate ? 'alert' : undefined}
+          accessibilityLiveRegion="polite"
           style={[
             styles.helperText,
             {
-              color: theme.textSecondary,
+              color: invalidPlate ? theme.errorText : theme.textSecondary,
             },
           ]}
         >
-          {t('vehicles.form.plateExample')}
+          {plateFormatMessage}
         </Text>
 
         <Text
@@ -667,13 +686,13 @@ export default function AddVehicleScreen({
             styles.saveButton,
             {
               backgroundColor: theme.primary,
-              opacity: saving ? 0.7 : 1,
+              opacity: saving || invalidPlate ? 0.7 : 1,
             },
           ]}
           onPress={handleSave}
-          disabled={saving}
+          disabled={saving || invalidPlate}
           accessibilityRole="button"
-          accessibilityState={{ disabled: saving, busy: saving }}
+          accessibilityState={{ disabled: saving || invalidPlate, busy: saving }}
           accessibilityLiveRegion="polite"
           activeOpacity={0.85}
         >
@@ -736,7 +755,10 @@ export default function AddVehicleScreen({
         transparent
         onRequestClose={() => setShowBrands(false)}
       >
-        <View style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}>
+        <KeyboardAvoidingView
+          style={[styles.modalBackdrop, { backgroundColor: theme.overlay }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View
             style={[
               styles.brandPicker,
@@ -833,6 +855,7 @@ export default function AddVehicleScreen({
               style={styles.brandResults}
               contentContainerStyle={styles.brandResultsContent}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
               showsVerticalScrollIndicator={false}
             >
               {filteredBrands.length === 0 ? (
@@ -925,7 +948,7 @@ export default function AddVehicleScreen({
               )}
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>

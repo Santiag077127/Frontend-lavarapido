@@ -25,6 +25,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import type { MainTabParamList } from './types'
 import NotificationTabIcon from '../components/notifications/NotificationTabIcon'
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context'
 
 const Tab =
   createBottomTabNavigator<MainTabParamList>()
@@ -48,6 +49,8 @@ export default function TabNavigator({
   )
 
   const { i18n } = useTranslation()
+  const insets = useContext(SafeAreaInsetsContext) ?? { top: 0, right: 0, bottom: 0, left: 0 }
+  const bottomInset = Math.max(0, insets.bottom)
   const language = i18n.resolvedLanguage || i18n.language || 'es'
   const labels: Record<string, Record<string, string>> = {
     es: { Home: 'Inicio', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
@@ -59,6 +62,14 @@ export default function TabNavigator({
 
   return (
     <Tab.Navigator
+      // Expo Go on Android can keep a detached native tab surface in the
+      // compositor. Keep tab state mounted, but render inactive tabs through
+      // React Native's display:none fallback so a previous scene cannot bleed
+      // through the focused one.
+      detachInactiveScreens={false}
+      sceneContainerStyle={{
+        backgroundColor: theme.background,
+      }}
       screenOptions={({
         route,
       }) => ({
@@ -72,9 +83,12 @@ export default function TabNavigator({
           borderTopColor:
             theme.divider,
 
-          height: 60,
-
-          paddingBottom: 5,
+          // The explicit height includes the Android three-button navigation inset.
+          // Keeping it in the bar prevents the last row from being covered without
+          // adding a large, fixed bottom padding to every screen.
+          height: 60 + bottomInset,
+          paddingBottom: bottomInset > 0 ? bottomInset : 5,
+          paddingTop: 5,
         },
 
         tabBarLabelStyle: {
@@ -147,7 +161,13 @@ export default function TabNavigator({
     >
 
       {/* 🏠 HOME */}
-      <Tab.Screen name="Home">
+      <Tab.Screen
+        name="Home"
+        // The Home scene is the one observed bleeding into other tabs in
+        // Expo Go. BottomTabView removes screens with this option before it
+        // creates a native/React scene, rather than only hiding the surface.
+        options={{ unmountOnBlur: true }}
+      >
         {() => (
           <HomeScreen
           />

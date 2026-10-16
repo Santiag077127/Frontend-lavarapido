@@ -13,7 +13,7 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/app-icon.png",
-        "backgroundColor": "#071525"
+        "backgroundColor": "#0D1B3E"
       }
     },
     "plugins": [

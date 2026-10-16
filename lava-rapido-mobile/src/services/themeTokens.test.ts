@@ -16,15 +16,15 @@ function contrastRatio(foreground: string, background: string) {
 }
 
 test('dark theme uses the required surfaces and semantic aliases', () => {
-  assert.equal(darkTheme.background, '#040833')
-  assert.equal(darkTheme.card, '#0B1B3D')
-  assert.equal(darkTheme.surfaceElevated, '#132A50')
-  assert.equal(darkTheme.inputBackground, '#0B1B3D')
-  assert.equal(darkTheme.primary, '#22D3EE')
+  assert.equal(darkTheme.background, '#0F172A')
+  assert.equal(darkTheme.card, '#151F32')
+  assert.equal(darkTheme.surfaceElevated, '#1D3048')
+  assert.equal(darkTheme.inputBackground, '#111827')
+  assert.equal(darkTheme.primary, '#1565C0')
   assert.equal(darkTheme.textPrimary, '#F8FAFC')
-  assert.equal(darkTheme.placeholder, '#B7C9DE')
-  assert.equal(darkTheme.tabBarBackground, '#0B1B3D')
-  assert.equal(darkTheme.modalBackground, '#132A50')
+  assert.equal(darkTheme.placeholder, '#9AA8BD')
+  assert.equal(darkTheme.tabBarBackground, '#151F32')
+  assert.equal(darkTheme.modalBackground, '#151F32')
   assert.notEqual(darkTheme.background, darkTheme.card)
   assert.notEqual(darkTheme.card, darkTheme.surfaceElevated)
 })
@@ -49,7 +49,7 @@ test('dark theme text, fields, actions and status colors meet WCAG AA', () => {
 })
 
 test('light theme keeps the existing primary appearance', () => {
-  assert.equal(lightTheme.background, '#F7FBFF')
+  assert.equal(lightTheme.background, '#F4F7FB')
   assert.equal(lightTheme.card, '#FFFFFF')
   assert.equal(lightTheme.primary, '#1565C0')
   assert.equal(lightTheme.text, '#0D1B3E')

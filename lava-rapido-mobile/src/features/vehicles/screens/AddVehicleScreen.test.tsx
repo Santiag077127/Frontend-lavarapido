@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { KeyboardAvoidingView, ScrollView } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import AddVehicleScreen from './AddVehicleScreen';
 
@@ -41,7 +42,29 @@ jest.mock('../../../services/vehicleService', () => ({
 const navigation = { goBack: jest.fn() };
 
 function renderScreen() {
-  return render(<AddVehicleScreen navigation={navigation} route={{ params: {} }} />);
+  return render(
+    <SafeAreaProvider initialMetrics={{
+      frame: { x: 0, y: 0, width: 360, height: 740 },
+      insets: { top: 24, right: 0, bottom: 24, left: 0 },
+    }}>
+      <AddVehicleScreen navigation={navigation} route={{ params: {} }} />
+    </SafeAreaProvider>,
+  );
+}
+
+function renderEditScreen() {
+  return render(
+    <SafeAreaProvider initialMetrics={{
+      frame: { x: 0, y: 0, width: 360, height: 740 },
+      insets: { top: 24, right: 0, bottom: 24, left: 0 },
+    }}>
+      <AddVehicleScreen navigation={navigation} route={{ params: {
+        vehicle: {
+          idVehiculo: 'vehicle-1', idMarca: 'brand-1', placa: 'ABC123', color: 'Negro', tipoVehiculo: 'CARRO',
+        },
+      } }} />
+    </SafeAreaProvider>,
+  );
 }
 
 async function completeRequiredFields(view: ReturnType<typeof renderScreen>) {
@@ -127,7 +150,7 @@ test('trata un HTTP 409 genérico como error de guardado, no como duplicado conf
 
   fireEvent.press(view.getByRole('button', { name: 'vehicles.actions.add' }));
   await waitFor(() => expect(mockAlert).toHaveBeenLastCalledWith(
-    'vehicles.errors.title', 'vehicles.errors.save', undefined, 'error',
+    'vehicles.errors.title', 'vehicles.errors.conflict', undefined, 'error',
   ));
 });
 
@@ -201,5 +224,54 @@ test('el formulario largo configura desplazamiento, taps y resize para Android',
   expect(view.UNSAFE_getAllByType(ScrollView).some(
     (scrollView) => scrollView.props.keyboardShouldPersistTaps === 'handled',
   )).toBe(true);
+  const formScrollView = view.UNSAFE_getAllByType(ScrollView).find(
+    (scrollView) => scrollView.props.keyboardShouldPersistTaps === 'handled'
+      && !scrollView.props.style,
+  );
+  const contentStyle = Array.isArray(formScrollView?.props.contentContainerStyle)
+    ? formScrollView.props.contentContainerStyle.reduce(
+      (styles: Record<string, unknown>, style: Record<string, unknown>) => ({ ...styles, ...style }),
+      {},
+    )
+    : formScrollView?.props.contentContainerStyle;
+  expect(contentStyle?.flexGrow).toBe(1);
+  expect(contentStyle?.paddingBottom).toBeGreaterThanOrEqual(24);
   expect(appConfig.expo.android.softwareKeyboardLayoutMode).toBe('resize');
+});
+
+test('shows the safe HU-31 plate message returned in HTTP 400', async () => {
+  mockCreate.mockRejectedValueOnce({
+    isAxiosError: true,
+    response: { status: 400, data: { error: 'Para MOTO, la placa debe tener el formato ABC12D' } },
+  });
+  const view = renderScreen();
+  await completeRequiredFields(view);
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.actions.add' }));
+  await waitFor(() => expect(mockAlert).toHaveBeenLastCalledWith(
+    'vehicles.errors.title', 'Para MOTO, la placa debe tener el formato ABC12D', undefined, 'error',
+  ));
+});
+
+test('revalidates and disables save when the vehicle type changes', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(mockGetActiveBrands).toHaveBeenCalled());
+  fireEvent.changeText(view.getByLabelText('vehicles.fields.plate'), 'ABC123');
+  fireEvent.press(view.getByRole('radio', { name: 'vehicles.types.motorcycle' }));
+
+  expect(view.getByRole('button', { name: 'vehicles.actions.add' }).props.accessibilityState.disabled).toBe(true);
+  expect(view.getByText('vehicles.fields.type: vehicles.types.motorcycle · ABC12D')).toBeTruthy();
+});
+
+test('updates a vehicle with the normalized plate and unchanged API type', async () => {
+  const update = require('../../../services/vehicleService').vehicleService.update as jest.Mock;
+  update.mockResolvedValueOnce({ data: { idVehiculo: 'vehicle-1' } });
+  const view = renderEditScreen();
+  await waitFor(() => expect(mockGetActiveBrands).toHaveBeenCalled());
+  fireEvent.changeText(view.getByLabelText('vehicles.fields.plate'), ' abc123 ');
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.form.saveChanges' }));
+  await waitFor(() => expect(update).toHaveBeenCalledWith('vehicle-1', {
+    placa: 'ABC123', color: 'Negro', tipoVehiculo: 'CARRO', fkIdMarca: 'brand-1',
+  }));
 });
