@@ -14,6 +14,18 @@ type FiltroEstado = EstadoReserva | "TODOS" | "ACTIVOS";
 const FILTROS: { labelKey: string; value: FiltroEstado }[] = [{ labelKey: "turns.active", value: "ACTIVOS" }, { labelKey: "turns.pendingPlural", value: "PENDIENTE" }, { labelKey: "turns.assignedPlural", value: "ASIGNADA" }, { labelKey: "turns.inProgress", value: "EN_PROCESO" }, { labelKey: "turns.finishedPlural", value: "FINALIZADA" }, { labelKey: "turns.cancelledPlural", value: "CANCELADA" }, { labelKey: "common.all", value: "TODOS" }];
 const ACTIVOS: EstadoReserva[] = ["PENDIENTE", "ASIGNADA", "EN_PROCESO"];
 const errorMessage = (error: unknown, fallback: string) => axios.isAxiosError(error) && error.response?.status === 403 ? "ui.no.tienes.permiso.para.realizar.esta.accion" : fallback;
+const horarioError = (error: unknown) => {
+  if (axios.isAxiosError(error) && error.response?.status === 400) {
+    const detail = error.response.data?.error;
+    if (typeof detail === "string") {
+      if (detail.includes("pas")) return "turns.pastTime";
+      if (detail.includes("solapad")) return "turns.occupiedTime";
+      if (detail.includes("06:00") || detail.includes("20:00")) return "ui.la.reserva.debe.iniciar.entre.06.00.y.20.00.y.finalizar.antes.de";
+      return detail;
+    }
+  }
+  return errorMessage(error, "ui.no.se.pudo.registrar.la.reserva");
+};
 
 export const TurnosPage = () => {
   const theme = useContext(ThemeContext);
@@ -30,7 +42,7 @@ export const TurnosPage = () => {
   const cambiar = async (estado: EstadoReserva) => { if (!seleccionada) return; try { actualizar(await cambiarEstado(seleccionada.idReserva, estado)); } catch (e) { setError(errorMessage(e, "ui.no.se.pudo.cambiar.el.estado")); } };
   const cancelar = async () => { if (!seleccionada) return; try { actualizar(await cancelarReserva(seleccionada.idReserva)); } catch (e) { setError(errorMessage(e, "ui.no.se.pudo.cancelar.la.reserva")); } };
   // Valida horario y duración antes de registrar una reserva presencial.
-  const guardar = async (e: React.FormEvent) => { e.preventDefault(); const servicio = servicios.find(s => s.idServicio === form.servicio); const [h, m] = form.hora.split(":").map(Number); const inicio = h * 60 + m; if (!form.vehiculo || !servicio || !form.fecha) return setFormError("ui.completa.todos.los.campos.de.la.reserva"); if (inicio < 360 || inicio > 1200 || inicio + servicio.duracionMinutos > 1200) return setFormError("ui.la.reserva.debe.iniciar.entre.06.00.y.20.00.y.finalizar.antes.de"); setGuardando(true); setFormError(null); try { const nueva = await crearReserva({ fkIdVehiculo: form.vehiculo, fkIdServicio: form.servicio, fechaReserva: form.fecha, horaReserva: form.hora + ":00" }); setReservas(prev => [nueva, ...prev]); setFormAbierto(false); setForm({ vehiculo: "", servicio: "", fecha: "", hora: "06:00" }); } catch (err) { setFormError(errorMessage(err, "ui.no.se.pudo.registrar.la.reserva")); } finally { setGuardando(false); } };
+  const guardar = async (e: React.FormEvent) => { e.preventDefault(); const servicio = servicios.find(s => s.idServicio === form.servicio); const [h, m] = form.hora.split(":").map(Number); const inicio = h * 60 + m; if (!form.vehiculo || !servicio || !form.fecha) return setFormError("ui.completa.todos.los.campos.de.la.reserva"); if (`${form.fecha}T${form.hora}` <= new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()).replace(" ", "T")) return setFormError("turns.pastTime"); if (inicio < 360 || inicio > 1200 || inicio + servicio.duracionMinutos > 1200) return setFormError("ui.la.reserva.debe.iniciar.entre.06.00.y.20.00.y.finalizar.antes.de"); if (reservas.some(r => r.idVehiculo === form.vehiculo && r.fechaReserva === form.fecha && r.estado !== "CANCELADA" && inicio < Number(r.horaReserva.slice(0,2))*60 + Number(r.horaReserva.slice(3,5)) + r.duracionServicio && Number(r.horaReserva.slice(0,2))*60 + Number(r.horaReserva.slice(3,5)) < inicio + servicio.duracionMinutos)) return setFormError("turns.occupiedTime"); setGuardando(true); setFormError(null); try { const nueva = await crearReserva({ fkIdVehiculo: form.vehiculo, fkIdServicio: form.servicio, fechaReserva: form.fecha, horaReserva: form.hora + ":00" }); setReservas(prev => [nueva, ...prev]); setFormAbierto(false); setForm({ vehiculo: "", servicio: "", fecha: "", hora: "06:00" }); } catch (err) { setFormError(horarioError(err)); } finally { setGuardando(false); } };
   const labelEstado: Record<EstadoReserva, string> = { PENDIENTE: t("common.pending"), ASIGNADA: t("common.assigned"), EN_PROCESO: t("common.inProgress"), FINALIZADA: t("common.finished"), CANCELADA: t("common.cancelled") };
   return <div className="gt-page"><div className="gt-header"><div><h1>{t("turns.title")}</h1><p>{t("turns.subtitle")}</p></div><button className="gt-btn-nuevo" onClick={() => { setFormError(null); setFormAbierto(true); }}>+ {t("turns.newWalkIn")}</button></div>
     <div className="gt-stats">{[["PENDIENTE", t("turns.pendingPlural"), "pendiente"], ["ASIGNADA", t("turns.assignedPlural"), "asignada"], ["EN_PROCESO", t("turns.inProgress"), "proceso"], ["FINALIZADA", t("turns.finishedPlural"), "finalizada"]].map(([key, label, css]) => <div key={key} className={"gt-stat-card gt-stat-" + css}><span className="gt-stat-numero">{stats[key]}</span><span className="gt-stat-label">{label}</span></div>)}</div>

@@ -51,7 +51,7 @@ describe("TurnosPage - reserva presencial", () => {
     await screen.findByText("AAA123 · Prueba");
     fireEvent.change(screen.getByLabelText("Vehículo"), { target: { value: "veh-1" } });
     fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
-    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2026-10-01" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
     fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:00" } });
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
 
@@ -61,9 +61,25 @@ describe("TurnosPage - reserva presencial", () => {
     expect(reservasMock.crear).toHaveBeenCalledWith({
       fkIdVehiculo: "veh-1",
       fkIdServicio: "svc-1",
-      fechaReserva: "2026-10-01",
+      fechaReserva: "2099-10-01",
       horaReserva: "09:00:00",
     });
+  });
+
+  it("rechaza una hora ocupada del mismo veh?culo", async () => {
+    vehiculosMock.mockResolvedValue([{ idVehiculo: "veh-1", estado: true, placa: "AAA123", nombreUsuario: "Prueba" }]);
+    serviciosMock.mockResolvedValue([{ idServicio: "svc-1", estado: true, nombre: "Lavado", duracionMinutos: 30 }]);
+    reservasMock.listar.mockResolvedValue([{ idVehiculo: "veh-1", fechaReserva: "2099-10-01", horaReserva: "09:00:00", duracionServicio: 30, precioServicio: 30000, estado: "PENDIENTE", nombreUsuario: "Prueba", placaVehiculo: "AAA123" }]);
+    const { container } = render(<TurnosPage />);
+    fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
+    await screen.findByText("AAA123 \u00b7 Prueba");
+    fireEvent.change(screen.getByLabelText("Veh\u00edculo"), { target: { value: "veh-1" } });
+    fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
+    fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/ocupada/);
+    expect(reservasMock.crear).not.toHaveBeenCalled();
   });
 
   it("agrega a Turnos la reserva devuelta por el backend", async () => {
@@ -71,7 +87,7 @@ describe("TurnosPage - reserva presencial", () => {
     serviciosMock.mockResolvedValue([{ idServicio: "svc-1", estado: true, nombre: "Lavado", duracionMinutos: 30 }]);
     reservasMock.crear.mockResolvedValue({
       idReserva: "reserva-nueva",
-      fechaReserva: "2026-10-01",
+      fechaReserva: "2099-10-01",
       horaReserva: "09:00:00",
       placaVehiculo: "AAA123",
       nombreUsuario: "Prueba",
@@ -86,7 +102,7 @@ describe("TurnosPage - reserva presencial", () => {
     await screen.findByText("AAA123 · Prueba");
     fireEvent.change(screen.getByLabelText("Vehículo"), { target: { value: "veh-1" } });
     fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
-    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2026-10-01" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
     fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:00" } });
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
 
@@ -96,7 +112,7 @@ describe("TurnosPage - reserva presencial", () => {
     expect(reservasMock.crear).toHaveBeenCalledWith({
       fkIdVehiculo: "veh-1",
       fkIdServicio: "svc-1",
-      fechaReserva: "2026-10-01",
+      fechaReserva: "2099-10-01",
       horaReserva: "09:00:00",
     });
   });

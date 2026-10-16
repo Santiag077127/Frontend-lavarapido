@@ -303,3 +303,5 @@
 .marca-modal-acciones button:disabled { opacity: 0.6; cursor: wait; }
 .page-exito { padding: 0.8rem 1rem; border-radius: var(--radio); background: #dcfce7; color: #166534; }
 :root[data-theme="dark"] .page-exito { background: #123728; color: #86efac; }
+
+.marca-btn-editar { border: 1px solid var(--accent); border-radius: 8px; background: var(--surface-soft); color: var(--accent); padding: 0.45rem 0.8rem; cursor: pointer; font-weight: 600; }

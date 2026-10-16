@@ -7,13 +7,11 @@ import "./ServiciosTable.css";
 interface ServiciosTableProps {
   servicios: Servicio[];
   onEditar: (servicio: Servicio) => void;
-  onCambiarEstado: (servicio: Servicio) => void;
 }
 
 export const ServiciosTable = ({
   servicios,
   onEditar,
-  onCambiarEstado,
 }: ServiciosTableProps) => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
@@ -27,7 +25,6 @@ export const ServiciosTable = ({
           <th>{t("common.description")}</th>
           <th>{t("common.price")}</th>
           <th>{t("common.duration")}</th>
-          <th>{t("common.status")}</th>
           <th>{t("common.actions")}</th>
         </tr>
       </thead>
@@ -41,25 +38,9 @@ export const ServiciosTable = ({
             <td>${servicio.precio.toLocaleString(locale)}</td>
             <td>{servicio.duracionMinutos} min</td>
             <td>
-              <span
-                className={
-                  servicio.estado
-                    ? "badge badge--activo"
-                    : "badge badge--inactivo"
-                }
-              >
-                {servicio.estado ? t("common.active") : t("common.inactive")}
-              </span>
-            </td>
-            <td>
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
                 {t("common.edit")}
               </button>
-              {!servicio.estado && (
-                <button className="btn-activar" onClick={() => onCambiarEstado(servicio)}>
-                  {t("common.activate")}
-                </button>
-              )}
             </td>
           </tr>
         ))}

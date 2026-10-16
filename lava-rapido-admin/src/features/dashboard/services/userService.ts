@@ -25,3 +25,6 @@ export type ChangePasswordPayload = {
 export const changePassword = async (data: ChangePasswordPayload): Promise<void> => {
   await api.put("/users/password", data);
 };
+
+export const changeEmail = async (newEmail: string, currentPassword: string): Promise<UserProfile> =>
+  (await api.put<UserProfile>("/users/email", { newEmail, currentPassword })).data;

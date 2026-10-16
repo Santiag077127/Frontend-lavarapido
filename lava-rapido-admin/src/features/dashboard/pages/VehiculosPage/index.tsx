@@ -5,21 +5,12 @@ import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import type { Vehiculo } from "@/features/dashboard/types";
 import "./VehiculosPage.css";
 
-type FiltroEstado = "todos" | "activos" | "inactivos";
-
-const FILTROS: { label: string; value: FiltroEstado }[] = [
-  { label: "common.all", value: "todos" },
-  { label: "common.activePlural", value: "activos" },
-  { label: "common.inactivePlural", value: "inactivos" },
-];
-
 export const VehiculosPage = () => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<FiltroEstado>("todos");
   const [busqueda, setBusqueda] = useState("");
 
   const cargarVehiculos = async () => {
@@ -42,11 +33,6 @@ export const VehiculosPage = () => {
   const vehiculosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
     return vehiculos.filter((vehiculo) => {
-      const coincideEstado =
-        filtro === "todos" ||
-        (filtro === "activos" && vehiculo.estado) ||
-        (filtro === "inactivos" && !vehiculo.estado);
-
       const coincideBusqueda =
         texto === "" ||
         vehiculo.placa.toLowerCase().includes(texto) ||
@@ -54,9 +40,9 @@ export const VehiculosPage = () => {
         vehiculo.nombreUsuario.toLowerCase().includes(texto) ||
         vehiculo.emailUsuario.toLowerCase().includes(texto);
 
-      return coincideEstado && coincideBusqueda;
+      return coincideBusqueda;
     });
-  }, [vehiculos, filtro, busqueda]);
+  }, [vehiculos, busqueda]);
 
   const stats = useMemo(() => ({
     activos: vehiculos.filter((v) => v.estado).length,
@@ -89,17 +75,6 @@ export const VehiculosPage = () => {
       </div>
 
       <div className="page-filtros">
-        <div className="filtros-group">
-          {FILTROS.map((f) => (
-            <button
-              key={f.value}
-              className={`filtro-btn ${filtro === f.value ? "filtro-activo" : ""}`}
-              onClick={() => setFiltro(f.value)}
-            >
-              {t(f.label)}
-            </button>
-          ))}
-        </div>
         <input
           className="page-buscador"
           type="text"
@@ -126,7 +101,6 @@ export const VehiculosPage = () => {
                 <th>{t("ui.propietario")}</th>
                 <th>{t("ui.email")}</th>
                 <th>{t("ui.color")}</th>
-                <th>{t("common.status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -143,11 +117,6 @@ export const VehiculosPage = () => {
                   <td>{vehiculo.nombreUsuario}</td>
                   <td>{vehiculo.emailUsuario}</td>
                   <td>{vehiculo.color || "—"}</td>
-                  <td>
-                    <span className={`badge ${vehiculo.estado ? "badge--activo" : "badge--inactivo"}`}>
-                      {vehiculo.estado ? t("common.active") : t("common.inactive")}
-                    </span>
-                  </td>
                 </tr>
               ))}
             </tbody>
