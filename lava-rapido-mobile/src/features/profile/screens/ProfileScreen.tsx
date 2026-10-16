@@ -934,25 +934,18 @@ export default function ProfileScreen({
 
       <TouchableOpacity
         accessibilityRole="button"
+        accessibilityLabel={t('profile.logout')}
         activeOpacity={0.8}
-        style={[styles.logout, { backgroundColor: theme.errorAction, shadowColor: theme.errorAction }]}
+        style={[styles.logout, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder, shadowColor: theme.errorAction }]}
         onPress={handleLogout}
       >
-        <View
-          style={[styles.logoutIcon, { backgroundColor: theme.errorBackground }]}
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color={theme.errorOnAction}
-          />
+        <View style={styles.logoutContent}>
+          <View style={[styles.logoutIcon, { backgroundColor: theme.errorAction }]}>
+            <Ionicons name="log-out-outline" size={21} color={theme.errorOnAction} />
+          </View>
+          <Text style={[styles.logoutText, { color: theme.errorText }]}>{t('profile.logout')}</Text>
         </View>
-
-        <Text
-          style={[styles.logoutText, { color: theme.errorOnAction }]}
-        >
-          {t('profile.logout')}
-        </Text>
+        <Ionicons name="chevron-forward" size={21} color={theme.errorText} />
       </TouchableOpacity>
 
       <View
@@ -1490,24 +1483,31 @@ const styles = StyleSheet.create({
   },
 
   logout: {
-    height: 57,
+    minHeight: 60,
     borderRadius: 17,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    elevation: 1,
     shadowOffset: {
       width: 0,
       height: 3,
     },
-    shadowOpacity: 0.18,
-    shadowRadius: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  logoutContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   logoutIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },

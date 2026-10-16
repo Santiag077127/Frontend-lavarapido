@@ -39,8 +39,8 @@ export default function ForgotPasswordScreen({ navigation }: any) {
   }
 
   return <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-    <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.header}><BackButton accessibilityLabel={t('mobile.serviceDetail.back')} onPress={() => navigation.goBack()} /><Text accessibilityRole="header" style={[styles.headerTitle, { color: theme.text }]}>{t('forgotPassword.title')}</Text></View>
           {sent ? <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.shadow }]}>
@@ -64,7 +64,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 }, keyboardContainer: { flex: 1 }, scrollContent: { flexGrow: 1 }, content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24, maxWidth: 540, width: '100%', alignSelf: 'center' },
+  safeArea: { flex: 1 }, keyboardContainer: { flex: 1 }, scrollContent: { flexGrow: 1, paddingBottom: 48 }, content: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 24, maxWidth: 540, width: '100%', alignSelf: 'center' },
   header: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 22 }, headerTitle: { flex: 1, fontSize: 24, fontWeight: '800', letterSpacing: -0.4 }, card: { borderWidth: 1, borderRadius: 24, padding: 24, shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 2 }, heroIcon: { width: 76, height: 76, borderRadius: 38, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 20 },
   subtitle: { fontSize: 15, lineHeight: 23, textAlign: 'center', marginBottom: 26 }, field: { marginBottom: 20 }, label: { fontSize: 14, fontWeight: '700', marginBottom: 8 }, inputWrapper: { minHeight: 54, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderRadius: 14, paddingHorizontal: 15 }, input: { flex: 1, minHeight: 52, marginLeft: 10, fontSize: 16 }, error: { marginTop: 8, fontSize: 13, lineHeight: 18 }, button: { minHeight: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center' }, buttonText: { fontSize: 16, fontWeight: '800' }, secondaryButton: { minHeight: 48, justifyContent: 'center', alignItems: 'center', marginTop: 10 }, secondaryButtonText: { fontSize: 15, fontWeight: '700' },
   statusIcon: { width: 76, height: 76, borderRadius: 38, justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 18 }, statusTitle: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 10 }, statusCopy: { fontSize: 15, lineHeight: 23, textAlign: 'center' }, tip: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: 14, padding: 14, marginVertical: 22 }, tipText: { flex: 1, fontSize: 14, lineHeight: 20 },

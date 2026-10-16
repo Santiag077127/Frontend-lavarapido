@@ -20,7 +20,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
 
 import {
   useFocusEffect,
@@ -45,6 +44,15 @@ import { reservationService } from '../services/reservationService';
 import { classifyReservationCreationError } from '../../../services/reservationErrors';
 import { classifyApiError } from '../../../services/api';
 import { serviceService } from '../../../services/serviceService';
+import {
+  getReservationTimeError,
+  isPastLocalDate,
+  isPastLocalTime,
+  isSameLocalDate,
+  RESERVATION_MAX_HOUR,
+  RESERVATION_MIN_HOUR,
+  startOfLocalDay,
+} from '../../../services/reservationSchedule';
 
 import type {
   CreateReservationData,
@@ -75,8 +83,17 @@ type ReservationNavigationProp =
 // CONSTANTES
 // ============================================================
 
-const MIN_HOUR = 6;
-const MAX_HOUR = 20;
+const MIN_HOUR = RESERVATION_MIN_HOUR;
+const MAX_HOUR = RESERVATION_MAX_HOUR;
+
+const vehicleTypeKeys: Record<string, string> = {
+  CARRO: 'vehicles.types.car',
+  CAMIONETA: 'vehicles.types.pickup',
+  MOTO: 'vehicles.types.motorcycle',
+  MOTOCARRO: 'vehicles.types.motortricycle',
+  FURGONETA: 'vehicles.types.van',
+  PESADO: 'vehicles.types.heavy',
+};
 
 // ============================================================
 // COMPONENTE
@@ -180,6 +197,7 @@ export default function ReservationScreen() {
       secondaryText: theme.textSecondary,
       border: theme.border,
       primary: theme.primary,
+      onPrimary: theme.onPrimary,
       inputBackground: theme.inputBackground,
       danger: theme.errorText,
 
@@ -234,22 +252,6 @@ export default function ReservationScreen() {
   // ==========================================================
   // COMPROBAR SI ES HOY
   // ==========================================================
-
-  const isToday = (
-    date: Date,
-  ): boolean => {
-    const today =
-      new Date();
-
-    return (
-      date.getFullYear() ===
-        today.getFullYear() &&
-      date.getMonth() ===
-        today.getMonth() &&
-      date.getDate() ===
-        today.getDate()
-    );
-  };
 
   // ==========================================================
   // CARGAR VEHÍCULOS
@@ -333,25 +335,9 @@ export default function ReservationScreen() {
 
   const validateTime =
     (): boolean => {
-      const hours =
-        selectedTime.getHours();
+      const timeError = getReservationTimeError(selectedTime, serviceDuration);
 
-      const minutes =
-        selectedTime.getMinutes();
-
-      const startMinutes =
-        hours * 60 + minutes;
-
-      const minimumMinutes =
-        MIN_HOUR * 60;
-
-      const maximumMinutes =
-        MAX_HOUR * 60;
-
-      if (
-        startMinutes <
-        minimumMinutes
-      ) {
+      if (timeError === 'beforeOpening') {
         Alert.alert(
           t('mobile.reservation.invalidSchedule'),
           t('mobile.reservation.startsAfter', { hour: MIN_HOUR }),
@@ -362,10 +348,7 @@ export default function ReservationScreen() {
         return false;
       }
 
-      if (
-        startMinutes >=
-        maximumMinutes
-      ) {
+      if (timeError === 'afterClosing') {
         Alert.alert(
           t('mobile.reservation.invalidSchedule'),
           t('mobile.reservation.startsBefore', { hour: MAX_HOUR }),
@@ -383,14 +366,7 @@ export default function ReservationScreen() {
       if (
         serviceDuration > 0
       ) {
-        const endMinutes =
-          startMinutes +
-          serviceDuration;
-
-        if (
-          endMinutes >
-          maximumMinutes
-        ) {
+        if (timeError === 'durationAfterClosing') {
           Alert.alert(
             t('mobile.reservation.invalidSchedule'),
             t('mobile.reservation.endsAfter', { hour: MAX_HOUR }),
@@ -421,7 +397,25 @@ export default function ReservationScreen() {
       return;
     }
 
+    if (isPastLocalDate(date)) {
+      Alert.alert(
+        t('mobile.reservation.invalidDate'),
+        t('mobile.reservation.pastDate'),
+        undefined,
+        'warning',
+      );
+      return;
+    }
+
     setSelectedDate(date);
+    if (isSameLocalDate(date, new Date()) && isPastLocalTime(selectedTime, date)) {
+      Alert.alert(
+        t('mobile.reservation.invalidTime'),
+        t('mobile.reservation.pastTime'),
+        undefined,
+        'warning',
+      );
+    }
   };
 
   // ==========================================================
@@ -437,6 +431,31 @@ export default function ReservationScreen() {
     );
 
     if (!date) {
+      return;
+    }
+
+    if (isPastLocalTime(date, selectedDate)) {
+      Alert.alert(
+        t('mobile.reservation.invalidTime'),
+        t('mobile.reservation.pastTime'),
+        undefined,
+        'warning',
+      );
+      return;
+    }
+
+    const timeError = getReservationTimeError(date, serviceDuration);
+    if (timeError) {
+      Alert.alert(
+        t('mobile.reservation.invalidSchedule'),
+        timeError === 'beforeOpening'
+          ? t('mobile.reservation.startsAfter', { hour: MIN_HOUR })
+          : timeError === 'afterClosing'
+            ? t('mobile.reservation.startsBefore', { hour: MAX_HOUR })
+            : t('mobile.reservation.endsAfter', { hour: MAX_HOUR }),
+        undefined,
+        'warning',
+      );
       return;
     }
 
@@ -562,37 +581,15 @@ export default function ReservationScreen() {
       // VALIDAR HORA SI ES HOY
       // --------------------------------------------------------
 
-      if (
-        isToday(
-          selectedDate,
-        )
-      ) {
-        const now =
-          new Date();
+      if (isPastLocalTime(selectedTime, selectedDate)) {
+        Alert.alert(
+          t('mobile.reservation.invalidTime'),
+          t('mobile.reservation.pastTime'),
+          undefined,
+          'warning',
+        );
 
-        const selectedMinutes =
-          selectedTime.getHours() *
-            60 +
-          selectedTime.getMinutes();
-
-        const currentMinutes =
-          now.getHours() *
-            60 +
-          now.getMinutes();
-
-        if (
-          selectedMinutes <
-          currentMinutes
-        ) {
-          Alert.alert(
-            t('mobile.reservation.invalidTime'),
-            t('mobile.reservation.pastTime'),
-            undefined,
-            'warning',
-          );
-
-          return;
-        }
+        return;
       }
 
       // --------------------------------------------------------
@@ -844,6 +841,7 @@ export default function ReservationScreen() {
           false
         }
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
       >
         <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <BackButton
@@ -995,8 +993,7 @@ export default function ReservationScreen() {
             {t('mobile.reservation.selectVehicle')}
           </Text>
 
-          {vehicles.length ===
-          0 ? (
+          {activeVehicles.length === 0 ? (
             <View
               style={
                 styles.emptyVehicle
@@ -1042,50 +1039,48 @@ export default function ReservationScreen() {
               </Pressable>
             </View>
           ) : (
-            <View
-              style={[
-                styles.pickerContainer,
-                {
-                  backgroundColor:
-                    colors.inputBackground,
-                  borderColor:
-                    colors.border,
-                },
-              ]}
-            >
-              <Picker
-                accessibilityLabel={t('mobile.reservation.selectVehicle')}
-                selectedValue={
-                  selectedVehicleId
-                }
-                onValueChange={(
-                  value,
-                ) =>
-                  setSelectedVehicleId(
-                    value,
-                  )
-                }
-                style={{
-                  color:
-                    colors.text,
-                }}
-              >
-                {activeVehicles.map(
-                  (
-                    vehicle,
-                  ) => (
-                    <Picker.Item
-                      key={
-                        vehicle.idVehiculo
-                      }
-                      label={`${vehicle.nombreMarca ?? ''} - ${vehicle.placa ?? ''} (${vehicle.tipoVehiculo ?? ''})`.trim()}
-                      value={
-                        vehicle.idVehiculo
-                      }
+            <View style={styles.vehicleOptions}>
+              {activeVehicles.map((vehicle) => {
+                const selected = vehicle.idVehiculo === selectedVehicleId;
+                const typeKey = vehicleTypeKeys[vehicle.tipoVehiculo];
+
+                return (
+                  <Pressable
+                    key={vehicle.idVehiculo}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${vehicle.nombreMarca || ''} ${vehicle.placa || ''}`.trim()}
+                    accessibilityState={{ selected }}
+                    onPress={() => setSelectedVehicleId(vehicle.idVehiculo)}
+                    style={[
+                      styles.vehicleOption,
+                      {
+                        backgroundColor: selected ? theme.primarySoft : colors.inputBackground,
+                        borderColor: selected ? colors.primary : colors.border,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.vehicleIcon,
+                        { backgroundColor: selected ? colors.primary : theme.primarySoft },
+                      ]}
+                    >
+                      <Ionicons name="car-outline" size={24} color={selected ? colors.onPrimary : colors.primary} />
+                    </View>
+                    <View style={styles.vehicleDetails}>
+                      <Text style={[styles.vehiclePlate, { color: colors.text }]}>{vehicle.placa || t('vehicles.fields.plate')}</Text>
+                      <Text style={[styles.vehicleMeta, { color: colors.secondaryText }]} numberOfLines={1}>
+                        {[vehicle.nombreMarca, typeKey ? t(typeKey) : vehicle.tipoVehiculo].filter(Boolean).join(' · ')}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={24}
+                      color={selected ? colors.primary : colors.secondaryText}
                     />
-                  ),
-                )}
-              </Picker>
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         </View>
@@ -1172,7 +1167,7 @@ export default function ReservationScreen() {
                   : 'default'
               }
               minimumDate={
-                new Date()
+                startOfLocalDay(new Date())
               }
               onChange={
                 handleDateChange
@@ -1522,9 +1517,10 @@ const styles =
     },
 
     scrollContent: {
+      flexGrow: 1,
       paddingHorizontal: 18,
       paddingTop: 8,
-      paddingBottom: 32,
+      paddingBottom: 48,
     },
 
     loadingContainer: {
@@ -1608,10 +1604,43 @@ const styles =
       fontWeight: '700',
     },
 
-    pickerContainer: {
-      borderWidth: 1,
-      borderRadius: 15,
-      overflow: 'hidden',
+    vehicleOptions: {
+      gap: 10,
+    },
+
+    vehicleOption: {
+      minHeight: 76,
+      borderWidth: 1.5,
+      borderRadius: 16,
+      padding: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+
+    vehicleIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    vehicleDetails: {
+      flex: 1,
+      minWidth: 0,
+    },
+
+    vehiclePlate: {
+      fontSize: 16,
+      fontWeight: '800',
+      letterSpacing: 0.3,
+    },
+
+    vehicleMeta: {
+      marginTop: 4,
+      fontSize: 13,
+      fontWeight: '600',
     },
 
     emptyVehicle: {

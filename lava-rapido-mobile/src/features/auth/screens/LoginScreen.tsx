@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  Dimensions,
   StatusBar,
   Keyboard,
 } from 'react-native';
@@ -29,8 +28,6 @@ type Props = {
   setIsLoggedIn: (value: boolean) => void;
   setRole?: (role: UserRole) => void;
 };
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function LoginScreen({
   setIsLoggedIn,
@@ -138,7 +135,7 @@ export default function LoginScreen({
         behavior={
           Platform.OS === 'ios'
             ? 'padding'
-            : undefined
+            : 'height'
         }
       >
         <ScrollView
@@ -150,15 +147,12 @@ export default function LoginScreen({
           ]}
           contentContainerStyle={[
             styles.scrollContent,
-            {
-              minHeight: SCREEN_HEIGHT,
-            },
           ]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={
             Platform.OS === 'ios'
               ? 'interactive'
-              : 'on-drag'
+              : 'none'
           }
           showsVerticalScrollIndicator={false}
           bounces={false}

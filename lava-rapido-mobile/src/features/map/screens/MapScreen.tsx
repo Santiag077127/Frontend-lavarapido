@@ -96,7 +96,7 @@ export default function MapScreen() {
           <Text style={[styles.stateMessage, { color: theme.textSecondary }]}>{copy.emptyMessage}</Text>
         </View>
       ) : (
-        <ScrollView style={styles.contentScroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={[styles.contentScroll, { backgroundColor: theme.background }]} contentContainerStyle={[styles.content, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
           <View style={[styles.mapFrame, { borderColor: theme.border }]}>
             <WebView
               key={mapKey}

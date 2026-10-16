@@ -21,7 +21,7 @@ export default function NotificationTabIcon({ color, size }: Props) {
         <View
           testID="notification-unread-dot"
           pointerEvents="none"
-          style={[styles.dot, { borderColor: theme.card }]}
+        style={[styles.dot, { backgroundColor: theme.warning, borderColor: theme.card }]}
         />
       )}
     </View>
@@ -42,6 +42,5 @@ const styles = StyleSheet.create({
     height: 9,
     borderRadius: 5,
     borderWidth: 1.5,
-    backgroundColor: '#F97316',
   },
 })

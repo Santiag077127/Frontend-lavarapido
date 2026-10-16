@@ -35,7 +35,7 @@ jest.mock('./OperatorNavigator', () => () => null);
 
 jest.mock('../theme/ThemeContext', () => ({
   ThemeContext: require('react').createContext({
-    theme: { background: '#040833' },
+    theme: { background: '#0F172A' },
   }),
 }));
 
@@ -57,5 +57,5 @@ test('usuarios sin sesión comienzan directamente en Login y no tienen ruta Land
   const routes = renderer!.root.findAllByType(Text).map((node) => node.props.children);
   expect(routes[0]).toBe('Login');
   expect(routes).not.toContain('Landing');
-  expect((globalThis as { navigatorProps?: { screenOptions?: { contentStyle?: { backgroundColor?: string } } } }).navigatorProps?.screenOptions?.contentStyle?.backgroundColor).toBe('#040833');
+  expect((globalThis as { navigatorProps?: { screenOptions?: { contentStyle?: { backgroundColor?: string } } } }).navigatorProps?.screenOptions?.contentStyle?.backgroundColor).toBe('#0F172A');
 });

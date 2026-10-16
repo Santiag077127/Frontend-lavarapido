@@ -113,11 +113,12 @@ export default function ChangePasswordScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
@@ -210,7 +211,7 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   keyboard: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: 48 },
   content: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 16 },
   header: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   title: { flex: 1, fontSize: 22, fontWeight: '700' },

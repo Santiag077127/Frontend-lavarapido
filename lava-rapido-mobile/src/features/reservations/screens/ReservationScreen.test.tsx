@@ -137,6 +137,25 @@ test('crea una reserva válida y navega al flujo de pago', async () => {
   });
 });
 
+test('permite seleccionar el vehiculo completo como una tarjeta accesible', async () => {
+  const secondVehicle = {
+    ...vehicle,
+    idVehiculo: 'vehicle-2',
+    nombreMarca: 'Otra marca',
+    placa: 'XYZ789',
+    tipoVehiculo: 'MOTO',
+  };
+  (vehicleService.getMyVehicles as jest.Mock).mockResolvedValue([vehicle, secondVehicle]);
+
+  const view = await renderReservation();
+  const secondCard = view.getByRole('radio', { name: 'Otra marca XYZ789' });
+
+  expect(view.getByRole('radio', { name: 'Marca ABC123' }).props.accessibilityState.selected).toBe(true);
+  fireEvent.press(secondCard);
+
+  expect(secondCard.props.accessibilityState.selected).toBe(true);
+});
+
 test('valida que exista un servicio antes de crear una reserva', async () => {
   mockRouteService = undefined;
   const view = await renderReservation();

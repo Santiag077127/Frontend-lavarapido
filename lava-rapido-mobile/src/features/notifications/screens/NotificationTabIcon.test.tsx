@@ -10,7 +10,7 @@ jest.mock('../../../components/notifications/NotificationProvider', () => ({
 }))
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }))
 jest.mock('../../../theme/ThemeContext', () => ({
-  ThemeContext: require('react').createContext({ theme: { card: '#fff' } }),
+  ThemeContext: require('react').createContext({ theme: { card: '#fff', warning: '#D97706' } }),
 }))
 
 beforeEach(() => { mockHasUnreadNotifications = false })
@@ -21,13 +21,13 @@ test('oculta el punto naranja cuando no hay notificaciones pendientes', () => {
   expect(view.queryByTestId('notification-unread-dot')).toBeNull()
 })
 
-test('muestra un punto naranja independiente del tema cuando hay pendientes', () => {
+test('muestra el indicador pendiente usando el color de advertencia del tema', () => {
   mockHasUnreadNotifications = true
   const view = render(<NotificationTabIcon color="#fff" size={24} />)
 
   expect(view.getByTestId('notification-unread-dot').props.style).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ backgroundColor: '#F97316' }),
+      expect.objectContaining({ backgroundColor: '#D97706' }),
     ]),
   )
 })
