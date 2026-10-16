@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { KeyboardAvoidingView, ScrollView } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import AddVehicleScreen from './AddVehicleScreen';
 
@@ -41,15 +42,29 @@ jest.mock('../../../services/vehicleService', () => ({
 const navigation = { goBack: jest.fn() };
 
 function renderScreen() {
-  return render(<AddVehicleScreen navigation={navigation} route={{ params: {} }} />);
+  return render(
+    <SafeAreaProvider initialMetrics={{
+      frame: { x: 0, y: 0, width: 360, height: 740 },
+      insets: { top: 24, right: 0, bottom: 24, left: 0 },
+    }}>
+      <AddVehicleScreen navigation={navigation} route={{ params: {} }} />
+    </SafeAreaProvider>,
+  );
 }
 
 function renderEditScreen() {
-  return render(<AddVehicleScreen navigation={navigation} route={{ params: {
-    vehicle: {
-      idVehiculo: 'vehicle-1', idMarca: 'brand-1', placa: 'ABC123', color: 'Negro', tipoVehiculo: 'CARRO',
-    },
-  } }} />);
+  return render(
+    <SafeAreaProvider initialMetrics={{
+      frame: { x: 0, y: 0, width: 360, height: 740 },
+      insets: { top: 24, right: 0, bottom: 24, left: 0 },
+    }}>
+      <AddVehicleScreen navigation={navigation} route={{ params: {
+        vehicle: {
+          idVehiculo: 'vehicle-1', idMarca: 'brand-1', placa: 'ABC123', color: 'Negro', tipoVehiculo: 'CARRO',
+        },
+      } }} />
+    </SafeAreaProvider>,
+  );
 }
 
 async function completeRequiredFields(view: ReturnType<typeof renderScreen>) {
@@ -220,6 +235,7 @@ test('el formulario largo configura desplazamiento, taps y resize para Android',
     )
     : formScrollView?.props.contentContainerStyle;
   expect(contentStyle?.flexGrow).toBe(1);
+  expect(contentStyle?.paddingBottom).toBeGreaterThanOrEqual(24);
   expect(appConfig.expo.android.softwareKeyboardLayoutMode).toBe('resize');
 });
 

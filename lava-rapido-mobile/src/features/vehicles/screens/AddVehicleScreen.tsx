@@ -21,7 +21,10 @@ import {
 } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import BackButton from '../../../components/common/BackButton';
@@ -90,6 +93,7 @@ export default function AddVehicleScreen({
 }: Props) {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   const vehicle: Vehicle | undefined =
     route?.params?.vehicle;
@@ -332,7 +336,7 @@ export default function AddVehicleScreen({
     );
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -354,7 +358,13 @@ export default function AddVehicleScreen({
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.content, { flexGrow: 1 }]}
+        contentContainerStyle={[
+          styles.content,
+          {
+            flexGrow: 1,
+            paddingBottom: Math.max(insets.bottom + 16, 24),
+          },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
