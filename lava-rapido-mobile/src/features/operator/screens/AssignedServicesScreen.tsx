@@ -110,12 +110,7 @@ export default function AssignedServicesScreen() {
             : item
         )
       );
-    } catch (error) {
-      console.error(
-        'Error actualizando asignación:',
-        error
-      );
-
+    } catch {
       Alert.alert(
         t('operator.errors.updateTitle'),
         t('operator.errors.updateMessage')

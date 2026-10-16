@@ -12,6 +12,8 @@ const mockT = (key: string, values?: Record<string, string | number>) => {
   const translated = mockLanguage === 'en' && key === 'notifications.title' ? 'Notifications' : mockCopy[key] ?? key
   return Object.entries(values ?? {}).reduce((text, [name, value]) => text.replace(`{{${name}}}`, String(value)), translated)
 }
+const mockSetUnreadCount = jest.fn()
+const mockAdjustUnreadCount = jest.fn()
 
 jest.mock('@react-navigation/native', () => ({ useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]), useNavigation: () => ({ navigate: jest.fn(), getParent: () => ({ navigate: jest.fn() }) }) }))
 jest.mock('@expo/vector-icons', () => ({ Ionicons: Object.assign((props: any) => require('react').createElement(require('react-native').Text, props), { glyphMap: {} }) }))
@@ -19,6 +21,7 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockT, i18n: { r
 jest.mock('../../../theme/ThemeContext', () => ({ ThemeContext: require('react').createContext({ theme: { background: '#F7FBFF', card: '#FFFFFF', interactiveSurface: '#E6F1FF', infoBackground: '#E6F1FF', errorBackground: '#DC262612', text: '#0D1B3E', primary: '#1565C0', accentText: '#0E7490', success: '#16A34A', errorText: '#DC2626', textSecondary: '#4A5568', border: '#DDE4EF', onPrimary: '#FFFFFF', shadow: '#0D1B3E' } }) }))
 jest.mock('../../../services/notificationService', () => ({ notificationService: { list: jest.fn(), count: jest.fn(), read: jest.fn(), readAll: jest.fn() } }))
 jest.mock('../../reservations/services/reservationService', () => ({ reservationService: { getById: jest.fn() } }))
+jest.mock('../../../components/notifications/NotificationProvider', () => ({ useNotification: () => ({ setUnreadCount: mockSetUnreadCount, adjustUnreadCount: mockAdjustUnreadCount }) }))
 
 const list = notificationService.list as jest.Mock
 const count = notificationService.count as jest.Mock
@@ -46,6 +49,7 @@ test('muestra estado vacío y contador de no leídas', async () => {
   const view = await render(<NotificationsScreen />)
   await waitFor(() => expect(view.getByText('Aún no tienes notificaciones')).toBeTruthy())
   expect(view.getByText('2 sin leer')).toBeTruthy()
+  expect(mockSetUnreadCount).toHaveBeenLastCalledWith(2)
 })
 
 test('adapta títulos y mensajes largos en una tarjeta y permite marcarla como leída', async () => {
@@ -57,6 +61,19 @@ test('adapta títulos y mensajes largos en una tarjeta y permite marcarla como l
   ;(notificationService.read as jest.Mock).mockResolvedValue({})
   await act(async () => { fireEvent.press(view.getByText('Marcar como leída')) })
   expect(notificationService.read).toHaveBeenCalledWith('long')
+})
+
+test('conserva el indicador confirmado si falla marcar una notificación como leída', async () => {
+  const unread = { id: 'pending', tipo: 'system' as const, titulo: 'Pendiente', mensaje: 'Mensaje', reservaId: null, pagoId: null, leidaAt: null, createdAt: '2026-01-10T12:30:00Z' }
+  list.mockResolvedValue({ ...emptyPage, content: [unread] }); count.mockResolvedValue(1)
+  ;(notificationService.read as jest.Mock).mockRejectedValueOnce(new Error('sin red'))
+  const view = await render(<NotificationsScreen />)
+  await waitFor(() => expect(view.getByText('Pendiente')).toBeTruthy())
+
+  await act(async () => { fireEvent.press(view.getByText('Marcar como leída')) })
+
+  expect(notificationService.read).toHaveBeenCalledWith('pending')
+  expect(mockSetUnreadCount).toHaveBeenLastCalledWith(1)
 })
 
 test('utiliza el idioma activo para los textos de interfaz', async () => {

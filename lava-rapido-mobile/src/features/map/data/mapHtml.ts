@@ -7,6 +7,10 @@ type MapColors = {
   onPrimary: string
   text: string
   border: string
+  attributionBackground?: string
+  attributionText?: string
+  attributionLink?: string
+  shadow?: string
 }
 
 const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -33,10 +37,10 @@ export const buildMapHtml = (locations: MapLocation[], colors: MapColors, langua
   <style>
     html,body,#map { width:100%; height:100%; margin:0; padding:0; background:${colors.card}; }
     .leaflet-container { font-family:system-ui,-apple-system,sans-serif; background:${colors.card}; }
-    .leaflet-control-attribution { display:block !important; background:rgba(255,255,255,.94) !important; color:#0D1B3E !important; font-size:11px !important; padding:3px 6px !important; }
-    .leaflet-control-attribution a { color:#1565C0 !important; }
-    .brand-marker { width:42px; height:42px; box-sizing:border-box; border:3px solid ${colors.card}; border-radius:50%; background:${colors.primary}; color:${colors.onPrimary}; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; box-shadow:0 3px 12px rgba(13,27,62,.25); }
-    .brand-marker.selected { width:48px; height:48px; background:${colors.primaryDark}; border-width:4px; box-shadow:0 0 0 3px ${colors.primary},0 3px 12px rgba(13,27,62,.25); }
+    .leaflet-control-attribution { display:block !important; background:${colors.attributionBackground ?? colors.card} !important; color:${colors.attributionText ?? colors.text} !important; font-size:11px !important; padding:3px 6px !important; }
+    .leaflet-control-attribution a { color:${colors.attributionLink ?? colors.primary} !important; }
+    .brand-marker { width:42px; height:42px; box-sizing:border-box; border:3px solid ${colors.card}; border-radius:50%; background:${colors.primary}; color:${colors.onPrimary}; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; box-shadow:0 3px 12px ${colors.shadow ?? 'rgba(13,27,62,.25)'}; }
+    .brand-marker.selected { width:48px; height:48px; background:${colors.primaryDark}; border-width:4px; box-shadow:0 0 0 3px ${colors.primary},0 3px 12px ${colors.shadow ?? 'rgba(13,27,62,.25)'}; }
     .leaflet-popup-content-wrapper { border:1px solid ${colors.border}; border-radius:12px; color:${colors.text}; }
   </style>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="window.ReactNativeWebView?.postMessage(JSON.stringify({type:'error'}))"></script>

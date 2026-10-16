@@ -1,0 +1,161 @@
+import React from 'react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+
+import ServiceDetailsScreen from './ServiceDetailsScreen';
+import { paymentService } from '../../../services/paymentService';
+import { reservationService } from '../../reservations/services/reservationService';
+
+const mockNavigate = jest.fn();
+const mockGoBack = jest.fn();
+
+const reservation = {
+  idReserva: 'reservation-1',
+  idUsuario: 'user-1',
+  idVehiculo: 'vehicle-1',
+  idServicio: 'service-1',
+  nombreUsuario: 'Test User',
+  placaVehiculo: 'ABC123',
+  tipoVehiculo: 'Carro',
+  nombreServicio: 'Lavado completo',
+  descripcionServicio: 'Servicio de prueba',
+  precioServicio: 25000,
+  duracionServicio: 60,
+  fechaReserva: '2026-10-16',
+  horaReserva: '10:00:00',
+  fechaHoraInicio: null,
+  fechaHoraFin: null,
+  createdAt: '2026-10-15T12:00:00Z',
+  updatedAt: '2026-10-15T12:00:00Z',
+  estado: 'PENDIENTE' as const,
+};
+
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]),
+}));
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => ({
+      'mobile.serviceDetail.back': 'Volver',
+      'mobile.reservationDetail.title': 'Detalle',
+      'mobile.reservationDetail.serviceInfo': 'Información del servicio',
+      'mobile.reservationDetail.reservation': 'Reserva',
+      'mobile.reservationDetail.date': 'Fecha',
+      'mobile.reservationDetail.time': 'Hora',
+      'mobile.reservationDetail.vehicle': 'Vehículo',
+      'mobile.reservationDetail.plate': 'Placa',
+      'mobile.reservationDetail.price': 'Precio',
+      'mobile.reservationDetail.duration': 'Duración',
+      'mobile.reservationDetail.minutes': 'minutos',
+      'mobile.reservationDetail.processStatus': 'Estado del proceso',
+      'mobile.reservationDetail.confirmed': 'Reserva confirmada',
+      'mobile.reservationDetail.inService': 'Vehículo en servicio',
+      'mobile.reservationDetail.finished': 'Servicio finalizado',
+      'mobile.reservationDetail.status.pending': 'Pendiente',
+      'mobile.services.serviceFallback': 'Servicio',
+      'mobile.services.notAvailable': 'No disponible',
+      'mobile.paymentFlow.status': 'Estado del pago',
+      'mobile.paymentFlow.retryPayment': 'Reintentar pago',
+      'mobile.paymentFlow.approved': 'Pago aprobado',
+      'mobile.paymentFlow.pendingHint': 'El pago sigue pendiente.',
+      'mobile.paymentFlow.declined': 'Pago rechazado',
+      'mobile.paymentFlow.error': 'No fue posible consultar el pago.',
+      'mobile.paymentFlow.checkAgain': 'Consultar estado',
+      'ratingFlow.rateService': 'Calificar servicio',
+      'ratingFlow.loadError': 'No fue posible cargar la calificación.',
+      'ratingFlow.alreadyRatedLabel': 'Ya calificado',
+      'ratingFlow.success': 'Calificación enviada',
+      'ratingFlow.question': '¿Cómo fue tu servicio?',
+      'ratingFlow.close': 'Cerrar',
+      'ratingFlow.title': 'Calificar',
+      'ratingFlow.comment': 'Comentario',
+      'ratingFlow.commentPlaceholder': 'Escribe un comentario',
+      'ratingFlow.submit': 'Enviar',
+      'ratingFlow.stars': 'Estrellas',
+    }[key] ?? key),
+  }),
+}));
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: (props: any) => require('react').createElement(require('react-native').Text, props),
+}));
+jest.mock('../../../components/common/BackButton', () => ({
+  __esModule: true,
+  default: (props: any) => require('react').createElement(
+    require('react-native').Pressable,
+    { accessibilityRole: 'button', accessibilityLabel: props.accessibilityLabel, onPress: props.onPress },
+  ),
+}));
+jest.mock('../../../theme/ThemeContext', () => ({
+  ThemeContext: require('react').createContext({
+    theme: {
+      background: '#F7FBFF', card: '#FFFFFF', border: '#DDE4EF', text: '#0D1B3E',
+      textSecondary: '#4A5568', primary: '#1565C0', primarySoft: '#E6F1FF',
+      onPrimary: '#FFFFFF', success: '#16A34A', inProgress: '#0E7490',
+      errorText: '#DC2626', inputBackground: '#F8FAFC', overlay: '#0008',
+      warning: '#D97706',
+    },
+  }),
+}));
+jest.mock('../../../services/ratingService', () => ({
+  ratingService: { getByReservation: jest.fn(), submit: jest.fn() },
+}));
+jest.mock('../../../utils/formatters', () => ({
+  formatCurrency: (value: number) => `$${value}`,
+}));
+jest.mock('../../../services/paymentService', () => ({
+  paymentService: { getByReservation: jest.fn() },
+}));
+jest.mock('../../reservations/services/reservationService', () => ({
+  reservationService: { getById: jest.fn() },
+}));
+
+const renderDetails = () => render(
+  <ServiceDetailsScreen
+    route={{ params: { reservation } } as any}
+    navigation={{ navigate: mockNavigate, goBack: mockGoBack } as any}
+  />,
+);
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  (reservationService.getById as jest.Mock).mockResolvedValue(reservation);
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue({ estado: 'rechazado' });
+});
+
+test('shows retry payment for a pending reservation with a rejected payment', async () => {
+  const view = renderDetails();
+
+  await waitFor(() => expect(view.getByRole('button', { name: 'Reintentar pago' })).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
+
+  expect(mockNavigate).toHaveBeenCalledWith('ReservationPayment', { reservation });
+});
+
+test('does not show retry payment when the backend reports an approved payment', async () => {
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue({ estado: 'aprobado' });
+  const view = renderDetails();
+
+  await waitFor(() => expect(view.getByText('Pago aprobado')).toBeTruthy());
+  expect(view.queryByRole('button', { name: 'Reintentar pago' })).toBeNull();
+});
+
+test('reuses the same navigation action on a double press', async () => {
+  const view = renderDetails();
+  await waitFor(() => expect(view.getByRole('button', { name: 'Reintentar pago' })).toBeTruthy());
+
+  await act(async () => {
+    fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
+    fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
+  });
+
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+});
+
+test('keeps retry hidden when payment status cannot be confirmed', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue(new Error('network'));
+  const view = renderDetails();
+
+  await waitFor(() => expect(view.getByText('No fue posible consultar el pago.')).toBeTruthy());
+  expect(view.queryByRole('button', { name: 'Reintentar pago' })).toBeNull();
+  expect(view.getByRole('button', { name: 'Consultar estado' })).toBeTruthy();
+});
+

@@ -7,6 +7,7 @@ import OperatorProfileScreen from '../features/operator/screens/OperatorProfileS
 import NotificationsScreen from '../features/notifications/screens/NotificationsScreen';
 import { ThemeContext } from '../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import NotificationTabIcon from '../components/notifications/NotificationTabIcon';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,14 +31,14 @@ export default function OperatorNavigator({ setIsLoggedIn }: Props) {
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarLabel: labels[language]?.[route.name] || route.name,
-        tabBarStyle: { backgroundColor: theme.card, borderTopColor: theme.border, height: 60, paddingBottom: 5 },
-        tabBarIcon: ({ color, size }) => (
-          <Ionicons
-            name={route.name === 'Asignaciones' ? 'list-outline' : route.name === 'Notificaciones' ? 'notifications-outline' : 'person-outline'}
+        tabBarStyle: { backgroundColor: theme.tabBarBackground, borderTopColor: theme.divider, height: 60, paddingBottom: 5 },
+        tabBarIcon: ({ color, size }) => route.name === 'Notificaciones'
+          ? <NotificationTabIcon color={color} size={size} />
+          : <Ionicons
+            name={route.name === 'Asignaciones' ? 'list-outline' : 'person-outline'}
             size={size}
             color={color}
-          />
-        ),
+          />,
       })}
     >
       <Tab.Screen name="Asignaciones" component={AssignedServicesScreen} />

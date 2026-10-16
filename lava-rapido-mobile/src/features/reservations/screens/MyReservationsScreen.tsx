@@ -207,9 +207,12 @@ export default function MyReservationsScreen() {
         'success',
       );
     } catch (err: any) {
+      const kind = classifyApiError(err);
       Alert.alert(
         t('mobile.reservations.cancelErrorTitle'),
-        t('mobile.reservations.cancelError'),
+        ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+          ? t(`apiErrors.${kind}`)
+          : t('mobile.reservations.cancelError'),
         undefined,
         'error',
       );

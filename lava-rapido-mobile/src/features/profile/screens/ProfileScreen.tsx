@@ -29,7 +29,7 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { images } from '../../../assets/images'
-import api, { setToken } from '../../../services/api'
+import api, { classifyApiError, setToken } from '../../../services/api'
 import LanguageSelector from '../../../components/profile/LanguageSelector'
 
 type Props = {
@@ -143,10 +143,11 @@ export default function ProfileScreen({
           return
         }
 
+        const kind = classifyApiError(error)
         Alert.alert(
           t('profile.errorTitle'),
-          !error?.response
-            ? t('profile.connectionError')
+          ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+            ? t(`apiErrors.${kind}`)
             : error?.response?.status === 404
               ? t('profile.notFound')
               : t('profile.loadError'),
@@ -278,9 +279,10 @@ export default function ProfileScreen({
       )
 
       const status = error?.response?.status
-      const message = !error?.response
-        ? t('profile.connectionError')
-        : status === 400
+      const kind = classifyApiError(error)
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : status === 400 || status === 422
           ? t('profile.badRequest')
           : status === 401
             ? t('profile.unauthorized')
@@ -838,15 +840,6 @@ export default function ProfileScreen({
         />
 
         <MenuItem
-          icon="key-outline"
-          title={t('changePassword.menuTitle')}
-          description={t('changePassword.menuDescription')}
-          onPress={() => navigation.navigate('ChangePassword')}
-          theme={theme}
-          darkMode={darkMode}
-        />
-
-        <MenuItem
           icon="car-outline"
           title={t('profile.vehicles')}
           description={t('profile.vehiclesDescription')}
@@ -855,15 +848,6 @@ export default function ProfileScreen({
               'MyVehicles'
             )
           }
-          theme={theme}
-          darkMode={darkMode}
-        />
-
-        <MenuItem
-          icon="settings-outline"
-          title={t('profile.settings')}
-          description={t('profile.settingsDescription')}
-          onPress={() => {}}
           theme={theme}
           darkMode={darkMode}
         />

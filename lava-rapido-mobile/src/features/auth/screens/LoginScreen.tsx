@@ -22,7 +22,7 @@ import { ThemeContext } from '../../../theme/ThemeContext';
 import { images } from '../../../assets/images';
 
 import { authService, UserRole } from '../../../services/authService';
-import { setToken } from '../../../services/api';
+import { classifyApiError, setToken } from '../../../services/api';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
@@ -96,21 +96,19 @@ export default function LoginScreen({
     } catch (error: any) {
 
 
-      let message =
-        t('login.genericError');
-
       const status = error?.response?.status;
-      if (status === 401) {
-        message = t('login.unauthorized');
-      } else if (status === 400) {
-        message = t('login.badRequest');
-      } else if (status === 404) {
-        message =
-          t('login.notFound');
-      } else if (!error?.response) {
-        message =
-          t('login.connectionError');
-      }
+      const kind = classifyApiError(error);
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : status === 401
+          ? t('login.unauthorized')
+          : status === 400 || status === 422
+            ? t('login.badRequest')
+            : status === 403
+              ? t('apiErrors.forbidden')
+              : status === 404
+                ? t('login.notFound')
+                : t('login.genericError');
 
       showError(message);
     } finally {

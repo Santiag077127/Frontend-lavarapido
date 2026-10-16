@@ -14,20 +14,45 @@ import pt from './locales/pt.json';
 import { recoveryCopy } from './recoveryCopy';
 import { notificationCopy } from './notificationCopy';
 import { paymentCopy } from './paymentCopy';
+import { emailChangeCopy } from './emailChangeCopy';
+import { apiCopy } from './apiCopy';
+import { passwordCopy } from './passwordCopy';
 
-const withRecovery = <T extends { forgotPassword: Record<string, string>; resetPassword: Record<string, string>; notifications: Record<string, unknown>; mobile: { paymentFlow: Record<string, string> } }>(
+type CopyOverlay = {
+  accessibility: Record<string, string>;
+  forgotPassword: Record<string, string>;
+  resetPassword: Record<string, string>;
+  register: Record<string, string>;
+  changePassword: Record<string, string>;
+  notifications: Record<string, unknown>;
+  apiErrors: Record<string, string>;
+  paymentFlow: Record<string, string>;
+  emailChange: Record<string, string>;
+};
+
+const withRecovery = <T extends { accessibility: Record<string, string>; forgotPassword: Record<string, string>; resetPassword: Record<string, string>; register: Record<string, string>; changePassword: Record<string, string>; notifications: Record<string, unknown>; apiErrors: Record<string, string>; mobile: { paymentFlow: Record<string, string> } }>(
   base: T,
-  copy: (typeof recoveryCopy.es | typeof recoveryCopy.en | typeof recoveryCopy.fr | typeof recoveryCopy.pt) & (typeof notificationCopy.es | typeof notificationCopy.en | typeof notificationCopy.fr | typeof notificationCopy.pt) & (typeof paymentCopy.es | typeof paymentCopy.en | typeof paymentCopy.fr | typeof paymentCopy.pt),
+  copy: CopyOverlay,
 ) => ({
   ...base,
+  accessibility: { ...base.accessibility, ...copy.accessibility },
   forgotPassword: { ...base.forgotPassword, ...copy.forgotPassword },
   resetPassword: { ...base.resetPassword, ...copy.resetPassword },
+  register: { ...base.register, ...copy.register },
+  changePassword: { ...base.changePassword, ...copy.changePassword },
   notifications: { ...base.notifications, ...copy.notifications },
+  apiErrors: { ...base.apiErrors, ...copy.apiErrors },
+  emailChange: { ...copy.emailChange },
   mobile: { ...base.mobile, paymentFlow: { ...base.mobile.paymentFlow, ...copy.paymentFlow } },
 });
 
 i18n.use(initReactI18next).init({
-  resources: { es: { translation: withRecovery(es, { ...recoveryCopy.es, ...notificationCopy.es, ...paymentCopy.es }) }, en: { translation: withRecovery(en, { ...recoveryCopy.en, ...notificationCopy.en, ...paymentCopy.en }) }, fr: { translation: withRecovery(fr, { ...recoveryCopy.fr, ...notificationCopy.fr, ...paymentCopy.fr }) }, pt: { translation: withRecovery(pt, { ...recoveryCopy.pt, ...notificationCopy.pt, ...paymentCopy.pt }) } },
+  resources: {
+    es: { translation: withRecovery(es, { ...recoveryCopy.es, ...notificationCopy.es, ...paymentCopy.es, ...apiCopy.es, ...passwordCopy.es, resetPassword: { ...recoveryCopy.es.resetPassword, ...passwordCopy.es.resetPassword }, emailChange: emailChangeCopy.es }) },
+    en: { translation: withRecovery(en, { ...recoveryCopy.en, ...notificationCopy.en, ...paymentCopy.en, ...apiCopy.en, ...passwordCopy.en, resetPassword: { ...recoveryCopy.en.resetPassword, ...passwordCopy.en.resetPassword }, emailChange: emailChangeCopy.en }) },
+    fr: { translation: withRecovery(fr, { ...recoveryCopy.fr, ...notificationCopy.fr, ...paymentCopy.fr, ...apiCopy.fr, ...passwordCopy.fr, resetPassword: { ...recoveryCopy.fr.resetPassword, ...passwordCopy.fr.resetPassword }, emailChange: emailChangeCopy.fr }) },
+    pt: { translation: withRecovery(pt, { ...recoveryCopy.pt, ...notificationCopy.pt, ...paymentCopy.pt, ...apiCopy.pt, ...passwordCopy.pt, resetPassword: { ...recoveryCopy.pt.resetPassword, ...passwordCopy.pt.resetPassword }, emailChange: emailChangeCopy.pt }) },
+  },
   lng: 'es',
   fallbackLng: 'es',
   interpolation: { escapeValue: false },

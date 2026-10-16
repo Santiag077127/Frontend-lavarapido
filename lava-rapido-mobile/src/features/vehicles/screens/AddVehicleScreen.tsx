@@ -1,12 +1,13 @@
 import React, {
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
+import axios from 'axios';
 
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -24,7 +25,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import BackButton from '../../../components/common/BackButton';
+import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
+import { classifyApiError } from '../../../services/api';
 
 import {
   Brand,
@@ -109,6 +112,7 @@ export default function AddVehicleScreen({
     useState(true);
 
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const [showBrands, setShowBrands] =
     useState(false);
@@ -130,20 +134,19 @@ export default function AddVehicleScreen({
         !vehicle &&
         response.data.length === 0
       ) {
-        Alert.alert(
+        appAlert.alert(
           t('vehicles.form.noBrandsTitle'),
           t('vehicles.form.noBrandsMessage'),
+          undefined,
+          'warning',
         );
       }
     } catch (error: any) {
-      console.error(
-        'Error cargando marcas:',
-        error?.response?.status || error?.message,
-      );
-
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.errors.title'),
         t('vehicles.errors.brands'),
+        undefined,
+        'error',
       );
     } finally {
       setLoadingBrands(false);
@@ -161,9 +164,11 @@ export default function AddVehicleScreen({
     const placaNormalizada = normalizePlate(placa);
 
     if (!placaNormalizada) {
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.form.plateRequiredTitle'),
         t('vehicles.form.plateRequired'),
+        undefined,
+        'error',
       );
       return false;
     }
@@ -172,33 +177,41 @@ export default function AddVehicleScreen({
       /^[A-Z]{3}[0-9]{3}$|^[A-Z]{3}[0-9]{2}[A-Z]$/;
 
     if (!plateRegex.test(placaNormalizada)) {
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.form.plateInvalidTitle'),
         t('vehicles.form.plateInvalid'),
+        undefined,
+        'error',
       );
       return false;
     }
 
     if (!selectedBrand) {
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.form.brandRequiredTitle'),
         t('vehicles.form.brandRequired'),
+        undefined,
+        'error',
       );
       return false;
     }
 
     if (!tipoVehiculo) {
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.form.typeRequiredTitle'),
         t('vehicles.form.typeRequired'),
+        undefined,
+        'error',
       );
       return false;
     }
 
     if (color.length > 30) {
-      Alert.alert(
+      appAlert.alert(
         t('vehicles.form.colorInvalidTitle'),
         t('vehicles.form.colorInvalid'),
+        undefined,
+        'error',
       );
       return false;
     }
@@ -207,6 +220,10 @@ export default function AddVehicleScreen({
   };
 
   const handleSave = async () => {
+    if (savingRef.current) {
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -219,6 +236,7 @@ export default function AddVehicleScreen({
     };
 
     try {
+      savingRef.current = true;
       setSaving(true);
 
       if (isEditing && vehicle) {
@@ -227,7 +245,7 @@ export default function AddVehicleScreen({
           data,
         );
 
-        Alert.alert(
+        appAlert.alert(
           t('vehicles.form.updatedTitle'),
           t('vehicles.form.updatedMessage'),
           [
@@ -236,11 +254,12 @@ export default function AddVehicleScreen({
               onPress: () => navigation.goBack(),
             },
           ],
+          'success',
         );
       } else {
         await vehicleService.create(data);
 
-        Alert.alert(
+        appAlert.alert(
           t('vehicles.form.createdTitle'),
           t('vehicles.form.createdMessage'),
           [
@@ -249,27 +268,45 @@ export default function AddVehicleScreen({
               onPress: () => navigation.goBack(),
             },
           ],
+          'success',
         );
       }
-    } catch (error: any) {
-      console.error(
-        'Error guardando vehículo:',
-        error?.response?.status || error?.message,
+    } catch (error: unknown) {
+      let message = t('vehicles.errors.save');
+      const errorKind = classifyApiError(error);
+      const responseData: unknown = axios.isAxiosError(error)
+        ? error.response?.data
+        : undefined;
+      const responseMessages = typeof responseData === 'string'
+        ? [responseData]
+        : responseData && typeof responseData === 'object'
+          ? ['message', 'error', 'detail'].flatMap((key) => {
+            const value = (responseData as Record<string, unknown>)[key];
+            return typeof value === 'string' ? [value] : [];
+          })
+          : [];
+      const duplicatePlate = responseMessages.some((value) =>
+        value.toLocaleLowerCase().includes('ya existe un vehículo registrado con esa placa'),
       );
 
-      let message =
-        t('vehicles.errors.save');
-
-      if (error?.response?.status === 401) {
-        message = t('vehicles.errors.unauthorized');
-      } else if (error?.response?.status === 400) {
-        message = t('vehicles.errors.badRequest');
-      } else if (error?.response?.status === 409) {
+      if (['network', 'server_unavailable', 'timeout', 'server'].includes(errorKind)) {
+        message = t(`apiErrors.${errorKind}`);
+      } else if (errorKind === 'unauthorized') {
+        return;
+      } else if (axios.isAxiosError(error) && error.response?.status === 400 && duplicatePlate) {
         message = t('vehicles.errors.conflict');
+      } else if (axios.isAxiosError(error) && [400, 422].includes(error.response?.status ?? 0)) {
+        message = t('vehicles.errors.badRequest');
       }
 
-      Alert.alert(t('vehicles.errors.title'), message);
+      appAlert.alert(
+        t('vehicles.errors.title'),
+        message,
+        undefined,
+        'error',
+      );
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -769,7 +806,7 @@ export default function AddVehicleScreen({
                 value={brandQuery}
                 onChangeText={setBrandQuery}
                 placeholder={t('vehicles.form.searchBrand')}
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.placeholder}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 style={[

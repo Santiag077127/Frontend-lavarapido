@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -41,6 +42,8 @@ import { vehicleService } from '../../vehicles/services/vehicleService';
 import type { Vehicle } from '../../vehicles/types/vehicle.types';
 
 import { reservationService } from '../services/reservationService';
+import { classifyReservationCreationError } from '../../../services/reservationErrors';
+import { classifyApiError } from '../../../services/api';
 import { serviceService } from '../../../services/serviceService';
 
 import type {
@@ -163,6 +166,7 @@ export default function ReservationScreen() {
     creatingReservation,
     setCreatingReservation,
   ] = useState(false);
+  const reservationSubmissionInProgress = useRef(false);
 
   // ==========================================================
   // COLORES
@@ -294,11 +298,13 @@ export default function ReservationScreen() {
         } catch (
           error: any
         ) {
-          void error;
+          const kind = classifyApiError(error);
 
           Alert.alert(
             t('mobile.reservation.error'),
-            t('mobile.reservation.vehicleLoadError'),
+            ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+              ? t(`apiErrors.${kind}`)
+              : t('mobile.reservation.vehicleLoadError'),
             undefined,
             'error',
           );
@@ -443,12 +449,12 @@ export default function ReservationScreen() {
 
   const handleCreateReservation =
     async () => {
-      if (
-        creatingReservation
-      ) {
+      if (reservationSubmissionInProgress.current) {
         return;
       }
 
+      reservationSubmissionInProgress.current = true;
+      try {
 
 
 
@@ -618,6 +624,16 @@ export default function ReservationScreen() {
         }
       } catch (availabilityError: any) {
         const status = availabilityError?.response?.status;
+        const kind = classifyApiError(availabilityError);
+        if (['network', 'server_unavailable', 'timeout', 'server'].includes(kind)) {
+          Alert.alert(
+            t('mobile.reservation.error'),
+            t(`apiErrors.${kind}`),
+            undefined,
+            'error',
+          );
+          return;
+        }
         if ([400, 404, 409, 422].includes(status)) {
           Alert.alert(
             t('mobile.reservation.error'),
@@ -634,11 +650,7 @@ export default function ReservationScreen() {
           );
         }
         return;
-      } finally {
-        setCreatingReservation(false);
       }
-
-      setCreatingReservation(true);
 
       // --------------------------------------------------------
       // REQUEST
@@ -676,45 +688,8 @@ export default function ReservationScreen() {
       } catch (
         error: any
       ) {
-        void error;
-
-        // ------------------------------------------------------
-        // OBTENER MENSAJE DEL BACKEND
-        // ------------------------------------------------------
-
-        const responseData =
-          error?.response
-            ?.data;
-
-        const backendMessage = typeof responseData === 'string'
-          ? responseData.toLowerCase()
-          : `${responseData?.message ?? ''} ${responseData?.error ?? ''} ${responseData?.detail ?? ''}`.toLowerCase();
-
-        // ------------------------------------------------------
-        // ERROR DE SOLAPAMIENTO
-        // ------------------------------------------------------
-
-        const normalizedMessage =
-          backendMessage
-            .toLowerCase();
-
-        const isOverlapError =
-          normalizedMessage.includes(
-            'reserva solapada',
-          ) ||
-          normalizedMessage.includes(
-            'solapada',
-          ) ||
-          normalizedMessage.includes(
-            'horario',
-          ) &&
-          normalizedMessage.includes(
-            'vehículo',
-          );
-
-        if (
-          isOverlapError
-        ) {
+        const kind = classifyReservationCreationError(error);
+        if (kind === 'overlap') {
           Alert.alert(
             t('mobile.reservation.overlapTitle'),
             t('mobile.reservation.overlapMessage'),
@@ -730,16 +705,9 @@ export default function ReservationScreen() {
           return;
         }
 
-        // ------------------------------------------------------
-        // OTROS ERRORES 400
-        // ------------------------------------------------------
-
-        if (
-          error?.response
-            ?.status === 400
-        ) {
+        if (kind === 'conflict') {
           Alert.alert(
-            t('mobile.reservation.invalidData'),
+            t('mobile.reservation.createErrorTitle'),
             t('mobile.reservation.genericCreateError'),
             undefined,
             'error',
@@ -748,14 +716,17 @@ export default function ReservationScreen() {
           return;
         }
 
-        // ------------------------------------------------------
-        // ERROR DE AUTORIZACIÓN
-        // ------------------------------------------------------
+        if (kind === 'invalid') {
+          Alert.alert(
+            t('mobile.reservation.invalidData'),
+            t('mobile.reservation.genericCreateError'),
+            undefined,
+            'error',
+          );
+          return;
+        }
 
-        if (
-          error?.response
-            ?.status === 401
-        ) {
+        if (kind === 'unauthorized') {
           Alert.alert(
             t('mobile.reservation.expiredTitle'),
             t('mobile.reservation.expiredMessage'),
@@ -766,14 +737,7 @@ export default function ReservationScreen() {
           return;
         }
 
-        // ------------------------------------------------------
-        // ERROR DE SERVIDOR
-        // ------------------------------------------------------
-
-        if (
-          error?.response
-            ?.status >= 500
-        ) {
+        if (kind === 'server') {
           Alert.alert(
             t('mobile.reservation.serverTitle'),
             t('mobile.reservation.serverMessage'),
@@ -784,9 +748,15 @@ export default function ReservationScreen() {
           return;
         }
 
-        // ------------------------------------------------------
-        // ERROR GENERAL
-        // ------------------------------------------------------
+        if (kind === 'timeout' || kind === 'network' || kind === 'server_unavailable') {
+          Alert.alert(
+            t('mobile.reservation.createErrorTitle'),
+            t(`apiErrors.${kind}`),
+            undefined,
+            'error',
+          );
+          return;
+        }
 
         Alert.alert(
           t('mobile.reservation.createErrorTitle'),
@@ -794,10 +764,11 @@ export default function ReservationScreen() {
           undefined,
           'error',
         );
+      }
+
       } finally {
-        setCreatingReservation(
-          false,
-        );
+        setCreatingReservation(false);
+        reservationSubmissionInProgress.current = false;
       }
     };
 
@@ -872,6 +843,7 @@ export default function ReservationScreen() {
         showsVerticalScrollIndicator={
           false
         }
+        keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <BackButton

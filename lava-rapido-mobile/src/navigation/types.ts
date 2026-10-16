@@ -15,8 +15,6 @@ export type MainTabParamList = {
 };
 
 export type RootStackParamList = {
-  Landing: undefined;
-
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
 
   OperatorTabs: { screen: 'Notificaciones' } | undefined;

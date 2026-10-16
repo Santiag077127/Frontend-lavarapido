@@ -24,6 +24,7 @@ import {
 } from '../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
 import type { MainTabParamList } from './types'
+import NotificationTabIcon from '../components/notifications/NotificationTabIcon'
 
 const Tab =
   createBottomTabNavigator<MainTabParamList>()
@@ -34,7 +35,6 @@ type Props = {
     value: boolean
   ) => void
 }
-
 export default function TabNavigator({
   isLoggedIn,
   setIsLoggedIn,
@@ -67,10 +67,10 @@ export default function TabNavigator({
 
         tabBarStyle: {
           backgroundColor:
-            theme.card,
+            theme.tabBarBackground,
 
           borderTopColor:
-            theme.border,
+            theme.divider,
 
           height: 60,
 
@@ -131,13 +131,11 @@ export default function TabNavigator({
             iconName = 'person'
           }
 
-          return (
-            <Ionicons
-              name={iconName}
-              size={size}
-              color={color}
-            />
-          )
+          if (route.name === 'Notificaciones') {
+            return <NotificationTabIcon color={color} size={size} />
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />
         },
 
         tabBarActiveTintColor:
@@ -185,4 +183,3 @@ export default function TabNavigator({
     </Tab.Navigator>
   )
 }
-

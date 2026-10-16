@@ -7,6 +7,8 @@ import { ThemeContext } from '../../../theme/ThemeContext'
 import { notificationService, type NotificationItem, type NotificationPage } from '../../../services/notificationService'
 import { reservationService } from '../../reservations/services/reservationService'
 import { useTranslation } from 'react-i18next'
+import { useNotification } from '../../../components/notifications/NotificationProvider'
+import { classifyApiError, type ApiErrorKind } from '../../../services/api'
 
 const categoryMeta: Record<NotificationItem['tipo'], { icon: keyof typeof Ionicons.glyphMap; color: 'primary' | 'accentText' | 'success' | 'textSecondary' }> = {
   booking: { icon: 'calendar-outline', color: 'primary' },
@@ -26,24 +28,27 @@ export default function NotificationsScreen({ operator = false }: { operator?: b
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage || i18n.language || 'es'
   const navigation = useNavigation<any>()
+  const { adjustUnreadCount, setUnreadCount } = useNotification()
   const [pagina, setPagina] = useState(0)
   const [soloNoLeidas, setSoloNoLeidas] = useState(false)
   const [data, setData] = useState<NotificationPage | null>(null)
   const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<ApiErrorKind | null>(null)
   const [opening, setOpening] = useState<string | null>(null)
+  const [readingIds, setReadingIds] = useState<Set<string>>(() => new Set())
+  const [markingAll, setMarkingAll] = useState(false)
   const requestId = useRef(0)
 
   const load = useCallback(async () => {
     const currentRequest = ++requestId.current
-    setLoading(true); setError(false)
+    setLoading(true); setError(null)
     try {
       const [list, unread] = await Promise.all([notificationService.list(pagina, soloNoLeidas), notificationService.count()])
-      if (currentRequest === requestId.current) { setData(list); setCount(unread) }
-    } catch { if (currentRequest === requestId.current) setError(true) }
+      if (currentRequest === requestId.current) { setData(list); setCount(unread); setUnreadCount(unread) }
+    } catch (requestError) { if (currentRequest === requestId.current) setError(classifyApiError(requestError)) }
     finally { if (currentRequest === requestId.current) setLoading(false) }
-  }, [pagina, soloNoLeidas])
+  }, [pagina, setUnreadCount, soloNoLeidas])
 
   useFocusEffect(useCallback(() => {
     void load()
@@ -59,15 +64,31 @@ export default function NotificationsScreen({ operator = false }: { operator?: b
         const reservation = await reservationService.getById(item.reservaId)
         navigation.getParent()?.navigate(item.tipo === 'payment' ? 'ReservationPayment' : 'ServiceDetails', { reservation })
       }
-    } catch { setError(true) }
+    } catch (requestError) { setError(classifyApiError(requestError)) }
     finally { setOpening(null) }
   }
 
   const markRead = async (id: string) => {
-    try { await notificationService.read(id); await load() } catch { setError(true) }
+    if (readingIds.has(id)) return
+    setReadingIds((current) => new Set(current).add(id))
+    try {
+      await notificationService.read(id)
+      adjustUnreadCount(-1)
+      setCount((current) => Math.max(0, current - 1))
+      await load()
+    } catch (requestError) { setError(classifyApiError(requestError)) }
+    finally { setReadingIds((current) => { const next = new Set(current); next.delete(id); return next }) }
   }
   const markAllRead = async () => {
-    try { await notificationService.readAll(); await load() } catch { setError(true) }
+    if (markingAll) return
+    setMarkingAll(true)
+    try {
+      await notificationService.readAll()
+      setUnreadCount(0)
+      setCount(0)
+      await load()
+    } catch (requestError) { setError(classifyApiError(requestError)) }
+    finally { setMarkingAll(false) }
   }
   const renderItem = ({ item }: { item: NotificationItem }) => {
     const meta = categoryMeta[item.tipo]
@@ -81,7 +102,7 @@ export default function NotificationsScreen({ operator = false }: { operator?: b
         <Text style={[styles.message, { color: theme.textSecondary }]}>{item.mensaje}</Text>
         <Text style={[styles.date, { color: theme.textSecondary }]}>{formatDate(item.createdAt, language)}</Text>
         <View style={styles.actions}>
-          {!item.leidaAt && <Pressable onPress={() => void markRead(item.id)} style={({ pressed }) => [styles.textButton, pressed && styles.pressed]} accessibilityRole="button"><Ionicons name="checkmark" size={17} color={theme.primary} /><Text style={[styles.textButtonLabel, { color: theme.primary }]}>{t('notifications.read')}</Text></Pressable>}
+          {!item.leidaAt && <Pressable onPress={() => void markRead(item.id)} disabled={readingIds.has(item.id)} style={({ pressed }) => [styles.textButton, pressed && styles.pressed, readingIds.has(item.id) && styles.disabled]} accessibilityRole="button" accessibilityState={{ disabled: readingIds.has(item.id), busy: readingIds.has(item.id) }}><Ionicons name="checkmark" size={17} color={theme.primary} /><Text style={[styles.textButtonLabel, { color: theme.primary }]}>{t('notifications.read')}</Text></Pressable>}
           {item.reservaId && <Pressable onPress={() => void openRelated(item)} disabled={opening === item.id} style={({ pressed }) => [styles.textButton, pressed && styles.pressed, opening === item.id && styles.disabled]} accessibilityRole="button" accessibilityState={{ disabled: opening === item.id, busy: opening === item.id }}>{opening === item.id ? <ActivityIndicator size="small" color={theme.primary} /> : <Ionicons name="arrow-forward" size={17} color={theme.primary} />}<Text style={[styles.textButtonLabel, { color: theme.primary }]}>{action}</Text></Pressable>}
         </View>
       </View>
@@ -91,13 +112,13 @@ export default function NotificationsScreen({ operator = false }: { operator?: b
   const header = <>
     <View style={styles.heading}><View><Text accessibilityRole="header" style={[styles.title, { color: theme.text }]}>{t('notifications.title')}</Text><Text style={[styles.unread, { color: theme.textSecondary }]}>{t('notifications.unread', { count })}</Text></View><View style={[styles.bell, { backgroundColor: theme.infoBackground }]}><Ionicons name="notifications-outline" size={24} color={theme.primary} /></View></View>
     <View style={styles.filters}><Pressable onPress={() => { setPagina(0); setSoloNoLeidas(false) }} style={[styles.filter, { backgroundColor: !soloNoLeidas ? theme.primary : theme.card, borderColor: !soloNoLeidas ? theme.primary : theme.border }]} accessibilityRole="button" accessibilityState={{ selected: !soloNoLeidas }}><Text style={[styles.filterText, { color: !soloNoLeidas ? theme.onPrimary : theme.text }]}>{t('notifications.all')}</Text></Pressable><Pressable onPress={() => { setPagina(0); setSoloNoLeidas(true) }} style={[styles.filter, { backgroundColor: soloNoLeidas ? theme.primary : theme.card, borderColor: soloNoLeidas ? theme.primary : theme.border }]} accessibilityRole="button" accessibilityState={{ selected: soloNoLeidas }}><Text style={[styles.filterText, { color: soloNoLeidas ? theme.onPrimary : theme.text }]}>{t('notifications.only')}</Text></Pressable></View>
-    {count > 0 && <Pressable onPress={() => void markAllRead()} style={styles.readAll} accessibilityRole="button"><Ionicons name="checkmark-done-outline" size={18} color={theme.primary} /><Text style={[styles.readAllText, { color: theme.primary }]}>{t('notifications.readAll')}</Text></Pressable>}
+    {count > 0 && <Pressable onPress={() => void markAllRead()} disabled={markingAll} style={[styles.readAll, markingAll && styles.disabled]} accessibilityRole="button" accessibilityState={{ disabled: markingAll, busy: markingAll }}><Ionicons name="checkmark-done-outline" size={18} color={theme.primary} /><Text style={[styles.readAllText, { color: theme.primary }]}>{t('notifications.readAll')}</Text></Pressable>}
   </>
 
   const state = (icon: keyof typeof Ionicons.glyphMap, title: string, description: string, retry?: boolean) => <View style={styles.state}><View style={[styles.stateIcon, { backgroundColor: retry ? theme.errorBackground : theme.infoBackground }]}><Ionicons name={icon} size={38} color={retry ? theme.errorText : theme.primary} /></View><Text style={[styles.stateTitle, { color: theme.text }]}>{title}</Text><Text style={[styles.stateText, { color: theme.textSecondary }]}>{description}</Text>{retry && <Pressable onPress={() => void load()} style={[styles.retryButton, { backgroundColor: theme.primary }]} accessibilityRole="button"><Text style={[styles.retryText, { color: theme.onPrimary }]}>{t('notifications.retry')}</Text></Pressable>}</View>
 
   return <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: theme.background }]}><View style={styles.screen}>
-    {loading ? <View style={styles.loading}><ActivityIndicator accessibilityLabel={t('notifications.loading')} size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.textSecondary }]}>{t('notifications.loading')}</Text></View> : error ? <FlatList data={[]} renderItem={null} ListHeaderComponent={header} ListEmptyComponent={state('cloud-offline-outline', t('notifications.errorTitle'), t('notifications.error'), true)} contentContainerStyle={styles.listContent} /> : <FlatList data={data?.content ?? []} keyExtractor={item => item.id} renderItem={renderItem} ListHeaderComponent={header} ListEmptyComponent={state('notifications-off-outline', t('notifications.emptyTitle'), t('notifications.empty'))} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} />}
+    {loading ? <View style={styles.loading}><ActivityIndicator accessibilityLabel={t('notifications.loading')} size="large" color={theme.primary} /><Text style={[styles.loadingText, { color: theme.textSecondary }]}>{t('notifications.loading')}</Text></View> : error ? <FlatList data={[]} renderItem={null} ListHeaderComponent={header} ListEmptyComponent={state('cloud-offline-outline', t('notifications.errorTitle'), error === 'unknown' ? t('notifications.error') : t(`apiErrors.${error}`), true)} contentContainerStyle={styles.listContent} /> : <FlatList data={data?.content ?? []} keyExtractor={item => item.id} renderItem={renderItem} ListHeaderComponent={header} ListEmptyComponent={state('notifications-off-outline', t('notifications.emptyTitle'), t('notifications.empty'))} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} />}
     {!!data?.totalPages && data.totalPages > 1 && <View style={[styles.pagination, { backgroundColor: theme.card, borderTopColor: theme.border }]}><Pressable disabled={pagina === 0} onPress={() => setPagina(pagina - 1)} style={[styles.pageButton, pagina === 0 && styles.disabled]} accessibilityRole="button"><Ionicons name="chevron-back" size={21} color={theme.primary} /></Pressable><Text style={[styles.pageLabel, { color: theme.text }]}>{t('notifications.page', { current: pagina + 1, total: data.totalPages })}</Text><Pressable disabled={pagina + 1 >= data.totalPages} onPress={() => setPagina(pagina + 1)} style={[styles.pageButton, pagina + 1 >= data.totalPages && styles.disabled]} accessibilityRole="button"><Ionicons name="chevron-forward" size={21} color={theme.primary} /></Pressable></View>}
   </View></SafeAreaView>
 }

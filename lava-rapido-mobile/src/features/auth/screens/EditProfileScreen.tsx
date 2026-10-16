@@ -2,8 +2,10 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react'
+import axios from 'axios'
 
 import {
   ActivityIndicator,
@@ -33,22 +35,15 @@ import {
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { useTranslation } from 'react-i18next'
 import BackButton from '../../../components/common/BackButton'
+import { userService, type UserProfile } from '../../../services/userService'
+import { invalidateSession } from '../../../services/api'
+import { classifyApiError } from '../../../services/apiErrors'
 
 import {
   images,
 } from '../../../assets/images'
 
-import api from '../../../services/api'
-
-
-type UserProfile = {
-  userId: string
-  email: string
-  firstName: string
-  lastName: string
-  phoneNumber: string
-  profilePicture: string | null
-}
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type AvatarKey =
   | 'avatar_1'
@@ -103,6 +98,12 @@ export default function EditProfileScreen() {
   const [phoneNumber, setPhoneNumber] =
     useState('')
 
+  const [newEmail, setNewEmail] =
+    useState('')
+
+  const [currentPassword, setCurrentPassword] =
+    useState('')
+
   const [profilePicture, setProfilePicture] =
     useState<AvatarKey>('avatar_1')
 
@@ -111,6 +112,11 @@ export default function EditProfileScreen() {
 
   const [saving, setSaving] =
     useState(false)
+
+  const [savingEmail, setSavingEmail] =
+    useState(false)
+
+  const emailChangeInProgress = useRef(false)
 
   const [selectedAvatar, setSelectedAvatar] =
     useState<AvatarKey>('avatar_1')
@@ -160,13 +166,7 @@ export default function EditProfileScreen() {
         try {
           setLoading(true)
 
-          const response =
-            await api.get<UserProfile>(
-              '/api/users/profile'
-            )
-
-          const data =
-            response.data
+          const data = await userService.getProfile()
 
           setProfile(data)
 
@@ -195,16 +195,11 @@ export default function EditProfileScreen() {
             avatar
           )
         } catch (error: any) {
-          console.log(
-            'ERROR CARGANDO PERFIL:',
-            error?.response?.data ||
-              error?.message
-          )
-
+          const kind = classifyApiError(error)
           Alert.alert(
             t('editProfile.errorTitle'),
-            !error?.response
-              ? t('editProfile.connectionError')
+            ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+              ? t(`apiErrors.${kind}`)
               : error?.response?.status === 401
                 ? t('editProfile.unauthorized')
                 : error?.response?.status === 404
@@ -258,7 +253,7 @@ export default function EditProfileScreen() {
   const handleSelectAvatar = (
     avatar: AvatarKey
   ) => {
-    if (saving) {
+    if (saving || savingEmail) {
       return
     }
 
@@ -326,7 +321,7 @@ export default function EditProfileScreen() {
   }
 
   const handleSave = async () => {
-    if (saving) {
+    if (saving || savingEmail || emailChangeInProgress.current) {
       return
     }
 
@@ -337,27 +332,14 @@ export default function EditProfileScreen() {
     try {
       setSaving(true)
 
-      const response =
-        await api.put<UserProfile>(
-          '/api/users/profile',
-          {
-            firstName:
-              firstName.trim(),
+      const data = await userService.updateProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        profilePicture,
+      })
 
-            lastName:
-              lastName.trim(),
-
-            phoneNumber:
-              phoneNumber.trim(),
-
-            profilePicture:
-              profilePicture,
-          }
-        )
-
-      setProfile(
-        response.data
-      )
+      setProfile(data)
 
       Alert.alert(
         t('editProfile.savedTitle'),
@@ -372,16 +354,11 @@ export default function EditProfileScreen() {
         'success',
       )
     } catch (error: any) {
-      console.log(
-        'ERROR ACTUALIZANDO PERFIL:',
-        error?.response?.data ||
-          error?.message
-      )
-
       const status = error?.response?.status
-      const message = !error?.response
-        ? t('editProfile.connectionError')
-        : status === 400
+      const kind = classifyApiError(error)
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : status === 400 || status === 422
           ? t('editProfile.badRequest')
           : status === 401
             ? t('editProfile.unauthorized')
@@ -402,8 +379,109 @@ export default function EditProfileScreen() {
     }
   }
 
+  const handleChangeEmail = async () => {
+    if (saving || savingEmail || emailChangeInProgress.current) {
+      return
+    }
+
+    const normalizedEmail = newEmail.trim().toLowerCase()
+    if (!normalizedEmail || !currentPassword) {
+      Alert.alert(
+        t('emailChange.errorTitle'),
+        t('emailChange.required'),
+        undefined,
+        'warning',
+      )
+      return
+    }
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      Alert.alert(
+        t('emailChange.errorTitle'),
+        t('emailChange.invalidEmail'),
+        undefined,
+        'warning',
+      )
+      return
+    }
+
+    if (normalizedEmail === profile?.email.trim().toLowerCase()) {
+      Alert.alert(
+        t('emailChange.errorTitle'),
+        t('emailChange.sameEmail'),
+        undefined,
+        'warning',
+      )
+      return
+    }
+
+    emailChangeInProgress.current = true
+    setSavingEmail(true)
+
+    try {
+      const updatedProfile = await userService.changeEmail({
+        currentPassword,
+        newEmail: normalizedEmail,
+      })
+
+      setProfile(updatedProfile)
+      setNewEmail('')
+      setCurrentPassword('')
+
+      // The backend validates JWT email claims against the updated account email.
+      invalidateSession()
+      Alert.alert(
+        t('emailChange.successTitle'),
+        t('emailChange.successMessage', { email: updatedProfile.email }),
+        [{ text: t('common.accept') }],
+        'success',
+      )
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        return
+      }
+
+      const kind = classifyApiError(error)
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined
+      const responseData: unknown = axios.isAxiosError(error)
+        ? error.response?.data
+        : undefined
+      const errorCode = responseData && typeof responseData === 'object'
+        && 'error' in responseData && typeof responseData.error === 'string'
+        ? responseData.error
+        : undefined
+      const message = kind === 'timeout'
+        ? t('emailChange.timeout')
+        : ['network', 'server_unavailable', 'server'].includes(kind)
+          ? t(`apiErrors.${kind}`)
+        : status === 400 && errorCode === 'CURRENT_PASSWORD_INVALID'
+          ? t('emailChange.incorrectPassword')
+          : status === 400
+            ? t('emailChange.invalidRequest')
+            : status === 403
+              ? t('emailChange.forbidden')
+              : status === 404
+                ? t('emailChange.notFound')
+                : status === 409
+                  ? t('emailChange.conflict')
+                  : t('emailChange.genericError')
+
+      Alert.alert(
+        t('emailChange.errorTitle'),
+        message,
+        undefined,
+        'error',
+      )
+    } finally {
+      emailChangeInProgress.current = false
+      setSavingEmail(false)
+    }
+  }
+
   const handleCancel = () => {
-    if (saving) {
+    if (saving || savingEmail) {
       return
     }
 
@@ -602,7 +680,7 @@ export default function EditProfileScreen() {
                   accessibilityLabel={t('accessibility.avatarOption', { number: index + 1 })}
                   accessibilityState={{ selected }}
                   activeOpacity={0.75}
-                  disabled={saving}
+                  disabled={saving || savingEmail}
                   onPress={() =>
                     handleSelectAvatar(
                       item.key
@@ -725,7 +803,7 @@ export default function EditProfileScreen() {
             icon="person-outline"
             theme={theme}
             darkMode={darkMode}
-            editable={!saving}
+            editable={!saving && !savingEmail}
           />
 
           <FormInput
@@ -738,88 +816,8 @@ export default function EditProfileScreen() {
             icon="person-outline"
             theme={theme}
             darkMode={darkMode}
-            editable={!saving}
+            editable={!saving && !savingEmail}
           />
-
-          <View
-            style={styles.fieldContainer}
-          >
-            <Text
-              style={[
-                styles.label,
-                {
-                  color:
-                    theme.text,
-                },
-              ]}
-            >
-              {t('editProfile.email')}
-            </Text>
-
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  backgroundColor:
-                    theme.inputBackground,
-
-                  borderColor:
-                    theme.border,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.inputIcon,
-                  {
-                    backgroundColor:
-                      theme.primaryContainer,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="mail-outline"
-                  size={19}
-                  color={
-                    theme.textSecondary
-                  }
-                />
-              </View>
-
-              <Text
-                style={[
-                  styles.disabledEmail,
-                  {
-                    color:
-                      theme.textSecondary,
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {profile?.email || t('editProfile.noEmail')}
-              </Text>
-
-              <Ionicons
-                name="lock-closed-outline"
-                size={17}
-                color={
-                  theme.textSecondary
-                }
-              />
-            </View>
-
-            <Text
-              style={[
-                styles.helperText,
-                {
-                  color:
-                    theme.textSecondary,
-                },
-              ]}
-            >
-              {t('editProfile.emailReadOnly')}
-            </Text>
-          </View>
 
           <FormInput
             label={t('editProfile.phone')}
@@ -831,91 +829,187 @@ export default function EditProfileScreen() {
             icon="call-outline"
             theme={theme}
             darkMode={darkMode}
-            editable={!saving}
+            editable={!saving && !savingEmail}
             keyboardType="phone-pad"
           />
-        </View>
 
-        {/* BOTONES */}
-
-        <View
-          style={styles.actions}
-        >
-          <TouchableOpacity
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            disabled={saving}
-            onPress={handleCancel}
-            style={[
-              styles.cancelButton,
-              {
-                backgroundColor: theme.card,
-
-                borderColor:
-                  theme.border,
-
-                opacity:
-                  saving ? 0.6 : 1,
-              },
-            ]}
-          >
-            <Ionicons
-              name="close-outline"
-              size={20}
-              color={theme.text}
-            />
-
-            <Text
+          <View style={styles.actions}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              disabled={saving || savingEmail}
+              onPress={handleCancel}
               style={[
-                styles.cancelText,
+                styles.cancelButton,
                 {
-                  color:
-                    theme.text,
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                  opacity: saving || savingEmail ? 0.6 : 1,
                 },
               ]}
             >
-              {t('editProfile.cancel')}
-            </Text>
-          </TouchableOpacity>
+              <Ionicons name="close-outline" size={20} color={theme.text} />
+              <Text style={[styles.cancelText, { color: theme.text }]}>
+                {t('editProfile.cancel')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: saving || savingEmail, busy: saving }}
+              accessibilityLiveRegion="polite"
+              disabled={saving || savingEmail}
+              onPress={handleSave}
+              accessibilityLabel={saving ? `${t('editProfile.save')}, ${t('accessibility.inProgress')}` : t('editProfile.save')}
+              style={[
+                styles.saveButton,
+                {
+                  backgroundColor: theme.primary,
+                  opacity: saving || savingEmail ? 0.75 : 1,
+                },
+              ]}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color={theme.onPrimary} />
+              ) : (
+                <Ionicons name="checkmark-circle-outline" size={20} color={theme.onPrimary} />
+              )}
+              <Text style={[styles.saveText, { color: theme.onPrimary }]}>
+                {saving ? t('editProfile.saving') : t('editProfile.save')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIcon, { backgroundColor: theme.primaryContainer }]}>
+              <Ionicons name="mail-outline" size={20} color={theme.primary} />
+            </View>
+            <View style={styles.emailHeaderText}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                {t('emailChange.title')}
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                {t('emailChange.subtitle')}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.helperText, styles.currentEmail, { color: theme.textSecondary }]}>
+            {t('emailChange.currentEmail', {
+              email: profile?.email || t('editProfile.noEmail'),
+            })}
+          </Text>
+
+          <FormInput
+            label={t('emailChange.newEmail')}
+            value={newEmail}
+            onChangeText={setNewEmail}
+            placeholder={t('emailChange.newEmailPlaceholder')}
+            icon="mail-outline"
+            theme={theme}
+            darkMode={darkMode}
+            editable={!saving && !savingEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+          />
+
+          <FormInput
+            label={t('emailChange.currentPassword')}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder={t('emailChange.currentPassword')}
+            icon="lock-closed-outline"
+            theme={theme}
+            darkMode={darkMode}
+            editable={!saving && !savingEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="current-password"
+            secureTextEntry
+          />
 
           <TouchableOpacity
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityState={{ disabled: saving, busy: saving }}
+            accessibilityState={{ disabled: saving || savingEmail, busy: savingEmail }}
             accessibilityLiveRegion="polite"
-            disabled={saving}
-            onPress={handleSave}
-            accessibilityLabel={saving ? `${t('editProfile.save')}, ${t('accessibility.inProgress')}` : t('editProfile.save')}
+            accessibilityLabel={t('emailChange.submit')}
+            disabled={saving || savingEmail}
+            onPress={handleChangeEmail}
             style={[
               styles.saveButton,
+              styles.emailSubmitButton,
               {
-                backgroundColor:
-                  theme.primary,
-                opacity:
-                  saving ? 0.75 : 1,
+                backgroundColor: theme.primary,
+                opacity: saving || savingEmail ? 0.75 : 1,
               },
             ]}
           >
-            {saving ? (
-              <ActivityIndicator
-                size="small"
-                color={theme.onPrimary}
-              />
-            ) : (
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={20}
-                color={theme.onPrimary}
-              />
-            )}
-
-            <Text
-              style={[styles.saveText, { color: theme.onPrimary }]}
-            >
-              {saving
-                ? t('editProfile.saving')
-                : t('editProfile.save')}
+            {savingEmail
+              ? <ActivityIndicator size="small" color={theme.onPrimary} />
+              : <Ionicons name="mail-outline" size={20} color={theme.onPrimary} />}
+            <Text style={[styles.saveText, { color: theme.onPrimary }]}>
+              {savingEmail ? t('emailChange.saving') : t('emailChange.submit')}
             </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={[
+            styles.formCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIcon, { backgroundColor: theme.primaryContainer }]}>
+              <Ionicons name="shield-checkmark-outline" size={20} color={theme.primary} />
+            </View>
+            <View style={styles.emailHeaderText}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                {t('changePassword.title')}
+              </Text>
+              <Text style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                {t('changePassword.subtitle')}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t('changePassword.menuTitle')}
+            accessibilityHint={t('changePassword.menuDescription')}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ChangePassword')}
+            style={[styles.securityAction, { borderColor: theme.border, backgroundColor: theme.inputBackground }]}
+          >
+            <View style={[styles.securityActionIcon, { backgroundColor: theme.primaryContainer }]}>
+              <Ionicons name="key-outline" size={19} color={theme.primary} />
+            </View>
+            <View style={styles.securityActionText}>
+              <Text style={[styles.securityActionTitle, { color: theme.text }]}>
+                {t('changePassword.menuTitle')}
+              </Text>
+              <Text style={[styles.securityActionDescription, { color: theme.textSecondary }]}>
+                {t('changePassword.menuDescription')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -961,6 +1055,10 @@ function FormInput({
   darkMode,
   editable = true,
   keyboardType = 'default',
+  autoCapitalize = 'words',
+  autoCorrect,
+  autoComplete,
+  secureTextEntry = false,
 }: any) {
   return (
     <View
@@ -1022,6 +1120,10 @@ function FormInput({
           keyboardType={
             keyboardType
           }
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
+          autoComplete={autoComplete}
+          secureTextEntry={secureTextEntry}
           style={[
             styles.input,
             {
@@ -1029,7 +1131,6 @@ function FormInput({
                 theme.text,
             },
           ]}
-          autoCapitalize="words"
         />
       </View>
     </View>
@@ -1179,6 +1280,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  emailHeaderText: {
+    flex: 1,
+  },
+
   sectionIcon: {
     width: 42,
     height: 42,
@@ -1233,17 +1338,54 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
 
-  disabledEmail: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-
   helperText: {
     fontSize: 10.5,
     marginTop: 5,
     marginLeft: 2,
+  },
+
+  currentEmail: {
+    marginTop: -8,
+    marginBottom: 16,
+  },
+
+  emailSubmitButton: {
+    flex: 0,
+    marginTop: 2,
+  },
+
+  securityAction: {
+    minHeight: 68,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  securityActionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+
+  securityActionText: {
+    flex: 1,
+    marginRight: 8,
+  },
+
+  securityActionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  securityActionDescription: {
+    fontSize: 11.5,
+    marginTop: 3,
   },
 
   actions: {
