@@ -34,6 +34,11 @@ describe("ChangePasswordPage", () => {
     expect(isValidNewPassword("       ")).toBe(false);
     expect(isValidNewPassword("á".repeat(36))).toBe(true);
     expect(isValidNewPassword("á".repeat(37))).toBe(false);
+
+    fill("CurrentPass1", "á".repeat(37), "á".repeat(37));
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar contraseña" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("La nueva contraseña es demasiado larga. Prueba una más corta.");
+    expect(mockedChangePassword).not.toHaveBeenCalled();
   });
 
   it("sends the backend body once and clears passwords after success", async () => {

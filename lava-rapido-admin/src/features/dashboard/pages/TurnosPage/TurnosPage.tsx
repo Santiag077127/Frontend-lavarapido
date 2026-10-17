@@ -21,7 +21,7 @@ const horarioError = (error: unknown) => {
       if (detail.includes("pas")) return "turns.pastTime";
       if (detail.includes("solapad")) return "turns.occupiedTime";
       if (detail.includes("06:00") || detail.includes("20:00")) return "ui.la.reserva.debe.iniciar.entre.06.00.y.20.00.y.finalizar.antes.de";
-      return detail;
+      return "ui.no.se.pudo.registrar.la.reserva";
     }
   }
   return errorMessage(error, "ui.no.se.pudo.registrar.la.reserva");

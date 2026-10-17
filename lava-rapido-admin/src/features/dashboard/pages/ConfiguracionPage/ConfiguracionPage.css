@@ -101,6 +101,14 @@
   background: var(--accent);
 }
 
+.config-card--password > a {
+  box-sizing: border-box;
+  width: min(100%, 270px);
+  min-height: 52px;
+  justify-self: stretch;
+  white-space: nowrap;
+}
+
 .config-toggle {
   width: 170px;
 }

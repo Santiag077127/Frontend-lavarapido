@@ -68,7 +68,7 @@ export const ConfiguracionPage = () => {
           <Link to="/dashboard/cambiar-correo">{t("emailChange.link")}</Link>
         </article>
 
-        <article className="config-card">
+        <article className="config-card config-card--password">
           <LockKeyhole size={24} />
           <div>
             <h3>{t("settings.password.title")}</h3>

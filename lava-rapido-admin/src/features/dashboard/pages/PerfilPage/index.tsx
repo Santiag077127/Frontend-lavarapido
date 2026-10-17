@@ -9,6 +9,7 @@ import { ThemeContext, localizeMessage, useTranslations } from "../../../../them
 import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
 import { getProfile, updateProfile } from "../../services/userService";
 import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
+import "@/styles/settingsBackLink.css";
 import "./PerfilPage.css";
 
 type ProfileForm = Pick<UserProfile, "firstName" | "lastName" | "phoneNumber" | "profilePicture" | "email">;
@@ -149,7 +150,7 @@ export const PerfilPage = () => {
     <div className="page-perfil">
       <div className="page-header">
         <div>
-          <Link to="/dashboard/configuracion" className="perfil-back-link">
+          <Link to="/dashboard/configuracion" className="settings-back-link">
             <ArrowLeft size={17} />
             {t("common.backToSettings")}
           </Link>

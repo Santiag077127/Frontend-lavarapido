@@ -45,8 +45,6 @@ export const VehiculosPage = () => {
   }, [vehiculos, busqueda]);
 
   const stats = useMemo(() => ({
-    activos: vehiculos.filter((v) => v.estado).length,
-    inactivos: vehiculos.filter((v) => !v.estado).length,
     total: vehiculos.length,
   }), [vehiculos]);
 
@@ -63,14 +61,6 @@ export const VehiculosPage = () => {
         <div className="stat-card stat--azul">
           <p className="stat-card__valor">{stats.total}</p>
           <p className="stat-card__label">{t("common.total")}</p>
-        </div>
-        <div className="stat-card stat--verde">
-          <p className="stat-card__valor">{stats.activos}</p>
-          <p className="stat-card__label">{t("common.activePlural")}</p>
-        </div>
-        <div className="stat-card stat--amarillo">
-          <p className="stat-card__valor">{stats.inactivos}</p>
-          <p className="stat-card__label">{t("common.inactivePlural")}</p>
         </div>
       </div>
 
