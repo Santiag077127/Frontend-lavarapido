@@ -56,7 +56,8 @@
 }
 
 .btn-editar,
-.btn-activar {
+.btn-activar,
+.btn-desactivar {
   border: none;
   padding: 8px 16px;
   border-radius: 16px;
@@ -85,6 +86,10 @@
 .btn-activar:hover {
   background: #bbf7d0;
 }
+
+.btn-desactivar { background: #fee2e2; color: #b91c1c; }
+.btn-desactivar:hover { background: #fecaca; }
+.btn-activar:disabled, .btn-desactivar:disabled { opacity: .6; cursor: wait; }
 
 .tabla-descripcion {
   max-width: 220px;

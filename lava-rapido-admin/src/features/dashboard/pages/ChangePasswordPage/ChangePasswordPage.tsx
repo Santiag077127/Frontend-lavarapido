@@ -41,6 +41,7 @@ export const ChangePasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const passwordsMatch = confirmation.length > 0 && newPassword === confirmation;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -102,6 +103,7 @@ export const ChangePasswordPage = () => {
           <label htmlFor="confirm-password">{t("ui.confirmar.nueva.contrasena")}</label>
           <input id="confirm-password" type="password" value={confirmation}
             onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" disabled={isLoading} />
+          {confirmation && <small className={passwordsMatch ? "password-match" : "password-mismatch"} role="status">{passwordsMatch ? t("passwords.match") : localizeMessage("ui.la.confirmacion.no.coincide.con.la.nueva.contrasena", t)}</small>}
 
           <button type="submit" disabled={isLoading} aria-busy={isLoading}>
             {isLoading ? t("auth.updating") : t("auth.updatePassword")}

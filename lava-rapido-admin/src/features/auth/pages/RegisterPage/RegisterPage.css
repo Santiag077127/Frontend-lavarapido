@@ -19,6 +19,15 @@
   max-width: 560px;
 }
 
+.rp-legal-link { border: 0; padding: 0; color: #1d4ed8; background: transparent; text-decoration: underline; font: inherit; cursor: pointer; }
+.rp-legal-overlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; background: rgba(13, 27, 62, .6); }
+.rp-legal-dialog { width: min(100%, 660px); max-height: min(85vh, 760px); overflow-y: auto; box-sizing: border-box; padding: 1.5rem; border-radius: 14px; background: #fff; color: #1f2937; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.rp-legal-dialog h2 { margin: 0; color: #172554; }
+.rp-legal-dialog h3 { margin: 1.15rem 0 .25rem; font-size: 1rem; color: #172554; }
+.rp-legal-dialog p { margin: .3rem 0; line-height: 1.55; }
+.rp-legal-dialog .rp-legal-date { margin: .3rem 0 1.25rem; color: #64748b; font-size: .85rem; }
+.rp-legal-close { position: sticky; bottom: 0; display: block; margin: 1.5rem 0 0 auto; padding: .65rem 1.25rem; border: 0; border-radius: 8px; background: #1d4ed8; color: #fff; font-weight: 700; cursor: pointer; }
+
 /* ── Encabezado ── */
 .rp-header {
   margin-bottom: 1.5rem;

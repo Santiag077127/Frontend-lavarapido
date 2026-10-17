@@ -7,6 +7,7 @@ import {
   getServicios,
   createServicio,
   updateServicio,
+  cambiarEstadoServicio,
 } from "@/features/dashboard/services/servicioService";
 import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
@@ -20,6 +21,7 @@ export const ServiciosPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null);
+  const [cambiandoId, setCambiandoId] = useState<string | null>(null);
 
   const cargarServicios = async () => {
     setCargando(true);
@@ -52,6 +54,19 @@ export const ServiciosPage = () => {
   const handleEditar = (servicio: Servicio) => {
     setServicioEditando(servicio);
     setModalAbierto(true);
+  };
+
+  const handleCambiarEstado = async (servicio: Servicio) => {
+    setCambiandoId(servicio.idServicio);
+    setError(null);
+    try {
+      const actualizado = await cambiarEstadoServicio(servicio.idServicio, !servicio.estado);
+      setServicios((actuales) => actuales.map((item) => item.idServicio === servicio.idServicio ? actualizado : item));
+    } catch {
+      setError("No se pudo cambiar el estado del servicio. Intenta de nuevo.");
+    } finally {
+      setCambiandoId(null);
+    }
   };
 
   // El mismo modal crea o actualiza según exista un servicio en edición.
@@ -99,6 +114,8 @@ export const ServiciosPage = () => {
           <ServiciosTable
             servicios={serviciosFiltrados}
             onEditar={handleEditar}
+            onCambiarEstado={handleCambiarEstado}
+            cambiandoId={cambiandoId}
           />
         </div>
       )}

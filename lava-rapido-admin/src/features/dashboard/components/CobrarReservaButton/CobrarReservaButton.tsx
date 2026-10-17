@@ -27,6 +27,7 @@ interface Props {
   estadoReserva?: EstadoReserva;
   compacto?: boolean;
   autoVerificar?: boolean;
+  mostrarActualizarEstado?: boolean;
   onPagoAprobado: () => Promise<void> | void;
   onError: (mensaje: string) => void;
 }
@@ -79,6 +80,7 @@ export const CobrarReservaButton = ({
   estadoReserva,
   compacto = false,
   autoVerificar = false,
+  mostrarActualizarEstado = true,
   onPagoAprobado,
   onError,
 }: Props) => {
@@ -276,7 +278,6 @@ export const CobrarReservaButton = ({
       {pago?.estado === "rechazado" && <span className="badge pago-rechazado">{t("ui.rechazado")}</span>}
       {pago?.estado === "pendiente" && <span className="badge pago-pendiente">{t("common.pending")}</span>}
       {tieneDuplicado && <span className="pago-incidencia-mini" title={t("ui.posible.doble.cobro")}>{t("ui.revisar")}</span>}
-      {pago?.estado === "pendiente" && <button type="button" className="pago-refrescar" disabled={verificando} onClick={iniciarVerificacion}>{verificando ? t("payments.verifying") : t("payments.check")}</button>}
       {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn pago-btn--compacto" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? t("payments.opening") : pago ? t("payments.continue") : t("payments.charge")}</button>}
     </div>;
   }
@@ -297,7 +298,7 @@ export const CobrarReservaButton = ({
     {verificando && <p className="pago-estado">{t("ui.consultando.confirmacion.del.backend")}</p>}
 
     <div className="pago-acciones">
-      {pago?.estado === "pendiente" && <button type="button" className="pago-btn-secundario" disabled={verificando || consultando} onClick={iniciarVerificacion}>{verificando ? t("payments.verifying") : esperaAgotada ? t("ui.consultar.de.nuevo") : t("ui.actualizar.estado")}</button>}
+      {mostrarActualizarEstado && pago?.estado === "pendiente" && <button type="button" className="pago-btn-secundario" disabled={verificando || consultando} onClick={iniciarVerificacion}>{verificando ? t("payments.verifying") : esperaAgotada ? t("ui.consultar.de.nuevo") : t("ui.actualizar.estado")}</button>}
       {puedePagar && pago?.estado !== "aprobado" && <button type="button" className="pago-btn" disabled={!listo || iniciando || cargandoScript} onClick={cobrar}>{iniciando ? t("ui.abriendo.wompi") : pago?.estado === "rechazado" ? t("ui.reintentar.pago") : pago?.estado === "pendiente" ? t("ui.continuar.en.wompi") : t("ui.pagar.con.wompi")}</button>}
       {esAdmin && intentoPendiente?.wompiTransactionId && <button type="button" className="pago-btn-secundario" disabled={reconciliando} onClick={reconciliar}>{reconciliando ? t("payments.verifying") : t("ui.verificar.con.wompi")}</button>}
     </div>

@@ -14,9 +14,14 @@
   border-radius: 16px;
   padding: 2rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 460px;
   box-shadow: 0 16px 48px rgba(13, 27, 62, 0.2);
 }
+
+.om-header { display: flex; align-items: center; gap: .9rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1rem; }
+.om-icon { width: 44px; height: 44px; display: grid; place-items: center; flex: none; border-radius: 12px; color: #1559a5; background: #e0f2fe; }
+.om-header .om-subtitulo { margin: .25rem 0 0; line-height: 1.4; }
+.om-help { margin: 0 0 1.25rem; padding: .7rem .8rem; border-radius: 8px; color: #334155; background: #f1f5f9; font-size: .84rem; line-height: 1.45; }
 
 .om-titulo {
   font-size: 1.1rem;

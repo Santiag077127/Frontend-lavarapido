@@ -7,11 +7,15 @@ import "./ServiciosTable.css";
 interface ServiciosTableProps {
   servicios: Servicio[];
   onEditar: (servicio: Servicio) => void;
+  onCambiarEstado: (servicio: Servicio) => void;
+  cambiandoId: string | null;
 }
 
 export const ServiciosTable = ({
   servicios,
   onEditar,
+  onCambiarEstado,
+  cambiandoId,
 }: ServiciosTableProps) => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
@@ -25,6 +29,7 @@ export const ServiciosTable = ({
           <th>{t("common.description")}</th>
           <th>{t("common.price")}</th>
           <th>{t("common.duration")}</th>
+          <th>{t("common.status")}</th>
           <th>{t("common.actions")}</th>
         </tr>
       </thead>
@@ -37,9 +42,13 @@ export const ServiciosTable = ({
             </td>
             <td>${servicio.precio.toLocaleString(locale)}</td>
             <td>{servicio.duracionMinutos} min</td>
+            <td><span className={`badge ${servicio.estado ? "badge--activo" : "badge--inactivo"}`}>{servicio.estado ? t("common.active") : t("common.inactive")}</span></td>
             <td>
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
                 {t("common.edit")}
+              </button>
+              <button className={servicio.estado ? "btn-desactivar" : "btn-activar"} onClick={() => onCambiarEstado(servicio)} disabled={cambiandoId === servicio.idServicio}>
+                {cambiandoId === servicio.idServicio ? t("profile.saving") : servicio.estado ? t("common.deactivate") : t("common.activate")}
               </button>
             </td>
           </tr>

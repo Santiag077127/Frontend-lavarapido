@@ -1,6 +1,5 @@
 // Muestra y actualiza los datos del perfil.
 import { useContext, useEffect, useState } from "react";
-import { login } from "@/features/auth/services/authService";
 import axios from "axios";
 import { ArrowLeft, Mail, Phone, Save } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,7 +7,7 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../../../../store/authStore";
 import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
 import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
-import { changeEmail, getProfile, updateProfile } from "../../services/userService";
+import { getProfile, updateProfile } from "../../services/userService";
 import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
 import "./PerfilPage.css";
 
@@ -45,8 +44,6 @@ export const PerfilPage = () => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
   const loggedUser = useAuthStore((state) => state.user);
-  const setAuth = useAuthStore((state) => state.setAuth);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
   const [cargando, setCargando] = useState(true);
@@ -114,10 +111,6 @@ export const PerfilPage = () => {
     };
     setFieldErrors(errors);
 
-    if (form.email.trim().toLowerCase() !== profile?.email.toLowerCase() && !currentPassword) {
-      setError("profile.passwordRequired");
-      return;
-    }
     if (Object.values(errors).some(Boolean)) {
       setError("ui.corrige.los.campos.marcados.antes.de.guardar");
       return;
@@ -131,12 +124,6 @@ export const PerfilPage = () => {
         phoneNumber: form.phoneNumber,
         profilePicture: form.profilePicture,
       });
-      if (form.email.trim().toLowerCase() !== profile?.email.toLowerCase()) {
-        await changeEmail(form.email.trim().toLowerCase(), currentPassword);
-        const session = await login(form.email.trim().toLowerCase(), currentPassword);
-        setAuth(session.token, session.user);
-        setCurrentPassword("");
-      }
       const refreshed = await getProfile();
       const currentProfile = refreshed || updated;
       setProfile(currentProfile);
@@ -194,10 +181,10 @@ export const PerfilPage = () => {
             </dl>
 
             <form className="perfil-form" onSubmit={handleSubmit}>
-              <label>{t("auth.email")}<input className={fieldErrors.email ? "perfil-input--error" : ""} name="email" type="email" value={form.email} onChange={handleChange} maxLength={100} required />
+              <label>{t("auth.email")}<input className={fieldErrors.email ? "perfil-input--error" : ""} name="email" type="email" value={form.email} readOnly maxLength={100} required />
                 {fieldErrors.email && <small className="perfil-field-error">{localizeMessage(fieldErrors.email, t)}</small>}
               </label>
-              {form.email.trim().toLowerCase() !== profile?.email.toLowerCase() && <label>{t("profile.currentPassword")}<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required autoComplete="current-password" /></label>}
+              <Link to="/dashboard/cambiar-correo">{t("emailChange.title")}</Link>
               <label>{t("services.name")}<input className={fieldErrors.firstName ? "perfil-input--error" : ""} name="firstName" value={form.firstName} onChange={handleChange} required />
                 {fieldErrors.firstName && <small className="perfil-field-error">{localizeMessage(fieldErrors.firstName, t)}</small>}
               </label>
