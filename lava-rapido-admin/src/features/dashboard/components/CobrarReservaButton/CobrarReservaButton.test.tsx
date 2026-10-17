@@ -89,7 +89,7 @@ describe("CobrarReservaButton", () => {
       </select>;
     }
     render(<ThemeProvider><LanguageControl /><CobrarReservaButton idReserva="reserva-1" habilitado estadoReserva="PENDIENTE" onPagoAprobado={vi.fn()} onError={vi.fn()} /></ThemeProvider>);
-    await screen.findByText("Estado financiero");
+    await screen.findByText("Estado del pago");
     fireEvent.change(screen.getByLabelText("language"), { target: { value: "en" } });
     expect(screen.getByText("Payment status")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Continue in Wompi" })).toBeTruthy();
@@ -151,7 +151,7 @@ describe("CobrarReservaButton", () => {
     pagosMock.consultar.mockResolvedValue(pago({ estado: "aprobado", fechaPago: "2026-09-21T14:35:20", intentoActual: aprobado, intentos: [aprobado, duplicado] }));
     render(<CobrarReservaButton idReserva="reserva-1" habilitado estadoReserva="CANCELADA" onPagoAprobado={vi.fn()} onError={vi.fn()} />);
     expect(await screen.findByText("Tarjeta")).toBeInTheDocument();
-    expect(screen.getByText(/Posible doble cobro detectado/)).toBeInTheDocument();
+    expect(screen.getByText(/Podría haber un cobro duplicado/)).toBeInTheDocument();
     expect(screen.getByText(/continúa cancelada/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /pagar|reintentar/i })).not.toBeInTheDocument();
   });
@@ -201,7 +201,7 @@ describe("CobrarReservaButton", () => {
     guardarContextoPago({ idReserva: "reserva-contexto", referencia: "PAGO-CONTEXTO" });
     pagosMock.consultar.mockResolvedValue(pago({ idReserva: "reserva-contexto" }));
     render(<MemoryRouter initialEntries={["/pagos/resultado?id=tx-wompi"]}><PagoResultadoPage /></MemoryRouter>);
-    expect(await screen.findByText(/La confirmación que ves aquí proviene del backend/)).toBeInTheDocument();
+    expect(await screen.findByText(/Estamos comprobando el pago/)).toBeInTheDocument();
     await waitFor(() => expect(pagosMock.consultar).toHaveBeenCalledWith("reserva-contexto", expect.any(AbortSignal)));
     await waitFor(() => expect(pagosMock.verificar).toHaveBeenCalledWith("reserva-contexto", "PAGO-CONTEXTO", "tx-wompi"));
     expect(pagosMock.consultar).not.toHaveBeenCalledWith("tx-wompi", expect.anything());

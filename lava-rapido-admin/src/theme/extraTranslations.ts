@@ -1,6 +1,8 @@
 // Copy with interpolation and short labels used by dynamic states.
 export const extraTranslations = {
   es: {
+    "passwords.minLength": "La nueva contraseña debe tener al menos 8 caracteres.", "passwords.tooLong": "La nueva contraseña es demasiado larga. Prueba una más corta.",
+    "passwords.notOnlySpaces": "La nueva contraseña no puede contener solo espacios.",
     "passwords.match": "Las contraseñas coinciden.",
     "legal.acceptTermsPrefix": "Acepto los", "legal.updated": "Última actualización: 17 de octubre de 2026",
     "emailChange.title": "Cambiar correo electrónico", "emailChange.cardDescription": "Confirma tu contraseña actual y vuelve a iniciar sesión con el correo nuevo.",
@@ -31,6 +33,8 @@ export const extraTranslations = {
     "operators.deactivatedOne": "Se desactivó {count} operador.", "operators.deactivatedMany": "Se desactivaron {count} operadores.",
   },
   en: {
+    "passwords.minLength": "The new password must have at least 8 characters.", "passwords.tooLong": "The new password is too long. Try a shorter one.",
+    "passwords.notOnlySpaces": "The new password cannot contain only spaces.",
     "passwords.match": "Passwords match.",
     "legal.acceptTermsPrefix": "I accept the", "legal.updated": "Last updated: October 17, 2026",
     "emailChange.title": "Change email address", "emailChange.cardDescription": "Confirm your current password and sign in again with the new address.",
@@ -61,6 +65,8 @@ export const extraTranslations = {
     "operators.deactivatedOne": "Deactivated {count} operator.", "operators.deactivatedMany": "Deactivated {count} operators.",
   },
   fr: {
+    "passwords.minLength": "Le nouveau mot de passe doit contenir au moins 8 caractères.", "passwords.tooLong": "Le nouveau mot de passe est trop long. Essayez-en un plus court.",
+    "passwords.notOnlySpaces": "Le nouveau mot de passe ne peut pas contenir uniquement des espaces.",
     "passwords.match": "Les mots de passe correspondent.",
     "legal.acceptTermsPrefix": "J'accepte les", "legal.updated": "Dernière mise à jour : 17 octobre 2026",
     "emailChange.title": "Changer l'adresse e-mail", "emailChange.cardDescription": "Confirmez votre mot de passe actuel, puis reconnectez-vous avec la nouvelle adresse.",
@@ -91,6 +97,8 @@ export const extraTranslations = {
     "operators.deactivatedOne": "{count} opérateur désactivé.", "operators.deactivatedMany": "{count} opérateurs désactivés.",
   },
   pt: {
+    "passwords.minLength": "A nova senha deve ter pelo menos 8 caracteres.", "passwords.tooLong": "A nova senha é longa demais. Tente uma mais curta.",
+    "passwords.notOnlySpaces": "A nova senha não pode conter apenas espaços.",
     "passwords.match": "As senhas coincidem.",
     "legal.acceptTermsPrefix": "Aceito os", "legal.updated": "Última atualização: 17 de outubro de 2026",
     "emailChange.title": "Alterar e-mail", "emailChange.cardDescription": "Confirme sua senha atual e entre novamente com o novo e-mail.",

@@ -52,7 +52,7 @@ export const ChangeEmailPage = () => {
   };
 
   return <main className="change-password-page change-email-page">
-    <Link className="change-password-back" to="/dashboard/configuracion"><ArrowLeft size={17} /> {t("common.backToSettings")}</Link>
+    <Link className="settings-back-link" to="/dashboard/configuracion"><ArrowLeft size={17} /> {t("common.backToSettings")}</Link>
     <section className="change-password-card" aria-labelledby="change-email-title">
       <Mail size={28} aria-hidden="true" />
       <h1 id="change-email-title">{t("emailChange.title")}</h1>

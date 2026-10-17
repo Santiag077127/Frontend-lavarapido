@@ -39,7 +39,7 @@ export function useTranslations() {
 // State may contain a translation key or a message returned by the server.
 // Server and user content stays untouched; keys are resolved at render time.
 export function localizeMessage(value: string, t: (key: string) => string): string {
-  return /^(ui|common|auth|profile|services|vehicles|brands|operators|turns|panel|map|payments|booking|app)\./.test(value)
+  return /^(ui|common|auth|profile|services|vehicles|brands|operators|turns|panel|map|payments|booking|app|passwords)\./.test(value)
     ? t(value)
     : value;
 }
@@ -108,8 +108,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.profile.title": "Mi perfil",
     "settings.profile.desc": "Consulta y actualiza tus datos de administrador.",
     "settings.profile.action": "Abrir perfil",
-    "settings.password.title": "Restablecer contraseña",
-    "settings.password.desc": "Solicita un enlace para restablecer tu contraseña cuando lo necesites.",
+    "settings.password.title": "Contraseña",
+    "settings.password.desc": "Cambia tu contraseña o recupérala por correo si no puedes entrar.",
     "settings.password.action": "Ir a restablecimiento",
     "settings.mode.title": "Modo de interfaz",
     "settings.mode.desc": "Cambia entre modo claro y modo oscuro en todo el panel.",
@@ -288,8 +288,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.profile.title": "My profile",
     "settings.profile.desc": "View and update your administrator details.",
     "settings.profile.action": "Open profile",
-    "settings.password.title": "Reset password",
-    "settings.password.desc": "Request a link to reset your password when needed.",
+    "settings.password.title": "Password",
+    "settings.password.desc": "Change your password or recover it by email if you cannot sign in.",
     "settings.password.action": "Go to reset",
     "settings.mode.title": "Interface mode",
     "settings.mode.desc": "Switch between light and dark mode across the panel.",
@@ -468,8 +468,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.profile.title": "Mon profil",
     "settings.profile.desc": "Consultez et mettez à jour vos données administrateur.",
     "settings.profile.action": "Ouvrir le profil",
-    "settings.password.title": "Réinitialiser le mot de passe",
-    "settings.password.desc": "Demandez un lien pour réinitialiser votre mot de passe.",
+    "settings.password.title": "Mot de passe",
+    "settings.password.desc": "Modifiez votre mot de passe ou récupérez-le par courriel si vous ne pouvez pas vous connecter.",
     "settings.password.action": "Aller à la réinitialisation",
     "settings.mode.title": "Mode d'interface",
     "settings.mode.desc": "Passez du mode clair au mode sombre dans tout le panneau.",
@@ -648,8 +648,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.profile.title": "Meu perfil",
     "settings.profile.desc": "Consulte e atualize seus dados de administrador.",
     "settings.profile.action": "Abrir perfil",
-    "settings.password.title": "Redefinir senha",
-    "settings.password.desc": "Solicite um link para redefinir sua senha quando precisar.",
+    "settings.password.title": "Senha",
+    "settings.password.desc": "Altere sua senha ou recupere-a por e-mail se não conseguir entrar.",
     "settings.password.action": "Ir para redefinição",
     "settings.mode.title": "Modo de interface",
     "settings.mode.desc": "Alterne entre modo claro e escuro em todo o painel.",

@@ -6,6 +6,7 @@ import axios from "axios";
 import { useTranslations, localizeMessage } from "@/theme/theme";
 
 import { changePassword } from "../../services/userService";
+import "@/styles/settingsBackLink.css";
 import "./ChangePasswordPage.css";
 
 const MAX_PASSWORD_UTF8_BYTES = 72;
@@ -54,8 +55,16 @@ export const ChangePasswordPage = () => {
       return;
     }
     // La validación local da respuesta inmediata; el backend vuelve a comprobarla.
-    if (!isValidNewPassword(newPassword)) {
-      setError("ui.la.nueva.contrasena.debe.tener.al.menos.8.caracteres.maximo.72.by");
+    if (!newPassword.trim()) {
+      setError("passwords.notOnlySpaces");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("passwords.minLength");
+      return;
+    }
+    if (getPasswordUtf8ByteLength(newPassword) > MAX_PASSWORD_UTF8_BYTES) {
+      setError("passwords.tooLong");
       return;
     }
     if (newPassword !== confirmation) {
@@ -80,7 +89,7 @@ export const ChangePasswordPage = () => {
 
   return (
     <main className="change-password-page">
-      <Link className="change-password-back" to="/dashboard/configuracion">
+      <Link className="settings-back-link" to="/dashboard/configuracion">
         <ArrowLeft size={17} />{" " + t("common.backToSettings")}</Link>
       <section className="change-password-card" aria-labelledby="change-password-title">
         <KeyRound size={28} aria-hidden="true" />

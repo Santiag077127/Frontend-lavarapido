@@ -11,6 +11,7 @@ import { forgotPassword } from "../../services/authService";
 import type { ForgotPasswordErrorResponse } from "../../types";
 import { useAuthStore } from "../../../../store/authStore";
 import { ThemeContext, localizeMessage, useTranslations } from "../../../../theme/theme";
+import "@/styles/settingsBackLink.css";
 
 export const ForgotPasswordPage = () => {
   const theme = useContext(ThemeContext);
@@ -129,7 +130,7 @@ export const ForgotPasswordPage = () => {
 };
 
 const DashboardBackLink = ({ label }: { label: string }) => (
-  <Link to="/dashboard/configuracion" className="fpp-dashboard-back">
+  <Link to="/dashboard/configuracion" className="settings-back-link fpp-dashboard-back">
     <ArrowLeft size={17} />
     {label}
   </Link>
