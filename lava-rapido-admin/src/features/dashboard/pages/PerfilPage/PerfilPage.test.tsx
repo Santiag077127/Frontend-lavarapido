@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "@/store/authStore";
@@ -23,12 +23,8 @@ describe("PerfilPage", () => {
   it("guarda el correo, renueva la sesi?n y recarga el perfil", async () => {
     const { container } = render(<MemoryRouter><PerfilPage /></MemoryRouter>);
     await screen.findByDisplayValue("old@example.com");
-    fireEvent.change(container.querySelector('input[name="email"]')!, { target: { value: "new@example.com" } });
-    fireEvent.change(container.querySelector('input[type="password"]')!, { target: { value: "secret" } });
-    fireEvent.click(screen.getByRole("button", { name: /guardar/i }));
-    await waitFor(() => expect(services.email).toHaveBeenCalledWith("new@example.com", "secret"));
-    expect(services.login).toHaveBeenCalledWith("new@example.com", "secret");
-    await waitFor(() => expect(useAuthStore.getState().user?.email).toBe("new@example.com"));
-    expect(container.querySelector('input[name="email"]')).toHaveValue("new@example.com");
+    expect(container.querySelector('input[name="email"]')).toHaveAttribute("readonly");
+    expect(screen.getByRole("link", { name: /cambiar correo/i })).toHaveAttribute("href", "/dashboard/cambiar-correo");
+    expect(services.email).not.toHaveBeenCalled();
   });
 });

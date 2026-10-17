@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Languages,
+  Mail,
   LockKeyhole,
   LogOut,
   Moon,
@@ -59,6 +60,12 @@ export const ConfiguracionPage = () => {
             <p>{t("settings.profile.desc")}</p>
           </div>
           <Link to="/dashboard/perfil">{t("settings.profile.action")}</Link>
+        </article>
+
+        <article className="config-card">
+          <Mail size={24} />
+          <div><h3>{t("emailChange.title")}</h3><p>{t("emailChange.cardDescription")}</p></div>
+          <Link to="/dashboard/cambiar-correo">{t("emailChange.link")}</Link>
         </article>
 
         <article className="config-card">

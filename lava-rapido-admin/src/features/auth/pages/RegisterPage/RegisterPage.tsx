@@ -1,13 +1,14 @@
 // Valida los datos del registro y envía la cuenta nueva al backend.
 import "./RegisterPage.css";
 
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslations, localizeMessage } from "@/theme/theme";
+import { ThemeContext, useTranslations, localizeMessage } from "@/theme/theme";
 
 import { HomeButton } from "../../components/HomeButton/HomeButton";
 import { register } from "../../services/authService";
 import type { RegisterPayload } from "../../types";
+import { legalContentByLanguage } from "./legalContent";
 
 const INITIAL_FORM: RegisterPayload = {
   firstName: "", lastName: "", email: "", phoneNumber: "", documentType: "CC", documentNumber: "", password: "",
@@ -42,6 +43,8 @@ const validateField = (field: FieldName, value: string, form: RegisterPayload): 
 
 export const RegisterPage = () => {
   const t = useTranslations();
+  const language = useContext(ThemeContext)?.language ?? "es";
+  const legalContent = legalContentByLanguage[language];
   const navigate = useNavigate();
   const [form, setForm] = useState<RegisterPayload>(INITIAL_FORM);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,6 +55,7 @@ export const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<"privacy" | "terms" | null>(null);
 
   const allFieldErrors = useMemo<FieldErrors>(() => ({
     firstName: validateField("firstName", form.firstName, form), lastName: validateField("lastName", form.lastName, form),
@@ -158,12 +162,22 @@ export const RegisterPage = () => {
           <div className="rp-field"><label className="rp-label" htmlFor="rp-confirm">{t("auth.confirmPassword") + " "}<span className="rp-required">*</span></label><input id="rp-confirm" name="confirmPassword" type="password" placeholder={t("ui.repite.la.contrasena")} value={confirmPassword} onChange={handleConfirmPasswordChange} className={getInputClassName("confirmPassword")} autoComplete="new-password" aria-required="true" aria-invalid={Boolean(fieldErrors.confirmPassword)} />{renderFieldError("confirmPassword")}</div>
         </div>
         <div className="rp-consents">
-          <label className="rp-consent"><input type="checkbox" checked={acceptsDataPolicy} onChange={(event) => handleConsentChange("dataPolicy", event.target.checked)} /><span>{t("ui.acepto.el.tratamiento.de.mis.datos.personales.conforme.a.la") + " "}<a href="#politica-de-privacidad">{t("ui.politica.de.privacidad")}</a>.</span></label>
-          <label className="rp-consent"><input type="checkbox" checked={acceptsTerms} onChange={(event) => handleConsentChange("terms", event.target.checked)} /><span>{t("ui.acepto.los.terminos.y.condiciones.del.servicio")}</span></label>
+          <label className="rp-consent"><input type="checkbox" checked={acceptsDataPolicy} onChange={(event) => handleConsentChange("dataPolicy", event.target.checked)} /><span>{t("ui.acepto.el.tratamiento.de.mis.datos.personales.conforme.a.la") + " "}<button type="button" className="rp-legal-link" onClick={() => setLegalDocument("privacy")}>{t("ui.politica.de.privacidad")}</button>.</span></label>
+          <label className="rp-consent"><input type="checkbox" checked={acceptsTerms} onChange={(event) => handleConsentChange("terms", event.target.checked)} /><span>{t("legal.acceptTermsPrefix") + " "}<button type="button" className="rp-legal-link" onClick={() => setLegalDocument("terms")}>{legalContent.terms.title.toLowerCase()}</button>.</span></label>
           {fieldErrors.consents && (!acceptsDataPolicy || !acceptsTerms) && <p className="rp-field-error">{localizeMessage(fieldErrors.consents, t)}</p>}
         </div>
         <button className="rp-btn" type="submit" disabled={!isFormValid} aria-busy={isLoading}>{isLoading && <svg className="rp-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="40" strokeDashoffset="10" /></svg>}{isLoading ? t("auth.registering") : t("auth.registerAction")}</button>
       </form>
-    </div></div>
+    </div>
+    {legalDocument && <div className="rp-legal-overlay" onClick={() => setLegalDocument(null)}>
+      <section className="rp-legal-dialog" role="dialog" aria-modal="true" aria-labelledby="rp-legal-title" onClick={(event) => event.stopPropagation()}>
+        <h2 id="rp-legal-title">{legalContent[legalDocument].title}</h2>
+        <p className="rp-legal-date">{t("legal.updated")}</p>
+        <p>{legalContent[legalDocument].intro}</p>
+        {legalContent[legalDocument].sections.map(([title, body]) => <div key={title}><h3>{title}</h3><p>{body}</p></div>)}
+        <button type="button" className="rp-legal-close" onClick={() => setLegalDocument(null)}>{t("ui.cerrar")}</button>
+      </section>
+    </div>}
+    </div>
   );
 };

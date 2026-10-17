@@ -17,6 +17,7 @@ import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
 import { ConfiguracionPage } from "@/features/dashboard/pages/ConfiguracionPage/ConfiguracionPage";
 import { PagoResultadoPage } from "@/features/dashboard/pages/PagoResultadoPage/PagoResultadoPage";
 import { ChangePasswordPage } from "@/features/dashboard/pages/ChangePasswordPage/ChangePasswordPage";
+import { ChangeEmailPage } from "@/features/dashboard/pages/ChangeEmailPage/ChangeEmailPage";
 import { RequireAdmin } from "./RequireAdmin";
 import { AuthNavigation } from "./AuthNavigation";
 import { AccessDeniedPage } from "./AccessDeniedPage";
@@ -49,6 +50,7 @@ export const AppRouter = () => {
           <Route path="perfil" element={<PerfilPage />} />
           <Route path="configuracion" element={<ConfiguracionPage />} />
           <Route path="cambiar-contrasena" element={<ChangePasswordPage />} />
+          <Route path="cambiar-correo" element={<ChangeEmailPage />} />
           <Route path="notificaciones" element={<Navigate to="/dashboard/panel" replace />} />
         </Route>
         </Route>
