@@ -10,6 +10,9 @@ export const passwordCopy = {
     },
     changePassword: { invalidPassword: 'La contraseña debe tener mínimo 8 caracteres.' },
     resetPassword: {
+      tokenPlaceholder: 'Ingresa el c\u00F3digo',
+      newPasswordPlaceholder: 'Nueva contrase\u00F1a',
+      confirmPasswordPlaceholder: 'Confirma tu contrase\u00F1a',
       passwordRequirements: 'Mínimo 8 caracteres.',
       passwordTooLong: 'La contraseña es demasiado larga. Prueba con una más corta.',
     },
@@ -25,6 +28,9 @@ export const passwordCopy = {
     },
     changePassword: { invalidPassword: 'The password must have at least 8 characters.' },
     resetPassword: {
+      tokenPlaceholder: 'Enter the code',
+      newPasswordPlaceholder: 'New password',
+      confirmPasswordPlaceholder: 'Confirm your password',
       passwordRequirements: 'Minimum 8 characters.',
       passwordTooLong: 'The password is too long. Try a shorter one.',
     },
@@ -40,6 +46,9 @@ export const passwordCopy = {
     },
     changePassword: { invalidPassword: 'A senha deve ter no mínimo 8 caracteres.' },
     resetPassword: {
+      tokenPlaceholder: 'Digite o c\u00F3digo',
+      newPasswordPlaceholder: 'Nova senha',
+      confirmPasswordPlaceholder: 'Confirme sua senha',
       passwordRequirements: 'Mínimo de 8 caracteres.',
       passwordTooLong: 'A senha é muito longa. Tente uma mais curta.',
     },
@@ -55,6 +64,9 @@ export const passwordCopy = {
     },
     changePassword: { invalidPassword: 'Le mot de passe doit comporter au moins 8 caractères.' },
     resetPassword: {
+      tokenPlaceholder: 'Saisissez le code',
+      newPasswordPlaceholder: 'Nouveau mot de passe',
+      confirmPasswordPlaceholder: 'Confirmez votre mot de passe',
       passwordRequirements: 'Au moins 8 caractères.',
       passwordTooLong: 'Le mot de passe est trop long. Essayez-en un plus court.',
     },

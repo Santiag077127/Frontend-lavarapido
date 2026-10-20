@@ -21,7 +21,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
@@ -963,68 +963,14 @@ export default function MyReservationsScreen() {
         },
       ]}
     >
-      {/* HEADER */}
-      <View
-        style={[
-          styles.header,
-          {
-            paddingHorizontal:
-              width < 360 ? 16 : 20,
-          },
-        ]}
-      >
-        <BackButton
-          accessibilityLabel={t('mobile.reservations.back')}
-          onPress={() => navigation.goBack()}
-        />
-
-        <View
-          style={styles.headerTextContainer}
-        >
-          <Text
-            style={[
-              styles.headerTitle,
-              {
-                color: textColor,
-              },
-            ]}
-          >
-            {t('mobile.reservations.title')}
-          </Text>
-
-          <Text
-            style={[
-              styles.headerSubtitle,
-              {
-                color: mutedColor,
-              },
-            ]}
-          >
-            {t('mobile.reservations.subtitle')}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.countBadge,
-            {
-              backgroundColor:
-                theme.primarySoft,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.countText,
-              {
-                color: primaryColor,
-              },
-            ]}
-          >
-            {reservations.length}
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        accessibilityLabel={t('mobile.reservations.back')}
+        onBack={() => navigation.goBack()}
+        right={<View style={[styles.countBadge, { backgroundColor: theme.primarySoft }]}><Text style={[styles.countText, { color: primaryColor }]}>{reservations.length}</Text></View>}
+        style={{ marginHorizontal: width < 360 ? 16 : 20 }}
+        subtitle={t('mobile.reservations.subtitle')}
+        title={t('mobile.reservations.title')}
+      />
 
       {/* LISTA */}
       <FlatList

@@ -19,7 +19,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import BackButton from '../../../components/common/BackButton'
+import ScreenHeader from '../../../components/common/ScreenHeader'
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 import { useTranslation } from 'react-i18next'
@@ -267,10 +267,12 @@ export default function ServiceDetailsScreen({
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.pageContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={[styles.topBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <BackButton onPress={() => navigation.goBack()} accessibilityLabel={t('mobile.serviceDetail.back')} />
-          <View style={styles.topBarText}><Text style={[styles.pageTitle, { color: theme.text }]}>{t('mobile.reservationDetail.title')}</Text><Text style={[styles.pageSubtitle, { color: theme.textSecondary }]} numberOfLines={2}>{reservation.nombreServicio || t('mobile.services.serviceFallback')}</Text></View>
-        </View>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.serviceDetail.back')}
+          onBack={() => navigation.goBack()}
+          subtitle={reservation.nombreServicio || t('mobile.services.serviceFallback')}
+          title={t('mobile.reservationDetail.title')}
+        />
         <View style={[styles.hero, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={[styles.heroIcon, { backgroundColor: theme.primarySoft }]}><Ionicons name="car-sport" size={28} color={theme.primary} /></View>
           <View style={styles.heroText}><Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={2}>{reservation.nombreServicio || t('mobile.services.serviceFallback')}</Text><Text style={[styles.reservationId, { color: theme.textSecondary }]} numberOfLines={1}>{t('mobile.reservationDetail.reservation')} #{reservation.idReserva}</Text></View>

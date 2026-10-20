@@ -21,7 +21,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import {
@@ -311,7 +311,7 @@ export default function MyVehiclesScreen({
 
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={`${t(item.estado ? 'vehicles.status.deactivate' : 'vehicles.status.activate')}: ${item.placa}`}
+            accessibilityLabel={`${item.estado ? 'Eliminar' : t('vehicles.status.activate')}: ${item.placa}`}
             style={[
               styles.actionButton,
               {
@@ -347,7 +347,7 @@ export default function MyVehiclesScreen({
               ]}
             >
               {item.estado
-                ? t('vehicles.status.deactivate')
+                ? 'Eliminar'
                 : t('vehicles.status.activate')}
             </Text>
           </TouchableOpacity>
@@ -396,20 +396,13 @@ export default function MyVehiclesScreen({
         },
       ]}
     >
-      <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <BackButton
-          accessibilityLabel={t('mobile.serviceDetail.back')}
-          onPress={() => navigation.goBack()}
-        />
-        <View style={styles.headerText}>
-          <Text accessibilityRole="header" style={[styles.title, { color: theme.text }]} numberOfLines={2}>
-            {t('vehicles.title')}
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
-            {t('vehicles.subtitle')}
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        accessibilityLabel={t('mobile.serviceDetail.back')}
+        onBack={() => navigation.goBack()}
+        style={{ marginHorizontal: 18, marginTop: 8 }}
+        subtitle={t('vehicles.subtitle')}
+        title={t('vehicles.title')}
+      />
 
       <FlatList
         data={vehicles}

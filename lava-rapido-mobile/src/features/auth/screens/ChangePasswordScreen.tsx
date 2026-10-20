@@ -16,15 +16,28 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
 import { classifyApiError } from '../../../services/api';
 import { isValidPassword, passwordsMatch } from '../../../services/passwordPolicy';
+import { passwordVisibilityIcon } from '../../../services/passwordVisibility';
 import type { RootStackParamList } from '../../../navigation/types';
 
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
+
+export type ConfirmationState = 'valid' | 'invalid' | 'neutral';
+
+export const getConfirmationState = (
+  newPassword: string,
+  confirmPassword: string,
+  touched: boolean,
+): ConfirmationState => {
+  if (!touched || !confirmPassword.trim()) return 'neutral';
+  if (!passwordsMatch(newPassword, confirmPassword)) return 'invalid';
+  return isValidPassword(newPassword) ? 'valid' : 'neutral';
+};
 
 export default function ChangePasswordScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -41,6 +54,14 @@ export default function ChangePasswordScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [retryableError, setRetryableError] = useState(false);
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
+  const confirmationState = getConfirmationState(newPassword, confirmPassword, confirmTouched);
+  const passwordPairBorderColor = confirmationState === 'valid'
+    ? theme.success
+    : confirmationState === 'invalid'
+      ? theme.errorBorder
+      : theme.border;
 
   const fields: Array<{
     key: PasswordField;
@@ -56,6 +77,7 @@ export default function ChangePasswordScreen() {
   const handleChangePassword = async () => {
     setError('');
     setRetryableError(false);
+    setConfirmTouched(true);
 
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       setError(t('changePassword.required'));
@@ -122,16 +144,12 @@ export default function ChangePasswordScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            <View style={styles.header}>
-              <BackButton onPress={() => navigation.goBack()} />
-              <Text accessibilityRole="header" style={[styles.title, { color: theme.text }]}>
-                {t('changePassword.title')}
-              </Text>
-            </View>
-
-            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-              {t('changePassword.subtitle')}
-            </Text>
+            <ScreenHeader
+              accessibilityLabel={t('mobile.serviceDetail.back')}
+              onBack={() => navigation.goBack()}
+              subtitle={t('changePassword.subtitle')}
+              title={t('changePassword.title')}
+            />
 
             <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
               {fields.map(({ key, label, value, onChangeText }) => (
@@ -139,7 +157,12 @@ export default function ChangePasswordScreen() {
                   <Text nativeID={`${key}-label`} style={[styles.label, { color: theme.text }]}>
                     {label}
                   </Text>
-                  <View style={[styles.inputContainer, { backgroundColor: theme.inputBackground, borderColor: error ? theme.errorBorder : theme.border }]}>
+                  <View style={[styles.inputContainer, {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: key === 'newPassword' || key === 'confirmPassword'
+                      ? passwordPairBorderColor
+                      : error ? theme.errorBorder : theme.border,
+                  }]}>
                     <Ionicons name="lock-closed-outline" size={20} color={theme.textSecondary} />
                     <TextInput
                       accessibilityLabel={label}
@@ -151,10 +174,14 @@ export default function ChangePasswordScreen() {
                       editable={!loading}
                       onChangeText={(valueText) => {
                         onChangeText(valueText);
+                        if (key === 'confirmPassword') setConfirmTouched(true);
                         setError('');
                         setRetryableError(false);
                       }}
-                      placeholder={label}
+                      onBlur={() => {
+                        if (key === 'confirmPassword') setConfirmTouched(true);
+                      }}
+                      placeholder={key === 'confirmPassword' ? t('changePassword.confirmPasswordPlaceholder') : label}
                       placeholderTextColor={theme.placeholder}
                       returnKeyType={key === 'confirmPassword' ? 'done' : 'next'}
                       secureTextEntry={!visible[key]}
@@ -162,6 +189,7 @@ export default function ChangePasswordScreen() {
                       value={value}
                     />
                     <TouchableOpacity
+                      style={styles.eyeButton}
                       accessibilityRole="button"
                       accessibilityLabel={t(visible[key] ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
                       accessibilityState={{ expanded: visible[key], disabled: loading }}
@@ -169,7 +197,7 @@ export default function ChangePasswordScreen() {
                       hitSlop={8}
                       onPress={() => setVisible((state) => ({ ...state, [key]: !state[key] }))}
                     >
-                      <Ionicons name={visible[key] ? 'eye-off-outline' : 'eye-outline'} size={22} color={theme.textSecondary} />
+                      <Ionicons name={passwordVisibilityIcon(visible[key])} size={22} color={theme.textSecondary} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -213,14 +241,12 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: 48 },
   content: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 16 },
-  header: { minHeight: 50, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  title: { flex: 1, fontSize: 22, fontWeight: '700' },
-  subtitle: { fontSize: 15, lineHeight: 22, marginBottom: 22 },
   card: { borderWidth: 1, borderRadius: 18, padding: 18 },
   field: { marginBottom: 14 },
   label: { fontSize: 14, fontWeight: '600', marginBottom: 7 },
   inputContainer: { minHeight: 52, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 },
-  input: { flex: 1, minHeight: 50, marginHorizontal: 10, fontSize: 16 },
+  input: { flex: 1, minWidth: 0, minHeight: 50, marginHorizontal: 10, paddingVertical: 0, fontSize: 16 },
+  eyeButton: { width: 36, height: 46, justifyContent: 'center', alignItems: 'center' },
   requirements: { fontSize: 13, lineHeight: 19, marginTop: 1, marginBottom: 12 },
   error: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
   button: { minHeight: 52, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 4 },

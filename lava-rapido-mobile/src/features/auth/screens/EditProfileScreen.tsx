@@ -19,6 +19,7 @@ import {
   View,
   Image,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
   Ionicons,
@@ -34,16 +35,16 @@ import {
 } from '../../../theme/ThemeContext'
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider'
 import { useTranslation } from 'react-i18next'
-import BackButton from '../../../components/common/BackButton'
+import ScreenHeader from '../../../components/common/ScreenHeader'
 import { userService, type UserProfile } from '../../../services/userService'
 import { invalidateSession } from '../../../services/api'
 import { classifyApiError } from '../../../services/apiErrors'
+import { isValidHumanText, sanitizeHumanText } from '../../../services/inputSanitizers'
+import { isValidEmail } from '../../../services/validators'
 
 import {
   images,
 } from '../../../assets/images'
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type AvatarKey =
   | 'avatar_1'
@@ -100,6 +101,9 @@ export default function EditProfileScreen() {
 
   const [newEmail, setNewEmail] =
     useState('')
+
+  const [emailTouched, setEmailTouched] =
+    useState(false)
 
   const [currentPassword, setCurrentPassword] =
     useState('')
@@ -293,6 +297,11 @@ export default function EditProfileScreen() {
       return false
     }
 
+    if (!isValidHumanText(cleanFirstName) || !isValidHumanText(cleanLastName)) {
+      Alert.alert(t('editProfile.requiredTitle'), t('editProfile.invalidName', 'Usa solo letras, espacios, tildes y ñ.'), undefined, 'warning')
+      return false
+    }
+
     if (!cleanPhone) {
       Alert.alert(
         t('editProfile.requiredTitle'),
@@ -384,6 +393,7 @@ export default function EditProfileScreen() {
       return
     }
 
+    setEmailTouched(true)
     const normalizedEmail = newEmail.trim().toLowerCase()
     if (!normalizedEmail || !currentPassword) {
       Alert.alert(
@@ -395,7 +405,7 @@ export default function EditProfileScreen() {
       return
     }
 
-    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    if (!isValidEmail(normalizedEmail)) {
       Alert.alert(
         t('emailChange.errorTitle'),
         t('emailChange.invalidEmail'),
@@ -542,6 +552,7 @@ export default function EditProfileScreen() {
   }
 
   return (
+    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
     <KeyboardAvoidingView
       style={[
         styles.container,
@@ -561,56 +572,16 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-        contentContainerStyle={
-          styles.scrollContent
-        }
+        contentContainerStyle={styles.scrollContent}
       >
         {/* HEADER */}
 
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor:
-                theme.card,
-              borderColor:
-                theme.border,
-            },
-          ]}
-        >
-          <BackButton
-            accessibilityLabel={t('mobile.serviceDetail.back')}
-            onPress={handleCancel}
-          />
-
-          <View
-            style={styles.headerText}
-          >
-            <Text
-              style={[
-                styles.headerTitle,
-                {
-                  color:
-                    theme.text,
-                },
-              ]}
-            >
-              {t('editProfile.title')}
-            </Text>
-
-            <Text
-              style={[
-                styles.headerSubtitle,
-                {
-                  color:
-                    theme.textSecondary,
-                },
-              ]}
-            >
-              {t('editProfile.subtitle')}
-            </Text>
-          </View>
-        </View>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.serviceDetail.back')}
+          onBack={handleCancel}
+          subtitle={t('editProfile.subtitle')}
+          title={t('editProfile.title')}
+        />
 
         {/* AVATAR */}
 
@@ -799,7 +770,7 @@ export default function EditProfileScreen() {
             label={t('editProfile.firstName')}
             value={firstName}
             onChangeText={
-              setFirstName
+              (value: string) => setFirstName(sanitizeHumanText(value))
             }
             placeholder={t('editProfile.firstNamePlaceholder')}
             icon="person-outline"
@@ -812,7 +783,7 @@ export default function EditProfileScreen() {
             label={t('editProfile.lastName')}
             value={lastName}
             onChangeText={
-              setLastName
+              (value: string) => setLastName(sanitizeHumanText(value))
             }
             placeholder={t('editProfile.lastNamePlaceholder')}
             icon="person-outline"
@@ -917,10 +888,13 @@ export default function EditProfileScreen() {
             label={t('emailChange.newEmail')}
             value={newEmail}
             onChangeText={setNewEmail}
+            onBlur={() => setEmailTouched(true)}
             placeholder={t('emailChange.newEmailPlaceholder')}
             icon="mail-outline"
             theme={theme}
             darkMode={darkMode}
+            error={emailTouched && newEmail.trim().length > 0 && !isValidEmail(newEmail)}
+            errorText={t('emailChange.invalidEmail')}
             editable={!saving && !savingEmail}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -1044,6 +1018,7 @@ export default function EditProfileScreen() {
         />
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
@@ -1061,7 +1036,13 @@ function FormInput({
   autoCorrect,
   autoComplete,
   secureTextEntry = false,
+  error = false,
+  errorText,
+  onBlur,
 }: any) {
+  const { t } = useTranslation()
+  const [passwordVisible, setPasswordVisible] = useState(false)
+
   return (
     <View
       style={styles.fieldContainer}
@@ -1085,8 +1066,7 @@ function FormInput({
             backgroundColor:
               theme.inputBackground,
 
-            borderColor:
-              theme.border,
+            borderColor: error ? theme.errorText : theme.border,
           },
         ]}
       >
@@ -1125,7 +1105,8 @@ function FormInput({
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
           autoComplete={autoComplete}
-          secureTextEntry={secureTextEntry}
+          onBlur={onBlur}
+          secureTextEntry={secureTextEntry && !passwordVisible}
           style={[
             styles.input,
             {
@@ -1134,12 +1115,34 @@ function FormInput({
             },
           ]}
         />
+        {secureTextEntry ? (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t(passwordVisible ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
+            accessibilityState={{ expanded: passwordVisible, disabled: !editable }}
+            disabled={!editable}
+            hitSlop={8}
+            onPress={() => setPasswordVisible((visible) => !visible)}
+          >
+            <Ionicons
+              name={passwordVisible ? 'eye-outline' : 'eye-off-outline'}
+              size={22}
+              color={theme.textSecondary}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
+      {error && errorText ? (
+        <Text accessibilityRole="alert" style={[styles.fieldError, { color: theme.errorText }]}>
+          {errorText}
+        </Text>
+      ) : null}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1 },
   container: {
     flex: 1,
   },
@@ -1347,6 +1350,13 @@ const styles = StyleSheet.create({
 
   helperText: {
     fontSize: 10.5,
+    marginTop: 5,
+    marginLeft: 2,
+  },
+
+  fieldError: {
+    fontSize: 12,
+    lineHeight: 16,
     marginTop: 5,
     marginLeft: 2,
   },

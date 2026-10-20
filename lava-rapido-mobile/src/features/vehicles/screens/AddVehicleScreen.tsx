@@ -26,8 +26,9 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { sanitizeHumanText } from '../../../services/inputSanitizers';
 
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { classifyApiError } from '../../../services/api';
@@ -341,21 +342,14 @@ export default function AddVehicleScreen({
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-      <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <BackButton
-          accessibilityLabel={t('mobile.serviceDetail.back')}
-          onPress={() => navigation.goBack()}
-          disabled={saving}
-        />
-        <View style={styles.headerText}>
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
-            {isEditing ? t('vehicles.form.editTitle') : t('vehicles.form.addTitle')}
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
-            {isEditing ? t('vehicles.form.editSubtitle') : t('vehicles.form.addSubtitle')}
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader
+        accessibilityLabel={t('mobile.serviceDetail.back')}
+        disabled={saving}
+        onBack={() => navigation.goBack()}
+        style={{ marginHorizontal: 18, marginTop: 8 }}
+        subtitle={isEditing ? t('vehicles.form.editSubtitle') : t('vehicles.form.addSubtitle')}
+        title={isEditing ? t('vehicles.form.editTitle') : t('vehicles.form.addTitle')}
+      />
 
       <ScrollView
         contentContainerStyle={[
@@ -656,7 +650,7 @@ export default function AddVehicleScreen({
           <TextInput
             accessibilityLabel={t('vehicles.fields.color')}
             value={color}
-            onChangeText={setColor}
+            onChangeText={(value) => setColor(sanitizeHumanText(value))}
             placeholder={t('vehicles.form.colorPlaceholder')}
             placeholderTextColor={
               theme.textSecondary
@@ -826,7 +820,7 @@ export default function AddVehicleScreen({
               <TextInput
                 accessibilityLabel={t('vehicles.form.searchBrand')}
                 value={brandQuery}
-                onChangeText={setBrandQuery}
+                onChangeText={(value) => setBrandQuery(sanitizeHumanText(value))}
                 placeholder={t('vehicles.form.searchBrand')}
                 placeholderTextColor={theme.placeholder}
                 autoCapitalize="characters"
@@ -982,7 +976,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
 
   introCard: {
@@ -1051,6 +1045,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     marginLeft: 11,
+    minHeight: 52,
+    paddingVertical: 8,
   },
 
   helperText: {
