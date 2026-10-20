@@ -34,7 +34,7 @@ import type {
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 
 import { vehicleService } from '../../vehicles/services/vehicleService';
@@ -842,16 +842,15 @@ export default function ReservationScreen() {
         }
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
+        bounces={false}
+        automaticallyAdjustContentInsets={false}
+        automaticallyAdjustKeyboardInsets={false}
       >
-        <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <BackButton
-            accessibilityLabel={t('mobile.reservation.back')}
-            onPress={() => navigation.goBack()}
-          />
-          <Text accessibilityRole="header" style={[styles.pageTitle, { color: colors.text }]} numberOfLines={2}>
-            {t('mobile.reservation.newTitle')}
-          </Text>
-        </View>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.reservation.back')}
+          onBack={() => navigation.goBack()}
+          title={t('mobile.reservation.newTitle')}
+        />
 
         {/* SERVICIO */}
 
@@ -1518,9 +1517,12 @@ const styles =
 
     scrollContent: {
       flexGrow: 1,
-      paddingHorizontal: 18,
-      paddingTop: 8,
-      paddingBottom: 48,
+      width: '100%',
+      maxWidth: 540,
+      alignSelf: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 24,
+      paddingBottom: 24,
     },
 
     loadingContainer: {
@@ -1539,37 +1541,32 @@ const styles =
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      minHeight: 60,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      marginHorizontal: 0,
-      marginBottom: 14,
-      borderWidth: 1,
-      borderRadius: 18,
+      minHeight: 50,
+      marginBottom: 22,
     },
 
-    pageTitle: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
+    pageTitle: { flex: 1, minWidth: 0, fontSize: 24, lineHeight: 29, fontWeight: '800', letterSpacing: -0.4 },
 
     card: {
       borderWidth: 1,
-      borderRadius: 20,
-      padding: 20,
-      marginBottom: 14,
-      elevation: 2,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+      elevation: 1,
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 5,
+      shadowOpacity: 0.04,
+      shadowRadius: 3,
     },
 
     sectionTitle: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '800',
-      marginBottom: 14,
+      marginBottom: 12,
     },
 
     serviceName: {
-      fontSize: 21,
+      fontSize: 20,
       fontWeight: '700',
       marginBottom: 6,
     },
@@ -1590,8 +1587,8 @@ const styles =
       flexBasis: '48%',
       flexGrow: 1,
       minWidth: 125,
-      borderRadius: 15,
-      padding: 13,
+      borderRadius: 12,
+      padding: 12,
     },
 
     infoLabel: {
@@ -1609,19 +1606,19 @@ const styles =
     },
 
     vehicleOption: {
-      minHeight: 76,
+      minHeight: 62,
       borderWidth: 1.5,
-      borderRadius: 16,
-      padding: 12,
+      borderRadius: 12,
+      padding: 11,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
     },
 
     vehicleIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -1668,10 +1665,10 @@ const styles =
 
     selector: {
       borderWidth: 1,
-      borderRadius: 15,
-      paddingHorizontal: 14,
-      paddingVertical: 16,
-      minHeight: 58,
+      borderRadius: 12,
+      paddingHorizontal: 17,
+      paddingVertical: 12,
+      minHeight: 62,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 11,
@@ -1691,10 +1688,10 @@ const styles =
 
     summaryCard: {
       borderWidth: 1,
-      borderRadius: 20,
-      padding: 20,
-      marginBottom: 20,
-      elevation: 2,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 16,
+      elevation: 1,
     },
 
     summaryRow: {
@@ -1726,11 +1723,15 @@ const styles =
 
     createButton: {
       minHeight: 58,
-      borderRadius: 17,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent:
         'center',
       paddingHorizontal: 20,
+      elevation: 4,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
     },
 
     createButtonText: {
@@ -1741,7 +1742,7 @@ const styles =
     cancelButton: {
       minHeight: 48,
       borderWidth: 1,
-      borderRadius: 14,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 12,

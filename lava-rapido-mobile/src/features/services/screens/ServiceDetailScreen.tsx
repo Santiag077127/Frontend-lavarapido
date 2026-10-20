@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { RootStackParamList } from '../../../navigation/types';
 import { ThemeContext } from '../../../theme/ThemeContext';
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import { formatCurrency } from '../../../utils/formatters';
 import { getServiceImage } from '../../../assets/serviceImages';
 
@@ -64,15 +64,11 @@ export default function ServiceDetailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <BackButton
-            accessibilityLabel={t('mobile.serviceDetail.back')}
-            onPress={() => navigation.goBack()}
-          />
-          <Text style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
-            {t('mobile.serviceDetail.title')}
-          </Text>
-        </View>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.serviceDetail.back')}
+          onBack={() => navigation.goBack()}
+          title={t('mobile.serviceDetail.title')}
+        />
 
         <Animated.View
           style={[

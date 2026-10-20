@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
-import RegisterScreen from './RegisterScreen';
+import RegisterScreen, { normalizeDocumentNumber } from './RegisterScreen';
 
 const mockRegister = jest.fn();
 const mockNavigate = jest.fn();
@@ -84,4 +84,23 @@ test('conserva la validación del formulario y muestra el mensaje dentro del con
 
   expect(mockRegister).not.toHaveBeenCalled();
   expect(view.getByRole('alert')).toHaveTextContent(/register\.required/);
+});
+
+test.each([
+  ['CC', '1234567890'],
+  ['TI', '0987654321'],
+] as const)('%s acepta 10 dígitos', (documentType, value) => {
+  expect(normalizeDocumentNumber(value, documentType)).toBe(value);
+});
+
+test.each(['CC', 'TI'] as const)('%s limita 11 dígitos a 10', (documentType) => {
+  expect(normalizeDocumentNumber('12345678901', documentType)).toBe('1234567890');
+});
+
+test.each(['CC', 'TI'] as const)('%s elimina letras, emojis, espacios y símbolos', (documentType) => {
+  expect(normalizeDocumentNumber('12A 34😀-56', documentType)).toBe('123456');
+});
+
+test('CE conserva su regla actual sin límite de 10 dígitos', () => {
+  expect(normalizeDocumentNumber('123456789012', 'CE')).toBe('123456789012');
 });

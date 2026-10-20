@@ -22,6 +22,7 @@ import { images } from '../../../assets/images';
 
 import { authService, UserRole } from '../../../services/authService';
 import { classifyApiError, setToken } from '../../../services/api';
+import { isValidEmail } from '../../../services/validators';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
@@ -39,6 +40,7 @@ export default function LoginScreen({
   const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [password, setPassword] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
@@ -55,9 +57,12 @@ export default function LoginScreen({
     if (errorMessage) setErrorMessage(null);
   };
 
+  const emailFormatError = emailTouched && email.trim().length > 0 && !isValidEmail(email);
+
   const handleLogin = async () => {
     Keyboard.dismiss();
     clearError();
+    setEmailTouched(true);
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password;
@@ -67,7 +72,7 @@ export default function LoginScreen({
       return;
     }
 
-    if (!cleanEmail.includes('@')) {
+    if (!isValidEmail(cleanEmail)) {
       showError(t('login.invalidEmail'));
       return;
     }
@@ -248,7 +253,7 @@ export default function LoginScreen({
                   styles.inputContainer,
                   {
                     backgroundColor: theme.inputBackground,
-                    borderColor: errorMessage ? theme.errorBorder : theme.border,
+                    borderColor: emailFormatError ? theme.errorBorder : theme.border,
                   },
                 ]}
               >
@@ -273,6 +278,7 @@ export default function LoginScreen({
                     setEmail(text);
                     clearError();
                   }}
+                  onBlur={() => setEmailTouched(true)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -281,6 +287,7 @@ export default function LoginScreen({
                   editable={!loading}
                 />
               </View>
+              {emailFormatError ? <Text accessibilityRole="alert" style={[styles.fieldError, { color: theme.errorText }]}>{t('login.invalidEmail')}</Text> : null}
             </View>
 
             {/* CONTRASEÑA */}
@@ -347,11 +354,7 @@ export default function LoginScreen({
                   accessibilityState={{ expanded: showPassword, disabled: loading }}
                 >
                   <Ionicons
-                    name={
-                      showPassword
-                        ? 'eye-off-outline'
-                        : 'eye-outline'
-                    }
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                     size={22}
                     color={theme.textSecondary}
                   />
@@ -381,7 +384,7 @@ export default function LoginScreen({
               style={[
                 styles.button,
                 {
-                  backgroundColor: theme.primary,
+                  backgroundColor: theme.primaryDark,
                   opacity: loading ? 0.7 : 1,
                 },
               ]}
@@ -458,9 +461,9 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   logo: {
-    width: '75%',
-    maxWidth: 300,
-    height: 190,
+    width: '100%',
+    maxWidth: 420,
+    height: 210,
     alignSelf: 'center',
     marginBottom: 0,
   },
@@ -494,6 +497,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
+  },
+  fieldError: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 16,
   },
   fieldWrapper: {
     width: '100%',

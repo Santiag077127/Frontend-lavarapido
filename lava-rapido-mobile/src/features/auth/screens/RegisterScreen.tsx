@@ -21,12 +21,22 @@ import { authService } from '../../../services/authService';
 import { classifyApiError } from '../../../services/api';
 import { getPasswordUtf8ByteLength, isValidPassword, passwordsMatch } from '../../../services/passwordPolicy';
 import { useTranslation } from 'react-i18next';
+import { sanitizeHumanText } from '../../../services/inputSanitizers';
+import { isValidEmail } from '../../../services/validators';
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void;
 };
 
 type DocumentType = 'CC' | 'TI' | 'CE';
+
+const isTenDigitDocumentType = (documentType: DocumentType) =>
+  documentType === 'CC' || documentType === 'TI';
+
+export const normalizeDocumentNumber = (value: string, documentType: DocumentType) => {
+  const digitsOnly = value.replace(/\D/g, '');
+  return isTenDigitDocumentType(documentType) ? digitsOnly.slice(0, 10) : digitsOnly;
+};
 
 // =========================================================
 // COMPONENTES AUXILIARES MOVIDOS AFUERA (REGLA DE REACT)
@@ -98,6 +108,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
 
   // ESTADOS
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -116,12 +127,14 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
   const passwordIsValid = isValidPassword(password);
   const confirmationMatches = passwordsMatch(password, confirmPassword);
 
-  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const emailIsValid = isValidEmail(email);
+  const emailFormatError = emailTouched && email.trim().length > 0 && !emailIsValid;
 
   // HANDLER REGISTRO
   const handleRegister = async () => {
     setError('');
     setSuccess('');
+    setEmailTouched(true);
 
     if (
       !email.trim() ||
@@ -144,6 +157,13 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
     const cleanPhone = phoneNumber.replace(/\s/g, '');
     if (!/^\d{10}$/.test(cleanPhone)) {
       setError(t('register.invalidPhone'));
+      return;
+    }
+
+    const normalizedDocumentNumber = normalizeDocumentNumber(documentNumber, documentType);
+    if (isTenDigitDocumentType(documentType) && normalizedDocumentNumber !== documentNumber.trim()) {
+      setDocumentNumber(normalizedDocumentNumber);
+      setError(t('register.invalidDocument'));
       return;
     }
 
@@ -171,7 +191,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
         lastName: lastName.trim(),
         phoneNumber: cleanPhone,
         documentType,
-        documentNumber: documentNumber.trim(),
+        documentNumber: normalizedDocumentNumber,
         password,
       };
 
@@ -249,7 +269,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
             {/* CORREO */}
             <InputContainer
               backgroundColor={inputBackground}
-              borderColor={borderColor}
+                borderColor={emailFormatError ? theme.errorText : borderColor}
             >
               <MaterialIcons name="email" size={20} color={iconColor} />
               <TextInput
@@ -263,12 +283,14 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                   setError('');
                   setSuccess('');
                 }}
+                onBlur={() => setEmailTouched(true)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="next"
               />
             </InputContainer>
+            {emailFormatError ? <Text accessibilityRole="alert" style={[styles.fieldError, { color: theme.errorText }]}>{t('register.invalidEmail')}</Text> : null}
 
             {/* NOMBRE */}
             <InputContainer
@@ -282,7 +304,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={firstName}
-                onChangeText={setFirstName}
+                onChangeText={(text) => setFirstName(sanitizeHumanText(text))}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
@@ -300,7 +322,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 placeholderTextColor={theme.placeholder}
                 style={[styles.input, { color: theme.text }]}
                 value={lastName}
-                onChangeText={setLastName}
+                onChangeText={(text) => setLastName(sanitizeHumanText(text))}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
@@ -345,7 +367,10 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                     accessibilityLabel={`${t('register.documentType')}: ${type}`}
                     accessibilityState={{ selected }}
                     activeOpacity={0.8}
-                    onPress={() => setDocumentType(type)}
+                    onPress={() => {
+                      setDocumentType(type);
+                      setDocumentNumber((current) => normalizeDocumentNumber(current, type));
+                    }}
                     style={[
                       styles.documentButton,
                       {
@@ -382,10 +407,10 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 style={[styles.input, { color: theme.text }]}
                 value={documentNumber}
                 onChangeText={(text) => {
-                  const numbers = text.replace(/\D/g, '');
-                  setDocumentNumber(numbers);
+                  setDocumentNumber(normalizeDocumentNumber(text, documentType));
                 }}
                 keyboardType="number-pad"
+                maxLength={isTenDigitDocumentType(documentType) ? 10 : undefined}
                 returnKeyType="next"
               />
             </InputContainer>
@@ -420,7 +445,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 hitSlop={10}
               >
                 <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={22}
                   color={theme.textSecondary}
                 />
@@ -491,8 +516,8 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
                 <Ionicons
                   name={
                     showConfirmPassword
-                      ? 'eye-off-outline'
-                      : 'eye-outline'
+                      ? 'eye-outline'
+                      : 'eye-off-outline'
                   }
                   size={22}
                   color={theme.textSecondary}
@@ -596,10 +621,11 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   logo: {
-    width: 130,
-    height: 130,
-    borderRadius: 20,
-    marginBottom: 25,
+    width: '100%',
+    maxWidth: 420,
+    height: 210,
+    alignSelf: 'center',
+    marginBottom: 0,
   },
   form: {
     width: '100%',
@@ -627,6 +653,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     minHeight: 53,
     paddingVertical: 8,
+  },
+  fieldError: {
+    marginTop: -6,
+    marginBottom: 2,
+    fontSize: 12,
+    lineHeight: 16,
   },
   sectionLabel: {
     fontSize: 14,

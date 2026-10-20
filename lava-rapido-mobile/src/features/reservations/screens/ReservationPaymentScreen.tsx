@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import BackButton from '../../../components/common/BackButton';
+import ScreenHeader from '../../../components/common/ScreenHeader';
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
@@ -496,15 +496,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
-        <View style={[styles.header, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <BackButton
-            accessibilityLabel={t('mobile.serviceDetail.back')}
-            onPress={() => navigation.goBack()}
-          />
-          <Text accessibilityRole="header" style={[styles.title, { color: theme.text }]} numberOfLines={2}>
-            {t('mobile.paymentFlow.title')}
-          </Text>
-        </View>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.serviceDetail.back')}
+          onBack={() => navigation.goBack()}
+          style={{ marginHorizontal: 18, marginTop: 8 }}
+          title={t('mobile.paymentFlow.title')}
+        />
 
         {!checkout && !approved && (
           <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>

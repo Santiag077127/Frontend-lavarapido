@@ -1,4 +1,4 @@
-export const paymentCopy = {
+const paymentCopyBase = {
   es: {
     paymentFlow: {
       approvedTitle: 'Pago aprobado',
@@ -109,6 +109,22 @@ export const paymentCopy = {
       reservationNotFoundMessage: 'Nous n’avons pas trouvé cette réservation. Consultez vos réservations.',
       cancelUnknownTitle: 'Statut non confirmé',
       cancelUnknownMessage: 'Nous n’avons pas pu confirmer le statut de l’annulation. Consultez vos réservations avant de continuer.',
+    },
+  },
+} as const;
+
+// Keep payment copy in UTF-8. This overlay is used before the locale JSON copy.
+export const paymentCopy = {
+  ...paymentCopyBase,
+  es: {
+    ...paymentCopyBase.es,
+    paymentFlow: {
+      ...paymentCopyBase.es.paymentFlow,
+      exitTitle: '¿Salir del pago?',
+      exitMessage: 'Si sales ahora, se intentará cancelar tu reserva pendiente. ¿Deseas continuar?',
+      cancellingReservation: 'Consultando y cancelando la reserva…',
+      cancelledMessage: 'Tu reserva se canceló correctamente.',
+      pendingCancellationMessage: 'Tu pago todavía está pendiente de confirmación. Por seguridad, la reserva no se ha cancelado.',
     },
   },
 } as const;
