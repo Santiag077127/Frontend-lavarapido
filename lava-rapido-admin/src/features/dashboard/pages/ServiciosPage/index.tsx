@@ -13,6 +13,8 @@ import {
 import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
 
+type ServiceStatusFilter = "ALL" | "ACTIVE" | "INACTIVE";
+
 const errorMessage = (error: unknown, fallback: string) => {
   if (axios.isAxiosError(error) && error.response?.status === 409) {
     const message = error.response.data?.error;
@@ -31,6 +33,8 @@ export const ServiciosPage = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null);
   const [cambiandoId, setCambiandoId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ServiceStatusFilter>("ALL");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const cargarServicios = async () => {
     setCargando(true);
@@ -51,18 +55,25 @@ export const ServiciosPage = () => {
 
   const serviciosFiltrados = useMemo(() => {
     const termino = busqueda.trim().toLowerCase();
-    if (!termino) return servicios;
-    return servicios.filter((s) => s.nombre.toLowerCase().includes(termino));
-  }, [servicios, busqueda]);
+    return servicios.filter((servicio) => {
+      const matchesName = !termino || servicio.nombre.toLowerCase().includes(termino);
+      const matchesStatus = statusFilter === "ALL"
+        || (statusFilter === "ACTIVE" && servicio.estado)
+        || (statusFilter === "INACTIVE" && !servicio.estado);
+      return matchesName && matchesStatus;
+    });
+  }, [servicios, busqueda, statusFilter]);
 
   const handleNuevo = () => {
     setError(null);
+    setSuccessMessage(null);
     setServicioEditando(null);
     setModalAbierto(true);
   };
 
   const handleEditar = (servicio: Servicio) => {
     setError(null);
+    setSuccessMessage(null);
     setServicioEditando(servicio);
     setModalAbierto(true);
   };
@@ -70,9 +81,13 @@ export const ServiciosPage = () => {
   const handleCambiarEstado = async (servicio: Servicio) => {
     setCambiandoId(servicio.idServicio);
     setError(null);
+    setSuccessMessage(null);
     try {
       const actualizado = await cambiarEstadoServicio(servicio.idServicio, !servicio.estado);
       setServicios((actuales) => actuales.map((item) => item.idServicio === servicio.idServicio ? actualizado : item));
+      setSuccessMessage(actualizado.estado
+        ? "Servicio activado correctamente."
+        : "Servicio desactivado correctamente.");
     } catch {
       setError("No se pudo cambiar el estado del servicio. Intenta de nuevo.");
     } finally {
@@ -83,6 +98,7 @@ export const ServiciosPage = () => {
   // El mismo modal crea o actualiza según exista un servicio en edición.
   const handleGuardar = async (form: ServicioForm) => {
     setError(null);
+    setSuccessMessage(null);
     try {
       if (servicioEditando) {
         await updateServicio(servicioEditando.idServicio, form);
@@ -90,6 +106,9 @@ export const ServiciosPage = () => {
         await createServicio(form);
       }
       setModalAbierto(false);
+      setSuccessMessage(servicioEditando
+        ? "Servicio actualizado correctamente."
+        : "Servicio creado correctamente.");
       await cargarServicios();
     } catch (error) {
       setError(errorMessage(error, "ui.no.se.pudo.guardar.el.servicio.verifica.los.datos"));
@@ -114,7 +133,22 @@ export const ServiciosPage = () => {
         />
       </div>
 
+      <div className="services-filters">
+        <label htmlFor="service-status-filter">{t("common.status")}</label>
+        <select
+          id="service-status-filter"
+          className="service-status-filter"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value as ServiceStatusFilter)}
+        >
+          <option value="ALL">{t("common.all")}</option>
+          <option value="ACTIVE">{t("common.activePlural")}</option>
+          <option value="INACTIVE">{t("common.inactivePlural")}</option>
+        </select>
+      </div>
+
       {error && !modalAbierto && <p className="page-error">{localizeMessage(error, t)}</p>}
+      {successMessage && !modalAbierto && <p className="page-success" role="status">{successMessage}</p>}
 
       {cargando ? (
         <p>{t("services.loading")}</p>
