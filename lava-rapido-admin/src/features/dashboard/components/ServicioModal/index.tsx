@@ -7,11 +7,12 @@ import type { Servicio, ServicioForm } from "../../types";
 
 interface Props {
   servicio: Servicio | null; // null = crear, Servicio = editar
+  error?: string | null;
   onGuardar: (form: ServicioForm) => void;
   onCerrar: () => void;
 }
 
-export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
+export const ServicioModal = ({ servicio, error, onGuardar, onCerrar }: Props) => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ServicioForm, string>>>({});
@@ -96,6 +97,7 @@ export const ServicioModal = ({ servicio, onGuardar, onCerrar }: Props) => {
         <h3 className="modal-title">
           {servicio ? t("services.edit") : t("services.new")}
         </h3>
+        {error && <p className="modal-error" role="alert">{localizeMessage(error, t)}</p>}
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="modal-field">
