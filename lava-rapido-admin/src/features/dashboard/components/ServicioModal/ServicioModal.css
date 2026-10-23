@@ -32,6 +32,13 @@
   margin-bottom: 24px;
 }
 
+.modal-error {
+  margin: -10px 0 18px;
+  color: var(--error-texto);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
 /* ── Campos del formulario ───────────────────────────────────── */
 .modal-field {
   display: flex;

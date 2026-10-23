@@ -1,5 +1,6 @@
 // Lista servicios y permite crearlos, editarlos o cambiar su estado.
 import { useContext, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
 import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
 import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
@@ -11,6 +12,14 @@ import {
 } from "@/features/dashboard/services/servicioService";
 import type { Servicio, ServicioForm } from "@/features/dashboard/types";
 import "./ServiciosPage.css";
+
+const errorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error) && error.response?.status === 409) {
+    const message = error.response.data?.error;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+};
 
 export const ServiciosPage = () => {
   const theme = useContext(ThemeContext);
@@ -47,11 +56,13 @@ export const ServiciosPage = () => {
   }, [servicios, busqueda]);
 
   const handleNuevo = () => {
+    setError(null);
     setServicioEditando(null);
     setModalAbierto(true);
   };
 
   const handleEditar = (servicio: Servicio) => {
+    setError(null);
     setServicioEditando(servicio);
     setModalAbierto(true);
   };
@@ -80,8 +91,8 @@ export const ServiciosPage = () => {
       }
       setModalAbierto(false);
       await cargarServicios();
-    } catch {
-      setError("ui.no.se.pudo.guardar.el.servicio.verifica.los.datos");
+    } catch (error) {
+      setError(errorMessage(error, "ui.no.se.pudo.guardar.el.servicio.verifica.los.datos"));
     }
   };
 
@@ -103,7 +114,7 @@ export const ServiciosPage = () => {
         />
       </div>
 
-      {error && <p className="page-error">{localizeMessage(error, t)}</p>}
+      {error && !modalAbierto && <p className="page-error">{localizeMessage(error, t)}</p>}
 
       {cargando ? (
         <p>{t("services.loading")}</p>
@@ -123,6 +134,7 @@ export const ServiciosPage = () => {
       {modalAbierto && (
         <ServicioModal
           servicio={servicioEditando}
+          error={modalAbierto ? error : null}
           onGuardar={handleGuardar}
           onCerrar={() => setModalAbierto(false)}
         />
