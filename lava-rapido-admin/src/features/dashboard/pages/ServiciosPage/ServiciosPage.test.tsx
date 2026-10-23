@@ -42,4 +42,36 @@ describe("ServiciosPage", () => {
     expect(screen.getByDisplayValue("sasasasasa")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Guardar" })).toBeTruthy();
   });
+
+  it("shows all services and filters them by status", async () => {
+    servicesMock.get.mockResolvedValue([
+      { idServicio: "active-id", nombre: "Active service", descripcion: "", precio: 1000, duracionMinutos: 20, estado: true },
+      { idServicio: "inactive-id", nombre: "Inactive service", descripcion: "", precio: 2000, duracionMinutos: 25, estado: false },
+    ]);
+
+    render(<ThemeProvider><ServiciosPage /></ThemeProvider>);
+    expect(await screen.findByText("Active service")).toBeTruthy();
+    expect(screen.getByText("Inactive service")).toBeTruthy();
+
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "INACTIVE" } });
+
+    expect(screen.queryByText("Active service")).toBeNull();
+    expect(screen.getByText("Inactive service")).toBeTruthy();
+  });
+
+  it("updates the service state after a successful toggle", async () => {
+    const activeService = {
+      idServicio: "active-id", nombre: "Active service", descripcion: "", precio: 1000, duracionMinutos: 20, estado: true,
+    };
+    servicesMock.get.mockResolvedValue([activeService]);
+    servicesMock.state.mockResolvedValue({ ...activeService, estado: false });
+
+    render(<ThemeProvider><ServiciosPage /></ThemeProvider>);
+    await screen.findByText("Active service");
+    fireEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+
+    expect(await screen.findByRole("button", { name: "Activar" })).toBeTruthy();
+    expect(screen.getByText("Inactivo")).toBeTruthy();
+    expect(screen.getByRole("status")).toHaveTextContent("Servicio desactivado correctamente.");
+  });
 });
