@@ -42,7 +42,7 @@ import type { Vehicle } from '../../vehicles/types/vehicle.types';
 
 import { reservationService } from '../services/reservationService';
 import { classifyReservationCreationError } from '../../../services/reservationErrors';
-import { classifyApiError } from '../../../services/api';
+import { classifyApiError, type ApiErrorKind } from '../../../services/api';
 import { serviceService } from '../../../services/serviceService';
 import {
   getReservationTimeError,
@@ -178,6 +178,8 @@ export default function ReservationScreen() {
     loadingVehicles,
     setLoadingVehicles,
   ] = useState(true);
+  const [vehicleLoadError, setVehicleLoadError] = useState<ApiErrorKind | null>(null);
+  const vehicleLoadInProgress = useRef(false);
 
   const [
     creatingReservation,
@@ -260,10 +262,14 @@ export default function ReservationScreen() {
   const loadVehicles =
     useCallback(
       async () => {
+        if (vehicleLoadInProgress.current) return;
+
+        vehicleLoadInProgress.current = true;
         try {
           setLoadingVehicles(
             true,
           );
+          setVehicleLoadError(null);
 
           const response =
             await vehicleService.getMyVehicles();
@@ -301,19 +307,12 @@ export default function ReservationScreen() {
           error: any
         ) {
           const kind = classifyApiError(error);
-
-          Alert.alert(
-            t('mobile.reservation.error'),
-            ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
-              ? t(`apiErrors.${kind}`)
-              : t('mobile.reservation.vehicleLoadError'),
-            undefined,
-            'error',
-          );
+          setVehicleLoadError(kind);
         } finally {
           setLoadingVehicles(
             false,
           );
+          vehicleLoadInProgress.current = false;
         }
       },
       [navigation, t],
@@ -992,7 +991,68 @@ export default function ReservationScreen() {
             {t('mobile.reservation.selectVehicle')}
           </Text>
 
+          {vehicleLoadError && activeVehicles.length > 0 ? (
+            <View style={[styles.loadErrorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
+              <Text
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+                style={[styles.loadErrorText, { color: colors.danger }]}
+              >
+                {vehicleLoadError === 'unknown'
+                  ? t('mobile.reservation.vehicleLoadError')
+                  : t(`apiErrors.${vehicleLoadError}`)}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loadingVehicles, busy: loadingVehicles }}
+                disabled={loadingVehicles}
+                onPress={() => void loadVehicles()}
+              >
+                {loadingVehicles ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>
+                    {t('common.retry')}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          ) : null}
+
           {activeVehicles.length === 0 ? (
+            vehicleLoadError ? (
+            <View style={styles.emptyVehicle}>
+              <Ionicons
+                name="cloud-offline-outline"
+                size={42}
+                color={colors.danger}
+              />
+              <Text
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+                style={[styles.emptyText, { color: colors.danger }]}
+              >
+                {vehicleLoadError === 'unknown'
+                  ? t('mobile.reservation.vehicleLoadError')
+                  : t(`apiErrors.${vehicleLoadError}`)}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loadingVehicles, busy: loadingVehicles }}
+                disabled={loadingVehicles}
+                style={[styles.secondaryButton, { borderColor: colors.primary, opacity: loadingVehicles ? 0.65 : 1 }]}
+                onPress={() => void loadVehicles()}
+              >
+                {loadingVehicles ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>
+                    {t('common.retry')}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+            ) : (
             <View
               style={
                 styles.emptyVehicle
@@ -1037,6 +1097,7 @@ export default function ReservationScreen() {
                 </Text>
               </Pressable>
             </View>
+            )
           ) : (
             <View style={styles.vehicleOptions}>
               {activeVehicles.map((vehicle) => {
@@ -1649,6 +1710,23 @@ const styles =
       fontSize: 14,
       textAlign: 'center',
       marginBottom: 14,
+    },
+
+    loadErrorBanner: {
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+
+    loadErrorText: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: 13,
+      lineHeight: 18,
     },
 
     secondaryButton: {

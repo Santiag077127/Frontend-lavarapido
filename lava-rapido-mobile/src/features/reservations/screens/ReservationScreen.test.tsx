@@ -181,6 +181,45 @@ test('no permite continuar sin vehículos activos', async () => {
   expect(reservationService.create).not.toHaveBeenCalled();
 });
 
+test('shows a retryable error when vehicle loading fails', async () => {
+  (vehicleService.getMyVehicles as jest.Mock).mockReset();
+  (vehicleService.getMyVehicles as jest.Mock)
+    .mockRejectedValueOnce(new Error('network failure'))
+    .mockResolvedValueOnce([vehicle]);
+
+  const view = render(<ReservationScreen />);
+
+  await waitFor(() => expect(view.getByText('mobile.reservation.vehicleLoadError')).toBeTruthy());
+  expect(view.queryByText('mobile.reservation.noVehicles')).toBeNull();
+
+  fireEvent.press(view.getByRole('button', { name: 'common.retry' }));
+
+  await waitFor(() => expect(vehicleService.getMyVehicles).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(view.getByRole('radio', { name: 'Marca ABC123' })).toBeTruthy());
+});
+
+test('does not start duplicate vehicle loads from repeated retry presses', async () => {
+  let finishRetry: (value: typeof vehicle[]) => void = () => {};
+  (vehicleService.getMyVehicles as jest.Mock).mockReset();
+  (vehicleService.getMyVehicles as jest.Mock)
+    .mockRejectedValueOnce(new Error('network failure'))
+    .mockImplementationOnce(() => new Promise((resolve) => { finishRetry = resolve; }));
+
+  const view = render(<ReservationScreen />);
+  await waitFor(() => expect(view.getByText('mobile.reservation.vehicleLoadError')).toBeTruthy());
+
+  const retry = view.getByRole('button', { name: 'common.retry' });
+  act(() => {
+    fireEvent.press(retry);
+    fireEvent.press(retry);
+  });
+
+  expect(vehicleService.getMyVehicles).toHaveBeenCalledTimes(2);
+
+  await act(async () => finishRetry([vehicle]));
+  await waitFor(() => expect(view.getByRole('radio', { name: 'Marca ABC123' })).toBeTruthy());
+});
+
 test('ignora doble pulsación mientras se procesa el envío', async () => {
   let finishCreate: (value: typeof createdReservation) => void = () => {};
   (reservationService.create as jest.Mock).mockImplementation(

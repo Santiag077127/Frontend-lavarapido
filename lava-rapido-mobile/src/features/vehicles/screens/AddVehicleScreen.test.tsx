@@ -275,3 +275,42 @@ test('updates a vehicle with the normalized plate and unchanged API type', async
     placa: 'ABC123', color: 'Negro', tipoVehiculo: 'CARRO', fkIdMarca: 'brand-1',
   }));
 });
+
+test('shows a retryable error when brand loading fails', async () => {
+  mockGetActiveBrands.mockReset();
+  mockGetActiveBrands
+    .mockRejectedValueOnce(new Error('network failure'))
+    .mockResolvedValueOnce({ data: [{ idMarca: 'brand-1', nombre: 'Toyota', estado: true }] });
+
+  const view = renderScreen();
+
+  await waitFor(() => expect(view.getByText('vehicles.errors.brands')).toBeTruthy());
+  expect(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }).props.accessibilityState.disabled).toBe(true);
+
+  fireEvent.press(view.getByRole('button', { name: 'common.retry' }));
+
+  await waitFor(() => expect(mockGetActiveBrands).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }).props.accessibilityState.disabled).toBe(false));
+});
+
+test('does not start duplicate brand loads from repeated retry presses', async () => {
+  let finishRetry: (value: { data: unknown[] }) => void = () => {};
+  mockGetActiveBrands.mockReset();
+  mockGetActiveBrands
+    .mockRejectedValueOnce(new Error('network failure'))
+    .mockImplementationOnce(() => new Promise((resolve) => { finishRetry = resolve; }));
+
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('vehicles.errors.brands')).toBeTruthy());
+
+  const retry = view.getByRole('button', { name: 'common.retry' });
+  act(() => {
+    fireEvent.press(retry);
+    fireEvent.press(retry);
+  });
+
+  expect(mockGetActiveBrands).toHaveBeenCalledTimes(2);
+
+  await act(async () => finishRetry({ data: [{ idMarca: 'brand-1', nombre: 'Toyota', estado: true }] }));
+  await waitFor(() => expect(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }).props.accessibilityState.disabled).toBe(false));
+});
