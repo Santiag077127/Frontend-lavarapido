@@ -10,6 +10,7 @@ import type { UserRole } from './src/services/authService'
 import { initializeLanguage } from './src/i18n'
 import { setLogoutHandler, setToken } from './src/services/api'
 import { userService } from './src/services/userService'
+import { clearAuthSession, loadAuthSession } from './src/services/authSession'
 import { pendingCheckoutRecovery } from './src/services/pendingCheckoutRecovery'
 import { appAlert } from './src/components/notifications/NotificationProvider'
 import i18n from './src/i18n'
@@ -75,11 +76,14 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [role, setRole] = useState<UserRole | null>(null)
   const [languageReady, setLanguageReady] = useState(false)
+  const [authReady, setAuthReady] = useState(false)
   const [navigationReady, setNavigationReady] = useState(false)
   const [pendingResetToken, setPendingResetToken] = useState<string | null>(null)
   const identityRefresh = useRef(false)
   const recoveryInProgress = useRef(false)
   const lastResetUrl = useRef<string | null>(null)
+  const authOperation = useRef(0)
+  const restoredIdentityUserId = useRef<string | null | undefined>(undefined)
 
   const refreshIdentity = useCallback(async () => {
     if (identityRefresh.current) return null
@@ -100,6 +104,13 @@ export default function App() {
     if (!isLoggedIn || recoveryInProgress.current) return
     recoveryInProgress.current = true
     try {
+      const restoredUserId = restoredIdentityUserId.current
+      if (restoredUserId !== undefined) {
+        restoredIdentityUserId.current = undefined
+        if (restoredUserId) await pendingCheckoutRecovery.recover(restoredUserId)
+        return
+      }
+
       const current = await refreshIdentity()
       if (current) await pendingCheckoutRecovery.recover(current.userId)
     } finally {
@@ -108,12 +119,64 @@ export default function App() {
   }, [isLoggedIn, refreshIdentity])
 
   const handleLoggedInChange = useCallback((value: boolean) => {
+    authOperation.current += 1
     setIsLoggedIn(value)
 
     if (!value) {
       void deactivatePush().catch(() => {})
       setToken(null)
       setRole(null)
+      setAuthReady(true)
+      void clearAuthSession().catch(() => {
+        appAlert.alert(i18n.t('profile.errorTitle'), 'No fue posible cerrar la sesión de forma segura.')
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    const operation = ++authOperation.current
+
+    const restoreSession = async () => {
+      const session = await loadAuthSession()
+      if (!active || operation !== authOperation.current) return
+
+      if (!session) {
+        setAuthReady(true)
+        return
+      }
+
+      setToken(session.token)
+
+      try {
+        const current = await userService.getCurrent()
+        if (!active || operation !== authOperation.current) return
+
+        setRole(current.role)
+        restoredIdentityUserId.current = current.userId
+        setIsLoggedIn(true)
+      } catch (error: any) {
+        if (!active || operation !== authOperation.current) return
+
+        if (error?.response?.status === 401) {
+          setToken(null)
+          setRole(null)
+          await clearAuthSession().catch(() => {})
+          setIsLoggedIn(false)
+        } else {
+          // A temporary network failure does not invalidate an unexpired local session.
+          restoredIdentityUserId.current = null
+          setRole(session.role)
+          setIsLoggedIn(true)
+        }
+      } finally {
+        if (active && operation === authOperation.current) setAuthReady(true)
+      }
+    }
+
+    void restoreSession()
+    return () => {
+      active = false
     }
   }, [])
 
@@ -191,7 +254,7 @@ export default function App() {
     initializeLanguage().finally(() => setLanguageReady(true))
   }, [])
 
-  if (!languageReady) {
+  if (!languageReady || !authReady) {
     return null
   }
 
