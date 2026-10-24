@@ -22,6 +22,7 @@ import { images } from '../../../assets/images';
 
 import { authService, UserRole } from '../../../services/authService';
 import { classifyApiError, setToken } from '../../../services/api';
+import { saveAuthSession } from '../../../services/authSession';
 import { isValidEmail } from '../../../services/validators';
 import { useTranslation } from 'react-i18next';
 
@@ -91,8 +92,10 @@ export default function LoginScreen({
         throw new Error(t('login.invalidToken'));
       }
 
+      const role = data.user?.role ?? 'USER';
+      await saveAuthSession(data.token, role);
       setToken(data.token);
-      setRole?.(data.user?.role ?? 'USER');
+      setRole?.(role);
       setIsLoggedIn(true);
 
     } catch (error: any) {
