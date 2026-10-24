@@ -120,6 +120,8 @@ export default function AddVehicleScreen({
 
   const [loadingBrands, setLoadingBrands] =
     useState(true);
+  const [brandsLoadError, setBrandsLoadError] = useState(false);
+  const brandsLoadInProgress = useRef(false);
 
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
@@ -134,7 +136,12 @@ export default function AddVehicleScreen({
   }, []);
 
   const loadBrands = async () => {
+    if (brandsLoadInProgress.current) return;
+
+    brandsLoadInProgress.current = true;
     try {
+      setLoadingBrands(true);
+      setBrandsLoadError(false);
       const response =
         await vehicleService.getActiveBrands();
 
@@ -151,15 +158,11 @@ export default function AddVehicleScreen({
           'warning',
         );
       }
-    } catch (error: any) {
-      appAlert.alert(
-        t('vehicles.errors.title'),
-        t('vehicles.errors.brands'),
-        undefined,
-        'error',
-      );
+    } catch {
+      setBrandsLoadError(true);
     } finally {
       setLoadingBrands(false);
+      brandsLoadInProgress.current = false;
     }
   };
 
@@ -487,7 +490,7 @@ export default function AddVehicleScreen({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${t('vehicles.fields.brand')}: ${loadingBrands ? t('vehicles.form.loadingBrands') : selectedBrandObject?.nombre || t('vehicles.form.selectBrand')}`}
-          accessibilityState={{ disabled: loadingBrands || saving, busy: loadingBrands }}
+          accessibilityState={{ disabled: loadingBrands || brandsLoadError || saving, busy: loadingBrands }}
           style={[
             styles.selectContainer,
             {
@@ -496,7 +499,7 @@ export default function AddVehicleScreen({
             },
           ]}
           onPress={() => setShowBrands(true)}
-          disabled={loadingBrands || saving}
+          disabled={loadingBrands || brandsLoadError || saving}
         >
           <View style={styles.selectLeft}>
             <Ionicons
@@ -537,6 +540,26 @@ export default function AddVehicleScreen({
             />
           )}
         </Pressable>
+
+        {brandsLoadError && (
+          <View style={[styles.brandLoadError, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.brandLoadErrorText, { color: theme.errorText }]}>
+              {t('vehicles.errors.brands')}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loadingBrands, busy: loadingBrands }}
+              disabled={loadingBrands}
+              onPress={() => void loadBrands()}
+            >
+              {loadingBrands ? (
+                <ActivityIndicator color={theme.primary} />
+              ) : (
+                <Text style={[styles.brandRetryText, { color: theme.primary }]}>{t('common.retry')}</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
 
         <Text
           style={[
@@ -1077,6 +1100,28 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: 15,
     marginLeft: 11,
+  },
+
+  brandLoadError: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  brandLoadErrorText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+
+  brandRetryText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   brandOption: {
