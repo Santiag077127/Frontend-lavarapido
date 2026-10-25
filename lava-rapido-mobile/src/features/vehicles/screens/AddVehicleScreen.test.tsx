@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
-import { KeyboardAvoidingView, ScrollView } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import AddVehicleScreen from './AddVehicleScreen';
@@ -313,4 +313,43 @@ test('does not start duplicate brand loads from repeated retry presses', async (
 
   await act(async () => finishRetry({ data: [{ idMarca: 'brand-1', nombre: 'Toyota', estado: true }] }));
   await waitFor(() => expect(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }).props.accessibilityState.disabled).toBe(false));
+});
+
+test('filters brands, clears the search, and keeps the selected brand accessible', async () => {
+  mockGetActiveBrands.mockResolvedValueOnce({ data: [
+    { idMarca: 'brand-1', nombre: 'Toyota', estado: true },
+    { idMarca: 'brand-2', nombre: 'Honda', estado: true },
+  ] });
+  const view = renderScreen();
+  await waitFor(() => expect(mockGetActiveBrands).toHaveBeenCalledTimes(1));
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }));
+  fireEvent.changeText(view.getByLabelText('vehicles.form.searchBrand'), 'Hon');
+  expect(view.getByRole('radio', { name: 'Honda' })).toBeTruthy();
+  expect(view.queryByRole('radio', { name: 'Toyota' })).toBeNull();
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.form.clearSearch' }));
+  expect(view.getByRole('radio', { name: 'Toyota' })).toBeTruthy();
+  fireEvent.press(view.getByRole('radio', { name: 'Honda' }));
+
+  expect(view.getByRole('button', { name: 'vehicles.fields.brand: Honda' })).toBeTruthy();
+  expect(mockGetActiveBrands).toHaveBeenCalledTimes(1);
+});
+
+test('closing and reopening the brand picker preserves the existing search and keyboard behavior', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(mockGetActiveBrands).toHaveBeenCalledTimes(1));
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }));
+  fireEvent.changeText(view.getByLabelText('vehicles.form.searchBrand'), 'Toy');
+  const modalScrollView = view.UNSAFE_getAllByType(ScrollView).find(
+    (scrollView) => scrollView.props.style && scrollView.props.keyboardShouldPersistTaps === 'handled',
+  );
+  expect(modalScrollView?.props.keyboardDismissMode).toBe(Platform.OS === 'ios' ? 'interactive' : 'none');
+
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.form.closeBrandSelector' }));
+  fireEvent.press(view.getByRole('button', { name: 'vehicles.fields.brand: vehicles.form.selectBrand' }));
+
+  expect(view.getByLabelText('vehicles.form.searchBrand').props.value).toBe('Toy');
+  expect(mockGetActiveBrands).toHaveBeenCalledTimes(1);
 });
