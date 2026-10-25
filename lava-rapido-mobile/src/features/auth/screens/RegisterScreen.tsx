@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
   Pressable,
+  Modal,
 } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
@@ -23,6 +24,7 @@ import { getPasswordUtf8ByteLength, isValidPassword, passwordsMatch } from '../.
 import { useTranslation } from 'react-i18next';
 import { sanitizeHumanText } from '../../../services/inputSanitizers';
 import { isValidEmail } from '../../../services/validators';
+import { legalContent, type LegalDocument } from '../legalContent';
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void;
@@ -121,6 +123,9 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acceptsPrivacy, setAcceptsPrivacy] = useState(false);
+  const [acceptsTerms, setAcceptsTerms] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   // VALIDACIONES
   const passwordBytes = getPasswordUtf8ByteLength(password);
@@ -143,9 +148,13 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
       !phoneNumber.trim() ||
       !documentNumber.trim() ||
       !password ||
-      !confirmPassword
+      !confirmPassword ||
+      !acceptsPrivacy ||
+      !acceptsTerms
     ) {
-      setError(t('register.required'));
+      setError(!acceptsPrivacy || !acceptsTerms
+        ? 'Debes leer la política de privacidad y aceptar los términos y condiciones para continuar.'
+        : t('register.required'));
       return;
     }
 
@@ -556,6 +565,47 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
               </View>
             ) : null}
 
+            <View style={styles.legalSection}>
+              <View style={styles.legalRow}>
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityLabel="He leído la política de privacidad"
+                  accessibilityState={{ checked: acceptsPrivacy }}
+                  onPress={() => setAcceptsPrivacy((current) => !current)}
+                  style={[styles.checkbox, { borderColor: theme.border, backgroundColor: acceptsPrivacy ? theme.primary : inputBackground }]}
+                >
+                  {acceptsPrivacy ? <Text style={[styles.checkboxMark, { color: theme.onPrimary }]}>✓</Text> : null}
+                </Pressable>
+                <Text style={[styles.legalLabel, { color: theme.text }]}>He leído la </Text>
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel="Política de privacidad"
+                  onPress={() => setLegalDocument('privacy')}
+                >
+                  <Text style={[styles.legalLink, { color: theme.primary }]}>política de privacidad</Text>
+                </Pressable>
+              </View>
+              <View style={styles.legalRow}>
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityLabel="Acepto los términos y condiciones"
+                  accessibilityState={{ checked: acceptsTerms }}
+                  onPress={() => setAcceptsTerms((current) => !current)}
+                  style={[styles.checkbox, { borderColor: theme.border, backgroundColor: acceptsTerms ? theme.primary : inputBackground }]}
+                >
+                  {acceptsTerms ? <Text style={[styles.checkboxMark, { color: theme.onPrimary }]}>✓</Text> : null}
+                </Pressable>
+                <Text style={[styles.legalLabel, { color: theme.text }]}>Acepto los </Text>
+                <Pressable
+                  accessibilityRole="link"
+                  accessibilityLabel="Términos y condiciones"
+                  onPress={() => setLegalDocument('terms')}
+                >
+                  <Text style={[styles.legalLink, { color: theme.primary }]}>términos y condiciones</Text>
+                </Pressable>
+              </View>
+            </View>
+
             {/* ÉXITO */}
             {success ? (
               <View
@@ -606,6 +656,41 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <Modal
+        visible={legalDocument !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setLegalDocument(null)}
+      >
+        <View style={styles.legalOverlay}>
+          <View style={[styles.legalModal, { backgroundColor: theme.surface }]}>
+            {legalDocument ? (
+              <>
+                <Text accessibilityRole="header" style={[styles.legalTitle, { color: theme.text }]}>
+                  {legalContent[legalDocument].title}
+                </Text>
+                <ScrollView style={styles.legalBody}>
+                  <Text style={[styles.legalIntro, { color: theme.text }]}>{legalContent[legalDocument].intro}</Text>
+                  {legalContent[legalDocument].sections.map((section) => (
+                    <View key={section.title} style={styles.legalParagraph}>
+                      <Text style={[styles.legalHeading, { color: theme.text }]}>{section.title}</Text>
+                      <Text style={[styles.legalText, { color: theme.textSecondary }]}>{section.body}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Cerrar"
+                  onPress={() => setLegalDocument(null)}
+                  style={[styles.legalClose, { backgroundColor: theme.primaryDark }]}
+                >
+                  <Text style={[styles.buttonText, { color: theme.onPrimary }]}>Cerrar</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -632,6 +717,83 @@ const styles = StyleSheet.create({
     maxWidth: 430,
     paddingHorizontal: 16,
     gap: 12,
+  },
+  legalSection: {
+    gap: 10,
+    marginTop: 4,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  checkboxMark: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  legalLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  legalLink: {
+    fontSize: 14,
+    lineHeight: 20,
+    textDecorationLine: 'underline',
+  },
+  legalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+  },
+  legalModal: {
+    maxHeight: '85%',
+    borderRadius: 14,
+    padding: 18,
+  },
+  legalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  legalBody: {
+    flexGrow: 0,
+  },
+  legalIntro: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  legalParagraph: {
+    marginBottom: 12,
+  },
+  legalHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  legalText: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  legalClose: {
+    alignSelf: 'flex-end',
+    minWidth: 96,
+    minHeight: 44,
+    marginTop: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   inputContainer: {
     width: '100%',
