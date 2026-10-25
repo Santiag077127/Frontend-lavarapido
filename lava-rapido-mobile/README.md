@@ -38,7 +38,7 @@ Las versiones indicadas son las declaradas en `package.json` (rangos con `^` o `
 | Jest | `~29.7.0` y `jest-expo` `~57.0.6` | Pruebas de componentes y de la integración Expo. |
 | React Native Testing Library | `^13.3.3` | Renderizado y pruebas de interacción de componentes. |
 
-También se utilizan Redux Toolkit (`^2.3.0`), AsyncStorage (`2.2.0`), Expo Notifications (`~57.0.24`), `react-i18next` (`^14.1.0`) y otras dependencias declaradas en `package.json`.
+También se utilizan AsyncStorage (`2.2.0`), Expo Notifications (`~57.0.24`), `react-i18next` (`^14.1.0`) y otras dependencias declaradas en `package.json`.
 
 ## Arquitectura
 
@@ -48,7 +48,7 @@ El código se organiza principalmente por funcionalidad bajo `src/features/`, co
 - `src/navigation/` contiene la navegación raíz, pestañas de clientes y operadores, y pilas de pantallas.
 - Los servicios usan una instancia común de Axios definida en `src/services/api.ts`.
 - `src/features/` contiene los flujos funcionales y sus tipos o servicios locales cuando existen.
-- Redux Toolkit está instalado y se usa en slices de autenticación y perfil; no todo el estado de la aplicación pasa por Redux. Las pantallas también utilizan estado local de React.
+- La sesión se administra desde `App.tsx` y los servicios de autenticación; las pantallas usan estado local de React y contextos para preferencias y notificaciones.
 - `src/theme/` define el contexto y los tokens visuales; `src/i18n/` configura traducciones para español, inglés, francés y portugués.
 
 Los errores HTTP se clasifican en `src/services/apiErrors.ts` y las pantallas muestran mensajes de usuario traducidos. La implementación combina servicios compartidos con llamadas directas a `api` en algunas pantallas; no se documenta aquí una capa de dominio uniforme porque el código no la aplica de forma exclusiva.
