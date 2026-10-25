@@ -25,7 +25,7 @@ export interface Vehicle {
 
 export interface VehicleRequest {
   placa: string;
-  color: string;
+  color?: string;
   tipoVehiculo: VehicleType;
   fkIdMarca: string;
 }
