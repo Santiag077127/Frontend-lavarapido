@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/services/*.test.ts",
     "test:ui": "jest --config jest.config.js --runInBand",
-    "test:ui:coverage": "jest --config jest.config.js --runInBand --coverage"
+    "test:ui:coverage": "jest --config jest.config.js --runInBand --coverage",
+    "test:ui:coverage:vehicles": "jest --config jest.config.js --runInBand --coverage --testTimeout=15000 --coverageDirectory=coverage/vehicles --collectCoverageFrom=src/services/vehicleService.ts --collectCoverageFrom=src/features/vehicles/**/*.ts --collectCoverageFrom=src/features/vehicles/**/*.tsx --runTestsByPath src/features/vehicles/screens/AddVehicleScreen.test.tsx src/features/vehicles/screens/MyVehiclesScreen.test.tsx src/features/vehicles/services/vehicleService.test.tsx src/features/vehicles/services/sharedVehicleService.test.tsx src/features/reservations/screens/ReservationScreen.test.tsx"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
