@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import RegisterScreen, { normalizeDocumentNumber } from './RegisterScreen';
@@ -83,7 +83,7 @@ test('conserva la validación del formulario y muestra el mensaje dentro del con
   fireEvent.press(view.getByRole('button', { name: 'register.button' }));
 
   expect(mockRegister).not.toHaveBeenCalled();
-  expect(view.getByRole('alert')).toHaveTextContent(/register\.required/);
+  expect(view.getByRole('alert')).toHaveTextContent(/política de privacidad/);
 });
 
 test.each([
@@ -103,4 +103,62 @@ test.each(['CC', 'TI'] as const)('%s elimina letras, emojis, espacios y símbolo
 
 test('CE conserva su regla actual sin límite de 10 dígitos', () => {
   expect(normalizeDocumentNumber('123456789012', 'CE')).toBe('123456789012');
+});
+
+test('muestra la privacidad y los términos desde el registro sin marcar los controles', () => {
+  const view = renderScreen();
+
+  const privacyCheckbox = view.getByRole('checkbox', { name: 'He leído la política de privacidad' });
+  const termsCheckbox = view.getByRole('checkbox', { name: 'Acepto los términos y condiciones' });
+
+  expect(privacyCheckbox.props.accessibilityState.checked).toBe(false);
+  expect(termsCheckbox.props.accessibilityState.checked).toBe(false);
+
+  fireEvent.press(view.getByRole('link', { name: 'Política de privacidad' }));
+  expect(view.getByRole('header')).toHaveTextContent('Política de privacidad');
+  expect(view.getByText('1. Datos tratados')).toBeTruthy();
+  fireEvent.press(view.getByRole('button', { name: 'Cerrar' }));
+
+  fireEvent.press(view.getByRole('link', { name: 'Términos y condiciones' }));
+  expect(view.getByRole('header')).toHaveTextContent('Términos y condiciones');
+  expect(view.getByText('5. Reservas y pagos')).toBeTruthy();
+});
+
+test('bloquea el registro hasta completar las dos confirmaciones requeridas', () => {
+  const view = renderScreen();
+
+  fireEvent.press(view.getByRole('button', { name: 'register.button' }));
+
+  expect(mockRegister).not.toHaveBeenCalled();
+  expect(view.getByRole('alert')).toHaveTextContent(/Debes leer la política de privacidad/);
+});
+
+test('permite el registro con ambas confirmaciones y conserva el payload actual', async () => {
+  mockRegister.mockResolvedValueOnce({});
+  const view = renderScreen();
+
+  fireEvent.changeText(view.getByLabelText('register.email'), 'cliente@example.com');
+  fireEvent.changeText(view.getByLabelText('register.firstName'), 'Ana');
+  fireEvent.changeText(view.getByLabelText('register.lastName'), 'Pérez');
+  fireEvent.changeText(view.getByLabelText('register.phone'), '3001234567');
+  fireEvent.changeText(view.getByLabelText('register.documentNumber'), '1234567890');
+  fireEvent.changeText(view.getByLabelText('register.password'), 'Password1');
+  fireEvent.changeText(view.getByLabelText('register.confirmPassword'), 'Password1');
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído la política de privacidad' }));
+  fireEvent.press(view.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }));
+
+  await act(async () => {
+    fireEvent.press(view.getByRole('button', { name: 'register.button' }));
+  });
+
+  await waitFor(() => expect(mockRegister).toHaveBeenCalledTimes(1));
+  expect(mockRegister).toHaveBeenCalledWith({
+    email: 'cliente@example.com',
+    firstName: 'Ana',
+    lastName: 'Pérez',
+    phoneNumber: '3001234567',
+    documentType: 'CC',
+    documentNumber: '1234567890',
+    password: 'Password1',
+  });
 });
