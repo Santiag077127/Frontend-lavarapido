@@ -262,3 +262,52 @@ test('bloquea solicitudes duplicadas mientras el cambio de correo está pendient
   await act(async () => resolveChange?.({ ...profile, email: 'new@example.com' }));
   expect(mockChangeEmail).toHaveBeenCalledTimes(1);
 });
+
+test('shows loading and a safe error after a failed profile request', async () => {
+  mockGetProfile.mockRejectedValueOnce({ response: { status: 503 } });
+  const view = renderScreen();
+  expect(view.getByText('editProfile.loadingTitle')).toBeTruthy();
+  await waitFor(() => expect(mockAlert).toHaveBeenCalledWith(
+    'editProfile.errorTitle', 'editProfile.loadError', undefined, 'error',
+  ));
+  expect(mockGetProfile).toHaveBeenCalledTimes(1);
+});
+
+test('selects an avatar while preserving the profile update contract', async () => {
+  const view = renderScreen();
+  await waitForProfile(view);
+  fireEvent.press(view.getAllByRole('radio')[2]);
+  fireEvent.press(view.getByRole('button', { name: 'editProfile.save' }));
+
+  await waitFor(() => expect(mockUpdateProfile).toHaveBeenCalledWith({
+    firstName: 'Test', lastName: 'User', phoneNumber: '3000000000', profilePicture: 'avatar_3',
+  }));
+  expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
+  expect(mockChangeEmail).not.toHaveBeenCalled();
+});
+
+test('rejects missing personal data without sending a profile request', async () => {
+  const view = renderScreen();
+  await waitForProfile(view);
+  fireEvent.changeText(view.getByLabelText('editProfile.firstName'), '');
+  fireEvent.press(view.getByRole('button', { name: 'editProfile.save' }));
+
+  expect(mockUpdateProfile).not.toHaveBeenCalled();
+  expect(mockAlert).toHaveBeenCalledWith(
+    'editProfile.requiredTitle', 'editProfile.firstNameRequired', undefined, 'warning',
+  );
+});
+
+test('disables profile submission while the update request is pending', async () => {
+  let resolveUpdate: ((value: typeof profile) => void) | undefined;
+  mockUpdateProfile.mockImplementationOnce(() => new Promise(resolve => { resolveUpdate = resolve; }));
+  const view = renderScreen();
+  await waitForProfile(view);
+  fireEvent.press(view.getByRole('button', { name: 'editProfile.save' }));
+
+  const busyButton = view.getByRole('button', { name: 'editProfile.save, accessibility.inProgress' });
+  expect(busyButton.props.accessibilityState).toEqual({ disabled: true, busy: true });
+  fireEvent.press(busyButton);
+  expect(mockUpdateProfile).toHaveBeenCalledTimes(1);
+  await act(async () => resolveUpdate?.(profile));
+});
