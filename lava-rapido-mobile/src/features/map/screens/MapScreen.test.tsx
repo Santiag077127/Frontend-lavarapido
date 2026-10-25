@@ -39,7 +39,13 @@ test('incluye mapa OSM, atribución, coordenadas y marcador reales', () => {
   expect(jest.requireActual('../data/locations').locations).toEqual([location])
   const view = render(<MapScreen />)
   const html = view.getByTestId('locations-map').props.source.html as string
-  expect(html).toContain('leaflet@1.9.4')
+  expect(html).toContain('Leaflet 1.9.4')
+  expect(html).toContain('@preserve')
+  expect(html).toContain('Vladimir Agafonkin')
+  expect(html).toContain('<style>/* required styles */')
+  expect(html).not.toContain('https://unpkg.com/leaflet')
+  expect(html).not.toContain('https://cdn.jsdelivr.net')
+  expect(html).not.toContain('<script src=')
   expect(html).toContain('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
   expect(html).toContain('OpenStreetMap contributors')
   expect(html).toContain('2.938')
@@ -62,6 +68,31 @@ test('selecciona marcador y tarjeta y centra el mapa', () => {
   fireEvent.press(view.getByTestId('center-map'))
   expect(mockInjectJavaScript).toHaveBeenCalledWith('window.centerLocations(); true;')
   send(view, { type: 'select', id: 999 })
+  expect(view.getByTestId('location-card-2').props.accessibilityState.selected).toBe(true)
+})
+
+test('valida los mensajes del WebView y restringe la navegación externa', () => {
+  const view = render(<MapScreen />)
+  const webView = view.getByTestId('locations-map')
+
+  expect(webView.props.originWhitelist).toEqual(['about:blank', 'data:'])
+  expect(webView.props.javaScriptEnabled).toBe(true)
+  expect(webView.props.domStorageEnabled).toBe(false)
+  expect(webView.props.allowFileAccess).toBe(false)
+  expect(webView.props.allowFileAccessFromFileURLs).toBe(false)
+  expect(webView.props.allowUniversalAccessFromFileURLs).toBe(false)
+  expect(webView.props.mixedContentMode).toBe('never')
+  expect(webView.props.setSupportMultipleWindows).toBe(false)
+  expect(webView.props.thirdPartyCookiesEnabled).toBe(false)
+  expect(webView.props.onShouldStartLoadWithRequest({ url: 'about:blank' })).toBe(true)
+  expect(webView.props.onShouldStartLoadWithRequest({ url: 'data:text/html,map' })).toBe(true)
+  expect(webView.props.onShouldStartLoadWithRequest({ url: 'https://example.com' })).toBe(false)
+
+  expect(() => webView.props.onMessage({ nativeEvent: { data: '{invalid' } })).not.toThrow()
+  expect(() => webView.props.onMessage({ nativeEvent: { data: JSON.stringify({ type: 'select', id: '2' }) } })).not.toThrow()
+  expect(view.getByTestId('location-card-2').props.accessibilityState.selected).toBe(false)
+
+  send(view, { type: 'select', id: 2 })
   expect(view.getByTestId('location-card-2').props.accessibilityState.selected).toBe(true)
 })
 

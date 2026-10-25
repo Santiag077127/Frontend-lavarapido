@@ -16,6 +16,18 @@ import { getMapCopy } from '../../../i18n/mapCopy'
 const MAP_READY_TIMEOUT_MS = 15000
 const OSM_COPYRIGHT_URL = 'https://www.openstreetmap.org/copyright'
 
+type MapMessage =
+  | { type: 'ready' }
+  | { type: 'error' }
+  | { type: 'select'; id: number }
+
+const isMapMessage = (value: unknown): value is MapMessage => {
+  if (typeof value !== 'object' || value === null || !('type' in value)) return false
+  const message = value as { type?: unknown; id?: unknown }
+  if (message.type === 'ready' || message.type === 'error') return true
+  return message.type === 'select' && typeof message.id === 'number' && Number.isInteger(message.id)
+}
+
 export default function MapScreen() {
   const { theme } = useContext(ThemeContext)
   const { i18n } = useTranslation()
@@ -63,10 +75,11 @@ export default function MapScreen() {
 
   const handleMapMessage = (event: WebViewMessageEvent) => {
     try {
-      const message = JSON.parse(event.nativeEvent.data) as { type?: string; id?: number }
+      const message: unknown = JSON.parse(event.nativeEvent.data)
+      if (!isMapMessage(message)) return
       if (message.type === 'ready') { setMapReady(true); setMapError(false) }
       else if (message.type === 'error') { setMapReady(false); setMapError(true) }
-      else if (message.type === 'select' && available.some(({ id }) => id === message.id)) setSelectedId(message.id!)
+      else if (available.some(({ id }) => id === message.id)) setSelectedId(message.id)
     } catch { /* Ignore messages outside the map protocol. */ }
   }
 
@@ -105,9 +118,15 @@ export default function MapScreen() {
               accessibilityLabel={copy.title}
               style={styles.map}
               source={mapSource}
-              originWhitelist={['*']}
+              originWhitelist={['about:blank', 'data:']}
               javaScriptEnabled
               domStorageEnabled={false}
+              allowFileAccess={false}
+              allowFileAccessFromFileURLs={false}
+              allowUniversalAccessFromFileURLs={false}
+              mixedContentMode="never"
+              setSupportMultipleWindows={false}
+              thirdPartyCookiesEnabled={false}
               cacheMode="LOAD_DEFAULT"
               userAgent={`LavaRapidoVehicular/${Constants.expoConfig?.version ?? '1.0'} (Android; com.lavarapido.vehicular)`}
               onMessage={handleMapMessage}

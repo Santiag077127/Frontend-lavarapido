@@ -1,4 +1,5 @@
 import type { MapLocation } from './locations'
+import { leafletCss, leafletJs, leafletVersion } from './leafletResources'
 
 type MapColors = {
   primary: string
@@ -33,7 +34,7 @@ export const buildMapHtml = (locations: MapLocation[], colors: MapColors, langua
 <html lang="${escapeHtml(language.split('-')[0])}"><head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="window.ReactNativeWebView?.postMessage(JSON.stringify({type:'error'}))" />
+  <style>${leafletCss}</style>
   <style>
     html,body,#map { width:100%; height:100%; margin:0; padding:0; background:${colors.card}; }
     .leaflet-container { font-family:system-ui,-apple-system,sans-serif; background:${colors.card}; }
@@ -43,7 +44,7 @@ export const buildMapHtml = (locations: MapLocation[], colors: MapColors, langua
     .brand-marker.selected { width:48px; height:48px; background:${colors.primaryDark}; border-width:4px; box-shadow:0 0 0 3px ${colors.primary},0 3px 12px ${colors.shadow ?? 'rgba(13,27,62,.25)'}; }
     .leaflet-popup-content-wrapper { border:1px solid ${colors.border}; border-radius:12px; color:${colors.text}; }
   </style>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="window.ReactNativeWebView?.postMessage(JSON.stringify({type:'error'}))"></script>
+  <script>/* Leaflet ${leafletVersion} */${leafletJs}</script>
 </head><body><div id="map"></div><script>
 (function () {
   var places = ${scriptData(locations)};
