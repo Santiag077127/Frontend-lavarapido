@@ -69,6 +69,7 @@ describe("language changes across admin routes", () => {
     fireEvent.change(screen.getByLabelText("test language"), { target: { value: "en" } });
     expect(screen.getByRole("heading", { name: "Manage your car wash from one place" })).toBeTruthy();
     expect(screen.getByText("Today's dashboard")).toBeTruthy();
+    useAuthStore.setState({ token: "test-token", user: { userId: "admin", firstName: "Ada", email: "ada@example.com", role: "ADMIN" } });
     for (const [route, heading] of [
       ["/login", "Admin access"], ["/register", "Create account"],
       ["/forgot-password", "Reset password"], ["/reset-password", "Invalid link"],
@@ -77,6 +78,7 @@ describe("language changes across admin routes", () => {
       fireEvent.click(screen.getByLabelText(`go ${route}`));
       expect(screen.getByRole("heading", { name: heading })).toBeTruthy();
     }
+    useAuthStore.getState().logout();
   });
 
   it("updates settings, sidebar, password form and an open modal", async () => {

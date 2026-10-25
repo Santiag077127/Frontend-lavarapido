@@ -41,7 +41,7 @@ export const LoginForm = () => {
       const data = await login(email.trim(), password);
       setAuth(data.token, data.user);
 
-      // Un ADMIN vuelve a su destino; otros roles no entran al panel privado.
+      // Only administrators may enter the private dashboard.
       const destinoPendiente = consumirDestinoTrasLogin();
       if (data.user.role === "ADMIN" && destinoPendiente) {
         navigate(destinoPendiente, { replace: true });
@@ -50,10 +50,8 @@ export const LoginForm = () => {
 
       if (data.user.role === "ADMIN") {
         navigate("/dashboard");
-      } else if (destinoPendiente?.startsWith("/dashboard") || destinoPendiente === "/pagos/resultado") {
-        navigate("/access-denied", { replace: true });
       } else {
-        navigate("/");
+        navigate("/access-denied", { replace: true });
       }
 
     } catch (error: any) {
