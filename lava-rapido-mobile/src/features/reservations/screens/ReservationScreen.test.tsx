@@ -132,6 +132,15 @@ test('crea una reserva válida y navega al flujo de pago', async () => {
   fireEvent.press(confirm);
 
   await waitFor(() => expect(reservationService.create).toHaveBeenCalledTimes(1));
+  expect(serviceService.getById).toHaveBeenCalledTimes(1);
+  expect(serviceService.getById).toHaveBeenCalledWith('service-1');
+  expect(vehicleService.getMyVehicles).toHaveBeenCalledTimes(2);
+  expect(reservationService.create).toHaveBeenCalledWith({
+    fkIdVehiculo: 'vehicle-1',
+    fkIdServicio: 'service-1',
+    fechaReserva: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    horaReserva: '08:00:00',
+  });
   expect(mockNavigate).toHaveBeenCalledWith('ReservationPayment', {
     reservation: createdReservation,
   });
