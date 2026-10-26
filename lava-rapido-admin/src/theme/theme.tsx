@@ -5,12 +5,15 @@ import { extraTranslations } from "./extraTranslations";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type LanguageOption = "es" | "en" | "fr" | "pt";
+export type AccentOption = "blue" | "cyan" | "indigo" | "emerald";
 
 interface ThemeContextValue {
   darkMode: boolean;
   setDarkMode: (value: boolean) => void;
   language: LanguageOption;
   setLanguage: (value: LanguageOption) => void;
+  accent: AccentOption;
+  setAccent: (value: AccentOption) => void;
   t: (key: string) => string;
 }
 
@@ -55,6 +58,8 @@ export function useLocale(): string {
 }
 
 const getStoredBoolean = (key: string) => localStorage.getItem(key) === "true";
+const isAccentOption = (value: string | null): value is AccentOption =>
+  value === "blue" || value === "cyan" || value === "indigo" || value === "emerald";
 
 export const translations: Record<LanguageOption, Record<string, string>> = {
   es: {
@@ -785,6 +790,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("lava-language");
     return stored === "en" || stored === "fr" || stored === "pt" ? stored : "es";
   });
+  const [accent, setAccent] = useState<AccentOption>(() => {
+    const stored = localStorage.getItem("lava-accent-color");
+    return isAccentOption(stored) ? stored : "blue";
+  });
 
   useEffect(() => {
     // Aplica el tema al documento y recuerda la elección entre visitas.
@@ -793,9 +802,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [darkMode]);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = "blue";
-    localStorage.removeItem("lava-accent-color");
-  }, []);
+    document.documentElement.dataset.accent = accent;
+    localStorage.setItem("lava-accent-color", accent);
+  }, [accent]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -809,9 +818,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setDarkMode,
       language,
       setLanguage,
+      accent,
+      setAccent,
       t: (key: string) => translate(language, key),
     }),
-    [darkMode, language]
+    [accent, darkMode, language]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

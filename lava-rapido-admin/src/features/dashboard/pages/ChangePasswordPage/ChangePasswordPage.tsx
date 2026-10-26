@@ -6,6 +6,7 @@ import axios from "axios";
 import { useTranslations, localizeMessage } from "@/theme/theme";
 
 import { changePassword } from "../../services/userService";
+import { PasswordVisibilityField } from "../../components/PasswordVisibilityField/PasswordVisibilityField";
 import "@/styles/settingsBackLink.css";
 import "./ChangePasswordPage.css";
 
@@ -100,18 +101,15 @@ export const ChangePasswordPage = () => {
         {success && <p className="change-password-success" role="status">{localizeMessage(success, t)}</p>}
 
         <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="current-password">{t("ui.contrasena.actual")}</label>
-          <input id="current-password" type="password" value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" disabled={isLoading} />
+          <PasswordVisibilityField id="current-password" label={t("ui.contrasena.actual")} value={currentPassword}
+            onChange={setCurrentPassword} autoComplete="current-password" disabled={isLoading} />
 
-          <label htmlFor="new-password">{t("auth.newPassword")}</label>
-          <input id="new-password" type="password" value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" disabled={isLoading} />
+          <PasswordVisibilityField id="new-password" label={t("auth.newPassword")} value={newPassword}
+            onChange={setNewPassword} autoComplete="new-password" disabled={isLoading} />
           <small>{t("ui.al.menos.8.caracteres.y.maximo.72.bytes.utf.8")}</small>
 
-          <label htmlFor="confirm-password">{t("ui.confirmar.nueva.contrasena")}</label>
-          <input id="confirm-password" type="password" value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" disabled={isLoading} />
+          <PasswordVisibilityField id="confirm-password" label={t("ui.confirmar.nueva.contrasena")} value={confirmation}
+            onChange={setConfirmation} autoComplete="new-password" disabled={isLoading} />
           {confirmation && <small className={passwordsMatch ? "password-match" : "password-mismatch"} role="status">{passwordsMatch ? t("passwords.match") : localizeMessage("ui.la.confirmacion.no.coincide.con.la.nueva.contrasena", t)}</small>}
 
           <button type="submit" disabled={isLoading} aria-busy={isLoading}>
