@@ -1,11 +1,12 @@
 // Define la reserva y llama a la API para crear, listar, cambiar estado o cancelar.
 import { api } from "@/services/api";
+import type { VehicleType } from "@/features/dashboard/types";
 
 export type EstadoReserva = "PENDIENTE" | "ASIGNADA" | "EN_PROCESO" | "FINALIZADA" | "CANCELADA";
 
 export interface Reserva {
   idReserva: string; idUsuario: string; nombreUsuario: string; idVehiculo: string;
-  placaVehiculo: string; tipoVehiculo: string | null; idServicio: string;
+  placaVehiculo: string; tipoVehiculo: VehicleType | null; idServicio: string;
   nombreServicio: string; descripcionServicio: string | null; precioServicio: number;
   duracionServicio: number; fechaReserva: string; horaReserva: string;
   fechaHoraInicio: string | null; fechaHoraFin: string | null; estado: EstadoReserva;

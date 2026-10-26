@@ -14,7 +14,10 @@ export type ServicioForm = Pick<
   Servicio,
   "nombre" | "descripcion" | "precio" | "duracionMinutos"
 >;
-export type TipoVehiculo = "CARRO" | "MOTO" | "CAMIONETA" | "OTRO"; // ← confirmar valores reales del enum TipoVehiculo.java
+export type VehicleType = "CARRO" | "CAMIONETA" | "MOTO" | "MOTOCARRO" | "FURGONETA" | "PESADO";
+
+/** @deprecated Use VehicleType. Kept for compatibility with existing imports. */
+export type TipoVehiculo = VehicleType;
 
 export interface Marca {
   idMarca: string; // UUID
@@ -39,7 +42,7 @@ export interface Vehiculo {
   marcaAprobada: boolean;
   placa: string;
   color?: string;
-  tipoVehiculo: TipoVehiculo;
+  tipoVehiculo: VehicleType;
   estado: boolean;
   createdAt: string;
 }
@@ -47,7 +50,7 @@ export interface Vehiculo {
 export interface VehiculoForm {
   placa: string;
   color?: string;
-  tipoVehiculo: TipoVehiculo;
+  tipoVehiculo: VehicleType;
   fkIdMarca: string; // UUID
 }
 
