@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useContext,
+  useRef,
   useState,
 } from 'react';
 
@@ -28,18 +29,10 @@ import {
   vehicleService,
   Vehicle,
 } from '../../../services/vehicleService';
+import VehicleCard from '../components/VehicleCard';
 
 type Props = {
   navigation: any;
-};
-
-const vehicleTypeKeys: Record<string, string> = {
-  CARRO: 'vehicles.types.car',
-  CAMIONETA: 'vehicles.types.pickup',
-  MOTO: 'vehicles.types.motorcycle',
-  MOTOCARRO: 'vehicles.types.motortricycle',
-  FURGONETA: 'vehicles.types.van',
-  PESADO: 'vehicles.types.heavy',
 };
 
 export default function MyVehiclesScreen({
@@ -53,6 +46,7 @@ export default function MyVehiclesScreen({
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<ApiErrorKind | null>(null);
   const [pendingVehicleStatus, setPendingVehicleStatus] = useState<{ vehicle: Vehicle; nextStatus: boolean } | null>(null);
+  const statusRequestInProgress = useRef(false);
 
   const loadVehicles = async () => {
     try {
@@ -95,7 +89,8 @@ export default function MyVehiclesScreen({
   };
 
   const confirmChangeStatus = async () => {
-    if (!pendingVehicleStatus) return;
+    if (!pendingVehicleStatus || statusRequestInProgress.current) return;
+    statusRequestInProgress.current = true;
     const { vehicle, nextStatus } = pendingVehicleStatus;
     setPendingVehicleStatus(null);
 
@@ -112,248 +107,9 @@ export default function MyVehiclesScreen({
         ? t(`apiErrors.${kind}`)
         : t('vehicles.errors.status');
       Alert.alert(t('vehicles.errors.title'), message);
+    } finally {
+      statusRequestInProgress.current = false;
     }
-  };
-
-  const renderVehicle = ({
-    item,
-  }: {
-    item: Vehicle;
-  }) => {
-    return (
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.card,
-            borderColor: theme.border,
-          },
-        ]}
-      >
-        <View style={styles.cardHeader}>
-          <View
-            style={[
-              styles.vehicleIcon,
-              {
-                backgroundColor: theme.primarySoft,
-              },
-            ]}
-          >
-            <Ionicons
-              name={
-                item.tipoVehiculo === 'MOTO'
-                  ? 'bicycle-outline'
-                  : 'car-sport-outline'
-              }
-              size={25}
-              color={theme.primary}
-            />
-          </View>
-
-          <View style={styles.headerInfo}>
-            <Text
-              style={[
-                styles.brandName,
-                {
-                  color: theme.text,
-                },
-              ]}
-            >
-              {item.nombreMarca}
-            </Text>
-
-            <Text
-              style={[
-                styles.plate,
-                {
-                  color: theme.textSecondary,
-                },
-              ]}
-            >
-              {item.placa}
-            </Text>
-          </View>
-
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: item.estado
-                  ? theme.successBackground
-                  : theme.errorBackground,
-                borderColor: item.estado ? theme.successBorder : theme.errorBorder,
-                borderWidth: 1,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.statusText,
-                {
-                  color: item.estado ? theme.successText : theme.errorText,
-                },
-              ]}
-            >
-              {item.estado
-                ? t('vehicles.status.active')
-                : t('vehicles.status.inactive')}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.divider,
-            {
-              backgroundColor: theme.border,
-            },
-          ]}
-        />
-
-        <View style={styles.infoRow}>
-          <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
-            <Ionicons
-              name="car-outline"
-              size={18}
-              color={theme.primary}
-            />
-
-            <View style={styles.infoText}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: theme.textSecondary,
-                  },
-                ]}
-              >
-                {t('vehicles.fields.type')}
-              </Text>
-
-              <Text
-                style={[
-                  styles.value,
-                  {
-                    color: theme.text,
-                  },
-                ]}
-              >
-                {vehicleTypeKeys[item.tipoVehiculo]
-                  ? t(vehicleTypeKeys[item.tipoVehiculo])
-                  : item.tipoVehiculo}
-              </Text>
-            </View>
-          </View>
-
-          <View style={[styles.infoItem, { backgroundColor: theme.background }]}>
-            <Ionicons
-              name="color-palette-outline"
-              size={18}
-              color={theme.primary}
-            />
-
-            <View style={styles.infoText}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: theme.textSecondary,
-                  },
-                ]}
-              >
-                {t('vehicles.fields.color')}
-              </Text>
-
-              <Text
-                style={[
-                  styles.value,
-                  {
-                    color: theme.text,
-                  },
-                ]}
-              >
-                {item.color || t('vehicles.fields.unspecified')}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.actions}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={`${t('accessibility.editVehicle')}: ${item.placa}`}
-            style={[
-              styles.actionButton,
-              {
-                backgroundColor: theme.primary,
-              },
-            ]}
-            onPress={() => handleEditVehicle(item)}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="create-outline"
-              size={19}
-              color={theme.onPrimary}
-            />
-
-            <Text
-              style={[
-                styles.actionText,
-                {
-                  color: theme.onPrimary,
-                },
-              ]}
-            >
-              {t('vehicles.actions.edit')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel={`${item.estado ? 'Eliminar' : t('vehicles.status.activate')}: ${item.placa}`}
-            style={[
-              styles.actionButton,
-              {
-                backgroundColor: item.estado
-                  ? theme.errorBackground
-                  : theme.primarySoft,
-                borderWidth: 1,
-                borderColor: item.estado
-                  ? theme.errorBorder
-                  : theme.infoBorder,
-              },
-            ]}
-            onPress={() => handleChangeStatus(item)}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={
-                item.estado
-                  ? 'eye-off-outline'
-                  : 'eye-outline'
-              }
-              size={19}
-              color={item.estado ? theme.errorText : theme.primary}
-            />
-
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[
-                styles.actionText,
-                {
-                  color: item.estado ? theme.errorText : theme.primary,
-                },
-              ]}
-            >
-              {item.estado
-                ? 'Eliminar'
-                : t('vehicles.status.activate')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
   };
 
   if (loading) {
@@ -407,7 +163,15 @@ export default function MyVehiclesScreen({
       <FlatList
         data={vehicles}
         keyExtractor={(item) => item.idVehiculo}
-        renderItem={renderVehicle}
+        renderItem={({ item }) => (
+          <VehicleCard
+            vehicle={item}
+            theme={theme}
+            translate={t}
+            onEdit={handleEditVehicle}
+            onChangeStatus={handleChangeStatus}
+          />
+        )}
         contentContainerStyle={[
           styles.listContent,
           vehicles.length === 0 &&
@@ -589,126 +353,6 @@ const styles = StyleSheet.create({
   emptyListContent: {
     flexGrow: 1,
     justifyContent: 'center',
-  },
-
-  card: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-  },
-
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  vehicleIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  headerInfo: {
-    flex: 1,
-    minWidth: 0,
-    marginLeft: 14,
-  },
-
-  brandName: {
-    fontSize: 17,
-    fontWeight: '800',
-    flexShrink: 1,
-  },
-
-  plate: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1.4,
-    marginTop: 4,
-  },
-
-  statusBadge: {
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  divider: {
-    height: 1,
-    marginVertical: 15,
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-
-  infoItem: {
-    width: '48%',
-    minWidth: 125,
-    flexGrow: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    borderRadius: 15,
-  },
-
-  infoText: {
-    flex: 1,
-    minWidth: 0,
-  },
-
-  label: {
-    fontSize: 11,
-    marginBottom: 2,
-  },
-
-  value: {
-    fontSize: 14,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 9,
-    marginTop: 14,
-  },
-
-  actionButton: {
-    flexGrow: 1,
-    flexBasis: '48%',
-    minWidth: 125,
-    minHeight: 50,
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-  },
-
-  actionText: {
-    flexShrink: 1,
-    textAlign: 'center',
-    fontSize: 13,
-    fontWeight: '700',
   },
 
   emptyContainer: {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { ThemeContext } from '../../../theme/ThemeContext';
 
 import RegisterScreen, { normalizeDocumentNumber } from './RegisterScreen';
 
@@ -77,6 +78,27 @@ test('mantiene el formulario desplazable con el teclado abierto en Android', () 
   expect(view.getByRole('button', { name: 'register.button' })).toBeTruthy();
 });
 
+test('applies the active dark theme to the screen and unchecked consent controls', () => {
+  const currentTheme = (ThemeContext as any)._currentValue.theme;
+  const darkTheme = { ...currentTheme, background: '#101010', surface: '#202020', inputBackground: '#303030' };
+  const view = render(
+    <ThemeContext.Provider value={{ theme: darkTheme, darkMode: true } as any}>
+      <RegisterScreen setIsLoggedIn={jest.fn()} />
+    </ThemeContext.Provider>,
+  );
+
+  const rootStyle = view.UNSAFE_getByType(require('react-native').View).props.style;
+  expect(rootStyle).toEqual(expect.arrayContaining([expect.objectContaining({ backgroundColor: '#101010' })]));
+  const privacyCheckbox = view.getByRole('checkbox', { name: 'He leído la política de privacidad' });
+  expect(privacyCheckbox.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ backgroundColor: '#303030' })]));
+});
+
+test('navigates to login from the existing account action', () => {
+  const view = renderScreen();
+  fireEvent.press(view.getByRole('button', { name: 'register.hasAccount register.signIn' }));
+  expect(mockNavigate).toHaveBeenCalledWith('Login');
+});
+
 test('conserva la validación del formulario y muestra el mensaje dentro del contenido desplazable', () => {
   const view = renderScreen();
 
@@ -131,6 +153,66 @@ test('bloquea el registro hasta completar las dos confirmaciones requeridas', ()
 
   expect(mockRegister).not.toHaveBeenCalled();
   expect(view.getByRole('alert')).toHaveTextContent(/Debes leer la política de privacidad/);
+});
+
+test('keeps password validation in the screen and does not call the API for an invalid password', () => {
+  const view = renderScreen();
+
+  fireEvent.changeText(view.getByLabelText('register.email'), 'cliente@example.com');
+  fireEvent.changeText(view.getByLabelText('register.firstName'), 'Ana');
+  fireEvent.changeText(view.getByLabelText('register.lastName'), 'Pérez');
+  fireEvent.changeText(view.getByLabelText('register.phone'), '3001234567');
+  fireEvent.changeText(view.getByLabelText('register.documentNumber'), '1234567890');
+  fireEvent.changeText(view.getByLabelText('register.password'), 'short');
+  fireEvent.changeText(view.getByLabelText('register.confirmPassword'), 'short');
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído la política de privacidad' }));
+  fireEvent.press(view.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }));
+  fireEvent.press(view.getByRole('button', { name: 'register.button' }));
+
+  expect(mockRegister).not.toHaveBeenCalled();
+  expect(view.getByRole('alert')).toHaveTextContent(/register\.invalidPassword/);
+});
+
+test('shows the existing conflict message when registration returns HTTP 409', async () => {
+  mockRegister.mockRejectedValueOnce({ response: { status: 409 } });
+  const view = renderScreen();
+  fireEvent.changeText(view.getByLabelText('register.email'), 'cliente@example.com');
+  fireEvent.changeText(view.getByLabelText('register.firstName'), 'Ana');
+  fireEvent.changeText(view.getByLabelText('register.lastName'), 'Pérez');
+  fireEvent.changeText(view.getByLabelText('register.phone'), '3001234567');
+  fireEvent.changeText(view.getByLabelText('register.documentNumber'), '1234567890');
+  fireEvent.changeText(view.getByLabelText('register.password'), 'Password1');
+  fireEvent.changeText(view.getByLabelText('register.confirmPassword'), 'Password1');
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído la política de privacidad' }));
+  fireEvent.press(view.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }));
+
+  await act(async () => {
+    fireEvent.press(view.getByRole('button', { name: 'register.button' }));
+  });
+
+  expect(await view.findByRole('alert')).toHaveTextContent(/register\.conflict/);
+});
+
+test('disables the submit control while registration is pending', async () => {
+  let resolveRequest: (value: object) => void = () => undefined;
+  mockRegister.mockImplementationOnce(() => new Promise((resolve) => { resolveRequest = resolve; }));
+  const view = renderScreen();
+  fireEvent.changeText(view.getByLabelText('register.email'), 'cliente@example.com');
+  fireEvent.changeText(view.getByLabelText('register.firstName'), 'Ana');
+  fireEvent.changeText(view.getByLabelText('register.lastName'), 'Pérez');
+  fireEvent.changeText(view.getByLabelText('register.phone'), '3001234567');
+  fireEvent.changeText(view.getByLabelText('register.documentNumber'), '1234567890');
+  fireEvent.changeText(view.getByLabelText('register.password'), 'Password1');
+  fireEvent.changeText(view.getByLabelText('register.confirmPassword'), 'Password1');
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído la política de privacidad' }));
+  fireEvent.press(view.getByRole('checkbox', { name: 'Acepto los términos y condiciones' }));
+
+  fireEvent.press(view.getByRole('button', { name: 'register.button' }));
+  expect(view.getByRole('button', { name: /register.button/ }).props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+  fireEvent.press(view.getByRole('button', { name: /register.button/ }));
+  expect(mockRegister).toHaveBeenCalledTimes(1);
+
+  await act(async () => resolveRequest({}));
 });
 
 test('permite el registro con ambas confirmaciones y conserva el payload actual', async () => {
