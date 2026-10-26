@@ -2,18 +2,25 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const reservasMock = vi.hoisted(() => ({ listar: vi.fn(), crear: vi.fn() }));
+const reservasMock = vi.hoisted(() => ({ listar: vi.fn(), crear: vi.fn(), cambiar: vi.fn() }));
 const vehiculosMock = vi.hoisted(() => vi.fn());
 const serviciosMock = vi.hoisted(() => vi.fn());
+const detailModalMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../services/reservaService", () => ({
   listarReservas: reservasMock.listar,
   crearReserva: reservasMock.crear,
+  cambiarEstado: reservasMock.cambiar,
 }));
 vi.mock("../../services/vehiculoService", () => ({ getVehiculos: vehiculosMock }));
 vi.mock("../../services/servicioService", () => ({ getServiciosDisponibles: serviciosMock }));
 vi.mock("../../components/CobrarReservaButton/CobrarReservaButton", () => ({ CobrarReservaButton: () => null }));
-vi.mock("../../components/TurnoDetailModal/TurnoDetailModal", () => ({ TurnoDetailModal: () => null }));
+vi.mock("../../components/TurnoDetailModal/TurnoDetailModal", () => ({
+  TurnoDetailModal: (props: Record<string, unknown>) => {
+    detailModalMock(props);
+    return <div>Detalle de prueba</div>;
+  },
+}));
 
 import { TurnosPage } from "./TurnosPage";
 
@@ -115,5 +122,36 @@ describe("TurnosPage - reserva presencial", () => {
       fechaReserva: "2099-10-01",
       horaReserva: "09:00:00",
     });
+  });
+
+  it("does not provide a cancellation action to the reservation detail", async () => {
+    reservasMock.listar.mockResolvedValue([{
+      idReserva: "reservation-1",
+      idUsuario: "user-1",
+      nombreUsuario: "Cliente Prueba",
+      idVehiculo: "vehicle-1",
+      placaVehiculo: "ABC123",
+      tipoVehiculo: "CARRO",
+      idServicio: "service-1",
+      nombreServicio: "Lavado",
+      descripcionServicio: "Lavado general",
+      precioServicio: 30000,
+      duracionServicio: 30,
+      fechaReserva: "2099-10-01",
+      horaReserva: "09:00:00",
+      fechaHoraInicio: null,
+      fechaHoraFin: null,
+      estado: "PENDIENTE",
+      createdAt: "2099-09-01T09:00:00",
+      updatedAt: "2099-09-01T09:00:00",
+      operadorNombre: null,
+    }]);
+
+    render(<TurnosPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "Ver" }));
+
+    const modalProps = detailModalMock.mock.calls.at(-1)?.[0];
+    expect(modalProps).not.toHaveProperty("onCancelar");
+    expect(screen.queryByRole("button", { name: "Cancelar reserva" })).not.toBeInTheDocument();
   });
 });

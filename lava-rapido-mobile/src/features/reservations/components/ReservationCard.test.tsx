@@ -85,6 +85,20 @@ test.each([
   expect(view.queryByRole('button', { name: 'mobile.reservations.cancelTitle: Lavado exterior' })).toBeNull();
 });
 
+test('does not expose cancellation for a non-pending reservation even when a caller marks it cancellable', () => {
+  const view = render(
+    <ReservationCard
+      reservation={{ ...reservation, estado: 'ASIGNADA' }}
+      cancellable
+      cancelling={false}
+      onCancel={onCancel}
+      onOpenDetails={onOpenDetails}
+    />,
+  );
+
+  expect(view.queryByRole('button', { name: 'mobile.reservations.cancelTitle: Lavado exterior' })).toBeNull();
+});
+
 test('disables cancellation and announces progress while a request is in flight', () => {
   const view = render(
     <ReservationCard

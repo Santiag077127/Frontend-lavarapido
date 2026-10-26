@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { paymentService, type ReservationPayment } from './paymentService';
-import { reservationService } from '../features/reservations/services/reservationService';
 
 const storageKey = 'pending-reservation-checkouts';
 
@@ -12,20 +11,16 @@ export type PendingCheckout = {
 };
 
 export type CheckoutRecoverySummary = {
+  // Kept for callers that consume the legacy summary contract. Recovery no
+  // longer cancels reservations, so this value is always zero.
   cancelled: number;
   protected: number;
   deferred: number;
 };
 
 type HttpFailure = {
-  response?: { status?: number; data?: { code?: unknown } };
+  response?: { status?: number };
 };
-
-function failureCode(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object') return undefined;
-  const code = (error as HttpFailure).response?.data?.code;
-  return typeof code === 'string' ? code : undefined;
-}
 
 function failureStatus(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined;
@@ -74,8 +69,8 @@ async function getPayment(reservationId: string): Promise<ReservationPayment | n
   try {
     return await paymentService.getByReservation(reservationId);
   } catch (error) {
-    // A missing payment is safe to submit to the backend cancellation check.
-    // Any other read error leaves the outcome uncertain.
+    // A missing payment is retained for an explicit customer decision.
+    // Any other read error also leaves the outcome uncertain.
     if (failureStatus(error) === 404) return null;
     throw error;
   }
@@ -124,26 +119,12 @@ export const pendingCheckoutRecovery = {
           summary.protected += 1;
           continue;
         }
-        if (payment?.estado === 'pendiente') {
-          retained.push(entry);
-          summary.deferred += 1;
-          continue;
-        }
-
-        // A missing payment or a provider-confirmed rejection is sent to the
-        // same idempotent endpoint, which performs the final safety check.
-        await reservationService.cancelForCheckout(entry.reservationId);
-        summary.cancelled += 1;
-      } catch (error) {
-        const status = failureStatus(error);
-        const code = failureCode(error);
-        if (status === 409 && code === 'PAGO_APROBADO') {
-          summary.protected += 1;
-          continue;
-        }
-
-        // PENDING, network failures, timeouts, 5xx, and unknown conflicts are
-        // retained for a later run. No local state is treated as a failure.
+        // Recovery never turns local payment state into cancellation consent.
+        // Pending, rejected, and missing payments remain available for an
+        // explicit customer decision in the reservation or checkout screens.
+        retained.push(entry);
+        summary.deferred += 1;
+      } catch {
         retained.push(entry);
         summary.deferred += 1;
       }

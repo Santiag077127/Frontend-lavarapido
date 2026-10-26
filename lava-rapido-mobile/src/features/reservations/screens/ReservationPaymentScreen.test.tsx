@@ -18,6 +18,11 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.pending': 'Pendiente de confirmación',
   'mobile.paymentFlow.declined': 'Pago rechazado',
   'mobile.paymentFlow.retryPayment': 'Reintentar pago',
+  'mobile.paymentFlow.acceptAndContinue': 'Acepto la política y continuar',
+  'mobile.paymentFlow.acceptAndRetry': 'Acepto la política y reintentar pago',
+  'mobile.paymentFlow.policySummary': 'Condiciones de cancelación antes de pagar.',
+  'mobile.paymentFlow.policyVersion': 'Versión de la política: 2026-10-26',
+  'mobile.reservation.readCancellationPolicy': 'Leer política de cancelación y devoluciones',
   'mobile.paymentFlow.error': 'Error de pago',
   'mobile.paymentFlow.startError': 'Error al iniciar el pago',
   'mobile.paymentFlow.duplicateHint': 'Requiere revisión',
@@ -42,6 +47,8 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.reservationNotFoundMessage': 'No pudimos encontrar esta reserva. Consulta tus reservas.',
   'mobile.paymentFlow.cancelUnknownTitle': 'No pudimos confirmar el estado',
   'mobile.paymentFlow.cancelUnknownMessage': 'No se pudo confirmar el estado de la cancelación. Consulta tus reservas antes de continuar.',
+  'mobile.paymentFlow.notPendingCancellationTitle': 'Reserva no cancelable',
+  'mobile.paymentFlow.notPendingCancellationMessage': 'La reserva ya no está pendiente y no puede cancelarse por esta opción.',
 };
 
 jest.mock('@react-navigation/native', () => ({
@@ -107,10 +114,14 @@ jest.mock('../../../services/paymentService', () => ({
   paymentService: { getByReservation: jest.fn(), start: jest.fn(), verify: jest.fn() },
 }));
 jest.mock('../services/reservationService', () => ({
+  getReservationCancellationFailure: (error: { response?: { status?: number; data?: { code?: string } } }) => ({
+    status: error?.response?.status,
+    code: error?.response?.data?.code,
+  }),
   reservationService: { cancelForCheckout: jest.fn() },
 }));
 
-const reservation = { idReserva: 'res-1' };
+const reservation = { idReserva: 'res-1', idUsuario: 'user-1' };
 const payment = (estado: 'aprobado' | 'rechazado' | 'pendiente', intentoEstado: string = estado) => ({
   idPago: 'pay-1',
   idReserva: 'res-1',
@@ -132,6 +143,11 @@ const triggerRemoval = (action = exitAction) => {
 const confirmCancellation = (view: ReturnType<typeof render>) => {
   fireEvent.press(view.getByRole('button', { name: 'Salir y cancelar reserva' }));
 };
+const beginCheckout = async (view: ReturnType<typeof render>) => {
+  await waitFor(() => expect(view.getByRole('button', { name: 'Acepto la política y continuar' })).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Acepto la política y continuar' }));
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(1));
+};
 const navigationAction = (status: string) => expect.objectContaining({
   type: 'NAVIGATE',
   payload: {
@@ -145,6 +161,28 @@ beforeEach(() => {
   mockGoBack.mockImplementation(() => triggerRemoval());
   (paymentService.start as jest.Mock).mockResolvedValue({ referencia: 'ref-1' });
   (paymentService.getByReservation as jest.Mock).mockResolvedValue(payment('pendiente'));
+});
+
+test('does not start Wompi until the user explicitly accepts the policy', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  const view = renderPayment();
+
+  await waitFor(() => expect(view.getByText('Condiciones de cancelación antes de pagar.')).toBeTruthy());
+  expect(view.getByText('Versión de la política: 2026-10-26')).toBeTruthy();
+  expect(paymentService.start).not.toHaveBeenCalled();
+
+  await beginCheckout(view);
+});
+
+test('opens the full cancellation terms before starting Wompi', async () => {
+  const view = renderPayment();
+  await waitFor(() => expect(view.getByRole('link', { name: 'Leer política de cancelación y devoluciones' })).toBeTruthy());
+
+  fireEvent.press(view.getByRole('link', { name: 'Leer política de cancelación y devoluciones' }));
+
+  expect(view.getByText('Términos y condiciones')).toBeTruthy();
+  expect(view.getByText('6. Cancelación voluntaria')).toBeTruthy();
+  expect(paymentService.start).not.toHaveBeenCalled();
 });
 
 test('pago aprobado conserva la navegación existente a Mis servicios', async () => {
@@ -167,11 +205,12 @@ test.each(['pendiente', 'rechazado'] as const)('pago %s no presenta confirmació
   await waitFor(() => expect(paymentService.getByReservation).toHaveBeenCalled());
   await waitFor(() => expect(view.queryByText('mobile.paymentFlow.processing')).toBeNull());
   expect(view.queryByText('Ver mis servicios')).toBeNull();
+  expect(reservationService.cancelForCheckout).not.toHaveBeenCalled();
 });
 
 test('seguir pagando cierra la confirmación sin solicitar cancelación ni navegar', async () => {
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
 
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   expect(view.getByText('¿Salir del pago?')).toBeTruthy();
@@ -187,7 +226,7 @@ test.each([
   ['gesture removal', { type: 'POP' }],
 ])('%s muestra confirmación antes de salir', async (_source, action) => {
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
 
   triggerRemoval(action);
 
@@ -202,13 +241,16 @@ test('confirma cancelación, muestra éxito y abre la lista para recargar reserv
     reservation: { idReserva: 'res-1', estado: 'CANCELADA' },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
 
   confirmCancellation(view);
 
   await waitFor(() => expect(reservationService.cancelForCheckout).toHaveBeenCalledTimes(1));
-  expect(reservationService.cancelForCheckout).toHaveBeenCalledWith('res-1');
+  expect(reservationService.cancelForCheckout).toHaveBeenCalledWith('res-1', {
+    policyAccepted: true,
+    policyVersion: '2026-10-26',
+  });
   expect(mockAppAlert).toHaveBeenCalledWith(
     'Reserva cancelada',
     'Tu reserva se canceló correctamente.',
@@ -224,7 +266,7 @@ test('reserva ya cancelada informa el resultado sin repetir operaciones', async 
     reservation: { idReserva: 'res-1', estado: 'CANCELADA' },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -242,7 +284,7 @@ test('pago pendiente no confirma cancelación y permite seguir pagando o consult
     response: { status: 409, data: { code: 'PAGO_PENDIENTE' } },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -266,7 +308,7 @@ test('pago aprobado bloquea cancelación y dirige a consultar el estado actualiz
     response: { status: 409, data: { code: 'PAGO_APROBADO' } },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -302,7 +344,7 @@ test.each([
 ])('%s no se presenta como cancelación fallida ni exitosa y ofrece consultar', async (_kind, error) => {
   (reservationService.cancelForCheckout as jest.Mock).mockRejectedValue(error);
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -320,7 +362,7 @@ test('error HTTP 403 no se trata como cierre de sesión ni cancelación exitosa'
     response: { status: 403, data: { error: 'internal detail' } },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -341,7 +383,7 @@ test.each([
     response: { status, data: { error: 'internal detail' } },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
@@ -361,7 +403,7 @@ test('doble pulsación mientras se cancela solo envía una solicitud', async () 
     resolveCancellation = resolve;
   }));
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   const confirmButton = view.getByRole('button', { name: 'Salir y cancelar reserva' });
 
@@ -384,13 +426,30 @@ test('un 409 con código desconocido conserva el estado como no confirmado', asy
     response: { status: 409, data: { code: 'UNKNOWN_CONFLICT' } },
   });
   const view = renderPayment();
-  await waitFor(() => expect(paymentService.start).toHaveBeenCalled());
+  await beginCheckout(view);
   fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
   confirmCancellation(view);
 
   await waitFor(() => expect(mockAppAlert).toHaveBeenCalledWith(
     'No pudimos confirmar el estado',
     expect.any(String),
+    expect.any(Array),
+    'warning',
+  ));
+});
+
+test('a non-pending reservation response blocks checkout cancellation', async () => {
+  (reservationService.cancelForCheckout as jest.Mock).mockRejectedValue({
+    response: { status: 409, data: { code: 'RESERVA_NO_PENDIENTE' } },
+  });
+  const view = renderPayment();
+  await beginCheckout(view);
+  fireEvent.press(view.getByLabelText('mobile.serviceDetail.back'));
+  confirmCancellation(view);
+
+  await waitFor(() => expect(mockAppAlert).toHaveBeenCalledWith(
+    'Reserva no cancelable',
+    'La reserva ya no está pendiente y no puede cancelarse por esta opción.',
     expect.any(Array),
     'warning',
   ));

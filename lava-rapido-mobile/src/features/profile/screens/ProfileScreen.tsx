@@ -30,6 +30,8 @@ import { images } from '../../../assets/images'
 import api, { classifyApiError, setToken } from '../../../services/api'
 import styles from '../components/profileStyles'
 import { ProfileIdentity, ProfileInformation, ProfileAvatarSelector, ProfilePreferences, type AvatarKey } from '../components/ProfileSections'
+import RegisterLegalDocumentModal from '../../auth/components/RegisterLegalDocumentModal'
+import type { LegalDocument } from '../../auth/legalContent'
 
 type Props = {
   setIsLoggedIn: (value: boolean) => void
@@ -77,6 +79,7 @@ export default function ProfileScreen({
   const { t } = useTranslation()
 
   const [logoutConfirmationVisible, setLogoutConfirmationVisible] = useState(false)
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null)
   const { theme, darkMode, setDarkMode } = useContext(ThemeContext)
 
   const { width } = useWindowDimensions()
@@ -499,6 +502,22 @@ export default function ProfileScreen({
       />
 
       <TouchableOpacity
+        accessibilityRole="link"
+        accessibilityLabel={t('profile.cancellationPolicy')}
+        activeOpacity={0.8}
+        style={[styles.legalLink, { backgroundColor: theme.card, borderColor: theme.border }]}
+        onPress={() => setLegalDocument('terms')}
+      >
+        <View style={styles.logoutContent}>
+          <View style={[styles.logoutIcon, { backgroundColor: theme.primarySoft }]}>
+            <Ionicons name="document-text-outline" size={21} color={theme.primary} />
+          </View>
+          <Text style={[styles.logoutText, { color: theme.text }]}>{t('profile.cancellationPolicy')}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={21} color={theme.textSecondary} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel={t('profile.logout')}
         activeOpacity={0.8}
@@ -554,6 +573,15 @@ export default function ProfileScreen({
           logoutUser();
         }}
         onCancel={() => setLogoutConfirmationVisible(false)}
+      />
+      <RegisterLegalDocumentModal
+        document={legalDocument}
+        onClose={() => setLegalDocument(null)}
+        surfaceColor={theme.card}
+        textColor={theme.text}
+        secondaryTextColor={theme.textSecondary}
+        buttonColor={theme.primary}
+        onPrimaryColor={theme.onPrimary}
       />
     </>
   )

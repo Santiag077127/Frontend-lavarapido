@@ -119,6 +119,16 @@ test('updates the avatar with the existing profile contract', async () => {
   expect(mockPut).toHaveBeenCalledTimes(1);
 });
 
+test('keeps a permanent profile link to the cancellation policy', async () => {
+  const view = render(<ProfileScreen setIsLoggedIn={mockSetIsLoggedIn} />);
+  await waitFor(() => expect(view.getByText('Test User')).toBeTruthy());
+
+  fireEvent.press(view.getByRole('link', { name: 'profile.cancellationPolicy' }));
+
+  expect(view.getByText('Términos y condiciones')).toBeTruthy();
+  expect(view.getByText('7. Reembolsos y derechos del consumidor')).toBeTruthy();
+});
+
 test('requires confirmation before clearing the local session', async () => {
   const view = render(<ProfileScreen setIsLoggedIn={mockSetIsLoggedIn} />);
   await waitFor(() => expect(view.getByText('Test User')).toBeTruthy());

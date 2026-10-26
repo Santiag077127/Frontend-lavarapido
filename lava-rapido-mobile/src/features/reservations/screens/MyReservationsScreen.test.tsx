@@ -10,6 +10,7 @@ const mockGoBack = jest.fn();
 const mockGetProfile = jest.fn();
 const mockGetByUser = jest.fn();
 const mockCancel = jest.fn();
+const mockClearPendingCheckout = jest.fn();
 const mockAlert = jest.fn();
 const mockClassifyApiError = jest.fn();
 
@@ -58,10 +59,19 @@ jest.mock('../../../services/api', () => ({
   default: { get: (...args: unknown[]) => mockGetProfile(...args) },
   classifyApiError: (...args: unknown[]) => mockClassifyApiError(...args),
 }));
+jest.mock('../../../services/pendingCheckoutRecovery', () => ({
+  pendingCheckoutRecovery: {
+    clear: (...args: unknown[]) => mockClearPendingCheckout(...args),
+  },
+}));
 jest.mock('../services/reservationService', () => ({
+  getReservationCancellationFailure: (error: { response?: { status?: number; data?: { code?: string } } }) => ({
+    status: error?.response?.status,
+    code: error?.response?.data?.code,
+  }),
   reservationService: {
     getByUser: (...args: unknown[]) => mockGetByUser(...args),
-    cancel: (...args: unknown[]) => mockCancel(...args),
+    cancelForCheckout: (...args: unknown[]) => mockCancel(...args),
   },
 }));
 
@@ -90,7 +100,11 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockGetProfile.mockResolvedValue({ data: { userId: 'user-1' } });
   mockGetByUser.mockResolvedValue([reservation]);
-  mockCancel.mockResolvedValue({ ...reservation, estado: 'CANCELADA' });
+  mockCancel.mockResolvedValue({
+    reservation: { ...reservation, estado: 'CANCELADA' },
+    result: 'CANCELLED',
+  });
+  mockClearPendingCheckout.mockResolvedValue(undefined);
   mockClassifyApiError.mockReturnValue('server_unavailable');
 });
 
@@ -120,8 +134,9 @@ test('sorts reservations by date and time without requesting them twice', async 
   expect(mockGetByUser).toHaveBeenCalledTimes(1);
 });
 
-test('allows cancellation only for pending and assigned reservations', async () => {
+test('allows cancellation only for pending reservations', async () => {
   mockGetByUser.mockResolvedValueOnce([
+    { ...reservation, idReserva: 'pending', nombreServicio: 'Pending' },
     { ...reservation, idReserva: 'assigned', nombreServicio: 'Assigned', estado: 'ASIGNADA' },
     { ...reservation, idReserva: 'finished', nombreServicio: 'Finished', estado: 'FINALIZADA' },
   ]);
@@ -129,7 +144,8 @@ test('allows cancellation only for pending and assigned reservations', async () 
   const view = render(<MyReservationsScreen />);
   await waitFor(() => expect(view.getByText('Finished')).toBeTruthy());
 
-  expect(view.getByRole('button', { name: 'mobile.reservations.cancelTitle: Assigned' })).toBeTruthy();
+  expect(view.getByRole('button', { name: 'mobile.reservations.cancelTitle: Pending' })).toBeTruthy();
+  expect(view.queryByRole('button', { name: 'mobile.reservations.cancelTitle: Assigned' })).toBeNull();
   expect(view.queryByRole('button', { name: 'mobile.reservations.cancelTitle: Finished' })).toBeNull();
   expect(mockCancel).not.toHaveBeenCalled();
 });
@@ -176,7 +192,11 @@ test('asks for confirmation before cancellation and updates the card after succe
   expect(view.getByText('mobile.reservations.cancelQuestion')).toBeTruthy();
   fireEvent.press(view.getByRole('button', { name: 'mobile.reservations.yesCancel' }));
 
-  await waitFor(() => expect(mockCancel).toHaveBeenCalledWith('reservation-1'));
+  await waitFor(() => expect(mockCancel).toHaveBeenCalledWith('reservation-1', {
+    policyAccepted: true,
+    policyVersion: '2026-10-26',
+  }));
+  expect(mockClearPendingCheckout).toHaveBeenCalledWith('reservation-1', 'user-1');
   await waitFor(() => expect(mockAlert).toHaveBeenCalledWith(
     'mobile.reservations.cancelledTitle',
     'mobile.reservations.cancelledMessage',
@@ -205,8 +225,8 @@ test('shows a safe cancellation error and leaves the reservation available', asy
 });
 
 test('sends only one cancellation request for repeated confirmation presses', async () => {
-  let resolveCancellation: (value: ReservationResponse) => void = () => {};
-  mockCancel.mockReturnValue(new Promise<ReservationResponse>((resolve) => {
+  let resolveCancellation: (value: unknown) => void = () => {};
+  mockCancel.mockReturnValue(new Promise((resolve) => {
     resolveCancellation = resolve;
   }));
   const view = render(<MyReservationsScreen />);
@@ -220,6 +240,48 @@ test('sends only one cancellation request for repeated confirmation presses', as
   });
 
   expect(mockCancel).toHaveBeenCalledTimes(1);
-  await act(async () => resolveCancellation({ ...reservation, estado: 'CANCELADA' }));
+  await act(async () => resolveCancellation({
+    reservation: { ...reservation, estado: 'CANCELADA' },
+    result: 'CANCELLED',
+  }));
   expect(mockAlert).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  ['PAGO_PENDIENTE', 'mobile.reservations.pendingPaymentError'],
+  ['PAGO_APROBADO', 'mobile.reservations.approvedPaymentError'],
+  ['RESERVA_NO_PENDIENTE', 'mobile.reservations.notPendingError'],
+] as const)('shows the specific backend cancellation error for %s', async (code, messageKey) => {
+  mockCancel.mockRejectedValueOnce({ response: { status: 409, data: { code } } });
+  const view = render(<MyReservationsScreen />);
+  await waitFor(() => expect(view.getByText('Lavado exterior')).toBeTruthy());
+
+  fireEvent.press(view.getByRole('button', { name: 'mobile.reservations.cancelTitle: Lavado exterior' }));
+  fireEvent.press(view.getByRole('button', { name: 'mobile.reservations.yesCancel' }));
+
+  await waitFor(() => expect(mockAlert).toHaveBeenCalledWith(
+    'mobile.reservations.cancelErrorTitle',
+    messageKey,
+    undefined,
+    'error',
+  ));
+});
+
+test.each([
+  [403, 'mobile.reservations.forbiddenError'],
+  [404, 'mobile.reservations.notFoundError'],
+] as const)('shows the specific HTTP %s cancellation error', async (status, messageKey) => {
+  mockCancel.mockRejectedValueOnce({ response: { status } });
+  const view = render(<MyReservationsScreen />);
+  await waitFor(() => expect(view.getByText('Lavado exterior')).toBeTruthy());
+
+  fireEvent.press(view.getByRole('button', { name: 'mobile.reservations.cancelTitle: Lavado exterior' }));
+  fireEvent.press(view.getByRole('button', { name: 'mobile.reservations.yesCancel' }));
+
+  await waitFor(() => expect(mockAlert).toHaveBeenCalledWith(
+    'mobile.reservations.cancelErrorTitle',
+    messageKey,
+    undefined,
+    'error',
+  ));
 });

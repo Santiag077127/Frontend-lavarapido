@@ -1,24 +1,22 @@
 // Muestra detalles de la reserva y acciones de estado, asignación y pago.
 import { useState } from "react";
 import axios from "axios";
-import { formatTranslation, useLocale, useTranslations } from "@/theme/theme";
+import { useLocale, useTranslations } from "@/theme/theme";
 import { CobrarReservaButton } from "../CobrarReservaButton/CobrarReservaButton";
-import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
 import { crearAsignacion, listarOperadores, type Operador } from "../../services/operadorService";
 import type { EstadoReserva, Reserva } from "../../services/reservaService";
 import "./TurnoDetailModal.css";
 
-interface Props { reserva: Reserva; onClose: () => void; onCambiarEstado: (estado: EstadoReserva) => Promise<void>; onCancelar: () => Promise<void>; onPagoAprobado: () => Promise<void>; onAsignado: () => Promise<void>; onError: (mensaje: string) => void; }
+interface Props { reserva: Reserva; onClose: () => void; onCambiarEstado: (estado: EstadoReserva) => Promise<void>; onPagoAprobado: () => Promise<void>; onAsignado: () => Promise<void>; onError: (mensaje: string) => void; }
 const LABEL: Record<EstadoReserva, string> = { PENDIENTE: "common.pending", ASIGNADA: "common.assigned", EN_PROCESO: "common.inProgress", FINALIZADA: "common.finished", CANCELADA: "common.cancelled" };
 const NEXT: Partial<Record<EstadoReserva, { estado: EstadoReserva; label: string }>> = { ASIGNADA: { estado: "EN_PROCESO", label: "ui.iniciar" }, EN_PROCESO: { estado: "FINALIZADA", label: "ui.finalizar" } };
 const show = (value: string | null | undefined) => value || "—";
 const dateTime = (value: string | null, locale: string) => value ? new Date(value).toLocaleString(locale) : "—";
 const errorMessage = (error: unknown, fallback: string) => axios.isAxiosError(error) && error.response?.status === 403 ? "ui.no.tienes.permiso.para.realizar.esta.accion" : fallback;
 
-export const TurnoDetailModal = ({ reserva, onClose, onCambiarEstado, onCancelar, onPagoAprobado, onAsignado, onError }: Props) => {
+export const TurnoDetailModal = ({ reserva, onClose, onCambiarEstado, onPagoAprobado, onAsignado, onError }: Props) => {
   const t = useTranslations();
   const locale = useLocale();
-  const [confirmar, setConfirmar] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const [asignando, setAsignando] = useState(false);
   const [selectorAbierto, setSelectorAbierto] = useState(false);
@@ -40,6 +38,6 @@ export const TurnoDetailModal = ({ reserva, onClose, onCambiarEstado, onCancelar
     <section className="tdm-seccion"><h3>{t("turns.payment")}</h3><CobrarReservaButton idReserva={reserva.idReserva} estadoReserva={reserva.estado} habilitado={reserva.estado === "PENDIENTE"} mostrarActualizarEstado={false} onPagoAprobado={onPagoAprobado} onError={onError} /></section>
     {(puedeAsignar || tieneAsignacion) && <section className="tdm-seccion"><h3>{t("common.operator")}</h3>{tieneAsignacion ? <p>{reserva.operadorNombre || t("ui.operador.asignado")}</p> : selectorAbierto ? <><label className="tdm-secundario">{t("ui.operador.activo")}<select value={operadorId} onChange={e => setOperadorId(e.target.value)} disabled={asignando}><option value="">{t("ui.seleccionar.operador")}</option>{operadores.map(op => <option key={op.idOperador} value={op.idOperador}>{op.nombre} · {op.email}</option>)}</select></label><div className="tdm-acciones"><button className="tdm-btn-cerrar" disabled={asignando} onClick={() => setSelectorAbierto(false)}>{t("common.cancel")}</button><button className="tdm-btn-asignar" disabled={asignando || !operadorId} onClick={confirmarAsignacion}>{asignando ? t("operators.assigning") : t("ui.confirmar.asignacion")}</button></div></> : <button className="tdm-btn-asignar" disabled={asignando} onClick={abrirAsignacion}>{asignando ? t("common.loading") : t("operators.assign")}</button>}</section>}
     <section className="tdm-seccion"><h3>{t("ui.registro")}</h3><p className="tdm-secundario">{t("ui.creada") + " "}{dateTime(reserva.createdAt, locale)}<br />{t("ui.actualizada") + " "}{dateTime(reserva.updatedAt, locale)}</p></section>
-    <div className="tdm-acciones"><div>{siguiente && <button className="tdm-btn-asignar" disabled={procesando} onClick={() => ejecutar(() => onCambiarEstado(siguiente.estado))}>{t(siguiente.label)}</button>}{(reserva.estado === "PENDIENTE" || reserva.estado === "ASIGNADA") && <button className="tdm-btn-cancelar" disabled={procesando} onClick={() => setConfirmar(true)}>{t("common.cancel")}</button>}</div><button className="tdm-btn-cerrar" onClick={onClose}>{t("ui.cerrar")}</button></div>
-  </div></div>{confirmar && <ConfirmModal titulo={t("booking.cancelTitle")} mensaje={formatTranslation(t("booking.cancelPrompt"), { name: reserva.nombreUsuario })} textoConfirmar={t("booking.yesCancel")} textoVolver={t("common.back")} onConfirmar={() => ejecutar(async () => { await onCancelar(); setConfirmar(false); })} onCancelar={() => setConfirmar(false)} />}</>;
+    <div className="tdm-acciones"><div>{siguiente && <button className="tdm-btn-asignar" disabled={procesando} onClick={() => ejecutar(() => onCambiarEstado(siguiente.estado))}>{t(siguiente.label)}</button>}</div><button className="tdm-btn-cerrar" onClick={onClose}>{t("ui.cerrar")}</button></div>
+  </div></div></>;
 };

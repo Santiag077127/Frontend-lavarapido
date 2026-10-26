@@ -229,6 +229,23 @@ const styles =
       fontWeight: '800',
     },
 
+    policyNotice: {
+      marginTop: 14,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      gap: 7,
+    },
+
+    policyText: {
+      fontSize: 12,
+      lineHeight: 18,
+    },
+
+    policyLink: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+
     createButton: {
       minHeight: 58,
       borderRadius: 12,

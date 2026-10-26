@@ -48,6 +48,8 @@ import VehicleSelectionCard from '../components/VehicleSelectionCard';
 import ReservationDateCard from '../components/ReservationDateCard';
 import ReservationTimeCard from '../components/ReservationTimeCard';
 import ReservationSummaryCard from '../components/ReservationSummaryCard';
+import RegisterLegalDocumentModal from '../../auth/components/RegisterLegalDocumentModal';
+import type { LegalDocument } from '../../auth/legalContent';
 import {
   getReservationTimeError,
   isPastLocalDate,
@@ -180,6 +182,7 @@ export default function ReservationScreen() {
     setCreatingReservation,
   ] = useState(false);
   const reservationSubmissionInProgress = useRef(false);
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   // ==========================================================
   // COLORES
@@ -817,6 +820,7 @@ export default function ReservationScreen() {
   // ==========================================================
 
   return (
+    <>
     <SafeAreaView
       style={[
         styles.container,
@@ -888,6 +892,7 @@ export default function ReservationScreen() {
           selectedTimeText={formatTime(selectedTime)}
           formattedPrice={formattedPrice}
           colors={colors}
+          onOpenTerms={() => setLegalDocument('terms')}
         />
 
         {/* CREAR RESERVA */}
@@ -969,6 +974,16 @@ export default function ReservationScreen() {
         </Pressable>
       </ScrollView>
     </SafeAreaView>
+    <RegisterLegalDocumentModal
+      document={legalDocument}
+      onClose={() => setLegalDocument(null)}
+      surfaceColor={theme.card}
+      textColor={theme.text}
+      secondaryTextColor={theme.textSecondary}
+      buttonColor={theme.primary}
+      onPrimaryColor={theme.onPrimary}
+    />
+    </>
   );
 }
 

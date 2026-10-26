@@ -3,7 +3,6 @@ import { beforeEach, expect, test } from '@jest/globals';
 
 import { paymentService } from '../../../services/paymentService';
 import { pendingCheckoutRecovery } from '../../../services/pendingCheckoutRecovery';
-import { reservationService } from './reservationService';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
@@ -16,13 +15,8 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 jest.mock('../../../services/paymentService', () => ({
   paymentService: { getByReservation: jest.fn() },
 }));
-jest.mock('./reservationService', () => ({
-  reservationService: { cancelForCheckout: jest.fn() },
-}));
-
 const storage = jest.mocked(AsyncStorage);
 const payment = jest.mocked(paymentService);
-const reservations = jest.mocked(reservationService);
 const marker = {
   reservationId: 'reservation-1',
   userId: 'user-1',
@@ -44,24 +38,24 @@ test('recovery never cancels a pending payment and keeps the marker', async () =
     protected: 0,
     deferred: 1,
   });
-  expect(reservations.cancelForCheckout).not.toHaveBeenCalled();
   expect(storage.setItem).toHaveBeenCalledWith(
     'pending-reservation-checkouts',
     JSON.stringify([marker]),
   );
 });
 
-test('recovery cancels only after a rejected payment is confirmed by the backend', async () => {
+test('recovery keeps a rejected payment marker until the user decides explicitly', async () => {
   payment.getByReservation.mockResolvedValue({ estado: 'rechazado' } as never);
-  reservations.cancelForCheckout.mockResolvedValue({} as never);
 
   await expect(pendingCheckoutRecovery.recover('user-1')).resolves.toEqual({
-    cancelled: 1,
+    cancelled: 0,
     protected: 0,
-    deferred: 0,
+    deferred: 1,
   });
-  expect(reservations.cancelForCheckout).toHaveBeenCalledWith('reservation-1');
-  expect(storage.removeItem).toHaveBeenCalledWith('pending-reservation-checkouts');
+  expect(storage.setItem).toHaveBeenCalledWith(
+    'pending-reservation-checkouts',
+    JSON.stringify([marker]),
+  );
 });
 
 test('recovery removes an approved marker without attempting cancellation', async () => {
@@ -69,7 +63,6 @@ test('recovery removes an approved marker without attempting cancellation', asyn
 
   await pendingCheckoutRecovery.recover('user-1');
 
-  expect(reservations.cancelForCheckout).not.toHaveBeenCalled();
   expect(storage.removeItem).toHaveBeenCalledWith('pending-reservation-checkouts');
 });
 
@@ -78,7 +71,20 @@ test('network failure keeps the marker for a later retry', async () => {
 
   await pendingCheckoutRecovery.recover('user-1');
 
-  expect(reservations.cancelForCheckout).not.toHaveBeenCalled();
+  expect(storage.setItem).toHaveBeenCalledWith(
+    'pending-reservation-checkouts',
+    JSON.stringify([marker]),
+  );
+});
+
+test('recovery keeps a missing payment marker without treating absence as consent', async () => {
+  payment.getByReservation.mockRejectedValue({ response: { status: 404 } });
+
+  await expect(pendingCheckoutRecovery.recover('user-1')).resolves.toEqual({
+    cancelled: 0,
+    protected: 0,
+    deferred: 1,
+  });
   expect(storage.setItem).toHaveBeenCalledWith(
     'pending-reservation-checkouts',
     JSON.stringify([marker]),

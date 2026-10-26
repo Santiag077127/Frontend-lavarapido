@@ -27,8 +27,13 @@ import ConfirmationModal from '../../../components/notifications/ConfirmationMod
 import { appAlert as Alert } from '../../../components/notifications/NotificationProvider';
 import api, { classifyApiError, type ApiErrorKind } from '../../../services/api';
 
-import { reservationService } from '../services/reservationService';
+import {
+  getReservationCancellationFailure,
+  reservationService,
+} from '../services/reservationService';
 import ReservationCard from '../components/ReservationCard';
+import { createCancellationPolicyAcceptance } from '../../auth/legalContent';
+import { pendingCheckoutRecovery } from '../../../services/pendingCheckoutRecovery';
 
 import type {
   ReservationResponse,
@@ -201,23 +206,47 @@ export default function MyReservationsScreen() {
 
     try {
       setCancellingId(reservation.idReserva);
-      const updated = await reservationService.cancel(reservation.idReserva);
+      const outcome = await reservationService.cancelForCheckout(
+        reservation.idReserva,
+        createCancellationPolicyAcceptance(),
+      );
+      const updated = outcome.reservation;
+      await pendingCheckoutRecovery.clear(
+        reservation.idReserva,
+        reservation.idUsuario,
+      ).catch(() => {});
       setReservations(previous => previous.map(item =>
         item.idReserva === reservation.idReserva ? updated : item
       ));
       Alert.alert(
-        t('mobile.reservations.cancelledTitle'),
-        t('mobile.reservations.cancelledMessage'),
+        t(outcome.result === 'ALREADY_CANCELLED'
+          ? 'mobile.reservations.alreadyCancelledTitle'
+          : 'mobile.reservations.cancelledTitle'),
+        t(outcome.result === 'ALREADY_CANCELLED'
+          ? 'mobile.reservations.alreadyCancelledMessage'
+          : 'mobile.reservations.cancelledMessage'),
         undefined,
         'success',
       );
     } catch (err: any) {
       const kind = classifyApiError(err);
+      const failure = getReservationCancellationFailure(err);
+      const messageKey = failure.status === 409 && failure.code === 'PAGO_PENDIENTE'
+        ? 'mobile.reservations.pendingPaymentError'
+        : failure.status === 409 && failure.code === 'PAGO_APROBADO'
+          ? 'mobile.reservations.approvedPaymentError'
+          : failure.status === 409 && failure.code === 'RESERVA_NO_PENDIENTE'
+            ? 'mobile.reservations.notPendingError'
+            : failure.status === 403
+              ? 'mobile.reservations.forbiddenError'
+              : failure.status === 404
+                ? 'mobile.reservations.notFoundError'
+                : ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+                  ? `apiErrors.${kind}`
+                  : 'mobile.reservations.cancelError';
       Alert.alert(
         t('mobile.reservations.cancelErrorTitle'),
-        ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
-          ? t(`apiErrors.${kind}`)
-          : t('mobile.reservations.cancelError'),
+        t(messageKey),
         undefined,
         'error',
       );
@@ -227,14 +256,7 @@ export default function MyReservationsScreen() {
     }
   };
 
-  const canCancel = (
-    estado: ReservationStatus
-  ) => {
-    return (
-      estado === 'PENDIENTE' ||
-      estado === 'ASIGNADA'
-    );
-  };
+  const canCancel = (estado: ReservationStatus) => estado === 'PENDIENTE';
 
   /**
    * ============================================================

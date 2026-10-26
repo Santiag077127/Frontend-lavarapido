@@ -356,6 +356,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
 
+  legalLink: {
+    minHeight: 60,
+    borderRadius: 17,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+
   logoutContent: {
     flexDirection: 'row',
     alignItems: 'center',

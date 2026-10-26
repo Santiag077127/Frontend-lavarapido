@@ -91,6 +91,7 @@ export default function ReservationCard({
   const primaryColor = theme.primary;
   const textColor = theme.text;
   const mutedColor = theme.textSecondary;
+  const showCancellation = cancellable && reservation.estado === 'PENDIENTE';
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -177,7 +178,7 @@ export default function ReservationCard({
             {formatPrice(reservation.precioServicio)}
           </Text>
         </View>
-        {cancellable && (
+        {showCancellation && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={cancelling
