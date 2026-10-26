@@ -28,7 +28,7 @@ vi.mock("@/features/dashboard/services/servicioService", () => ({
   createServicio: vi.fn(), updateServicio: vi.fn(), cambiarEstadoServicio: vi.fn(),
 }));
 vi.mock("@/features/dashboard/services/reservaService", () => ({
-  listarReservas: vi.fn().mockResolvedValue([]), crearReserva: vi.fn(), cambiarEstado: vi.fn(), cancelarReserva: vi.fn(),
+  listarReservas: vi.fn().mockResolvedValue([]), crearReserva: vi.fn(), cambiarEstado: vi.fn(),
 }));
 vi.mock("@/features/dashboard/services/vehiculoService", () => ({ getVehiculos: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/features/dashboard/services/marcaService", () => ({ getMarcas: vi.fn().mockResolvedValue([]), createMarca: vi.fn() }));
