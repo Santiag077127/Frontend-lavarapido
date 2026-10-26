@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert } from 'react-native';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import MyVehiclesScreen from './MyVehiclesScreen';
 import { vehicleService } from '../../../services/vehicleService';
@@ -103,6 +103,20 @@ test('loads vehicles once and applies the confirmed status change once', async (
 
   await waitFor(() => expect(vehicleService.changeStatus).toHaveBeenCalledWith('vehicle-1', false));
   expect(vehicleService.getMine).toHaveBeenCalledTimes(2);
+});
+
+test('does not send duplicate status requests when confirmation is triggered twice before rerender', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('ABC123')).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Eliminar: ABC123' }));
+
+  await act(async () => {
+    const confirmButton = view.getByRole('button', { name: 'vehicles.status.deactivate' });
+    fireEvent.press(confirmButton);
+    fireEvent.press(confirmButton);
+  });
+
+  expect(vehicleService.changeStatus).toHaveBeenCalledTimes(1);
 });
 
 test('reports a status update failure without hiding the loaded vehicle', async () => {

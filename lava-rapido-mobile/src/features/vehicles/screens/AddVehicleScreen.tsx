@@ -1,34 +1,12 @@
-import React, {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-
-import Ionicons from '@expo/vector-icons/Ionicons';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { sanitizeHumanText } from '../../../services/inputSanitizers';
-
 import ScreenHeader from '../../../components/common/ScreenHeader';
 import BrandPickerModal from '../components/BrandPickerModal';
+import VehicleForm, { type VehicleTypeOption } from '../components/VehicleForm';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { classifyApiError } from '../../../services/api';
@@ -37,12 +15,11 @@ import {
   validateVehiclePlate,
   vehiclePlateBackendValidationMessage,
 } from '../../../services/vehiclePlate';
-
 import {
-  Brand,
-  Vehicle,
-  VehicleRequest,
-  VehicleType,
+  type Brand,
+  type Vehicle,
+  type VehicleRequest,
+  type VehicleType,
   vehicleService,
 } from '../../../services/vehicleService';
 
@@ -51,106 +28,44 @@ type Props = {
   route: any;
 };
 
-const vehicleTypes: {
-  value: VehicleType;
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}[] = [
-  {
-    value: 'CARRO',
-    labelKey: 'vehicles.types.car',
-    icon: 'car-sport-outline',
-  },
-  {
-    value: 'CAMIONETA',
-    labelKey: 'vehicles.types.pickup',
-    icon: 'car-outline',
-  },
-  {
-    value: 'MOTO',
-    labelKey: 'vehicles.types.motorcycle',
-    icon: 'bicycle-outline',
-  },
-  {
-    value: 'MOTOCARRO',
-    labelKey: 'vehicles.types.motortricycle',
-    icon: 'car-outline',
-  },
-  {
-    value: 'FURGONETA',
-    labelKey: 'vehicles.types.van',
-    icon: 'bus-outline',
-  },
-  {
-    value: 'PESADO',
-    labelKey: 'vehicles.types.heavy',
-    icon: 'bus-outline',
-  },
+const vehicleTypes: VehicleTypeOption[] = [
+  { value: 'CARRO', labelKey: 'vehicles.types.car', icon: 'car-sport-outline' },
+  { value: 'CAMIONETA', labelKey: 'vehicles.types.pickup', icon: 'car-outline' },
+  { value: 'MOTO', labelKey: 'vehicles.types.motorcycle', icon: 'bicycle-outline' },
+  { value: 'MOTOCARRO', labelKey: 'vehicles.types.motortricycle', icon: 'car-outline' },
+  { value: 'FURGONETA', labelKey: 'vehicles.types.van', icon: 'bus-outline' },
+  { value: 'PESADO', labelKey: 'vehicles.types.heavy', icon: 'bus-outline' },
 ];
 
-export default function AddVehicleScreen({
-  navigation,
-  route,
-}: Props) {
+export default function AddVehicleScreen({ navigation, route }: Props) {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-
-  const vehicle: Vehicle | undefined =
-    route?.params?.vehicle;
-
+  const vehicle: Vehicle | undefined = route?.params?.vehicle;
   const isEditing = Boolean(vehicle);
 
-  const [placa, setPlaca] = useState(
-    vehicle?.placa || '',
-  );
-
-  const [color, setColor] = useState(
-    vehicle?.color || '',
-  );
-
-  const [tipoVehiculo, setTipoVehiculo] =
-    useState<VehicleType>(
-      vehicle?.tipoVehiculo || 'CARRO',
-    );
-
+  const [plate, setPlate] = useState(vehicle?.placa || '');
+  const [vehicleColor, setVehicleColor] = useState(vehicle?.color || '');
+  const [vehicleType, setVehicleType] = useState<VehicleType>(vehicle?.tipoVehiculo || 'CARRO');
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [selectedBrand, setSelectedBrand] =
-    useState(vehicle?.idMarca || '');
-
-  const [loadingBrands, setLoadingBrands] =
-    useState(true);
+  const [selectedBrandId, setSelectedBrandId] = useState(vehicle?.idMarca || '');
+  const [loadingBrands, setLoadingBrands] = useState(true);
   const [brandsLoadError, setBrandsLoadError] = useState(false);
   const brandsLoadInProgress = useRef(false);
-
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-
-  const [showBrands, setShowBrands] =
-    useState(false);
-
+  const [showBrands, setShowBrands] = useState(false);
   const [brandQuery, setBrandQuery] = useState('');
-
-  useEffect(() => {
-    loadBrands();
-  }, []);
 
   const loadBrands = async () => {
     if (brandsLoadInProgress.current) return;
-
     brandsLoadInProgress.current = true;
     try {
       setLoadingBrands(true);
       setBrandsLoadError(false);
-      const response =
-        await vehicleService.getActiveBrands();
-
+      const response = await vehicleService.getActiveBrands();
       setBrands(response.data);
-
-      if (
-        !vehicle &&
-        response.data.length === 0
-      ) {
+      if (!vehicle && response.data.length === 0) {
         appAlert.alert(
           t('vehicles.form.noBrandsTitle'),
           t('vehicles.form.noBrandsMessage'),
@@ -166,127 +81,68 @@ export default function AddVehicleScreen({
     }
   };
 
-  const plateValidation = validateVehiclePlate(placa, tipoVehiculo);
-  const plateHasValue = placa.trim().length > 0;
+  useEffect(() => {
+    void loadBrands();
+  }, []);
+
+  const plateValidation = validateVehiclePlate(plate, vehicleType);
+  const plateHasValue = plate.trim().length > 0;
   const invalidPlate = plateHasValue && !plateValidation.isValid;
   const plateFormatMessage = `${t('vehicles.fields.type')}: ${t(
-    vehicleTypes.find((type) => type.value === tipoVehiculo)?.labelKey ?? 'vehicles.fields.type',
+    vehicleTypes.find((type) => type.value === vehicleType)?.labelKey ?? 'vehicles.fields.type',
   )} · ${plateValidation.expectedFormat}`;
 
   const validateForm = () => {
-    const placaNormalizada = plateValidation.normalized;
-
-    if (!placaNormalizada) {
-      appAlert.alert(
-        t('vehicles.form.plateRequiredTitle'),
-        t('vehicles.form.plateRequired'),
-        undefined,
-        'error',
-      );
+    if (!plateValidation.normalized) {
+      appAlert.alert(t('vehicles.form.plateRequiredTitle'), t('vehicles.form.plateRequired'), undefined, 'error');
       return false;
     }
-
     if (!plateValidation.isValid) {
-      appAlert.alert(
-        t('vehicles.form.plateInvalidTitle'),
-        plateFormatMessage,
-        undefined,
-        'error',
-      );
+      appAlert.alert(t('vehicles.form.plateInvalidTitle'), plateFormatMessage, undefined, 'error');
       return false;
     }
-
-    if (!selectedBrand) {
-      appAlert.alert(
-        t('vehicles.form.brandRequiredTitle'),
-        t('vehicles.form.brandRequired'),
-        undefined,
-        'error',
-      );
+    if (!selectedBrandId) {
+      appAlert.alert(t('vehicles.form.brandRequiredTitle'), t('vehicles.form.brandRequired'), undefined, 'error');
       return false;
     }
-
-    if (!tipoVehiculo) {
-      appAlert.alert(
-        t('vehicles.form.typeRequiredTitle'),
-        t('vehicles.form.typeRequired'),
-        undefined,
-        'error',
-      );
+    if (!vehicleType) {
+      appAlert.alert(t('vehicles.form.typeRequiredTitle'), t('vehicles.form.typeRequired'), undefined, 'error');
       return false;
     }
-
-    if (color.length > 30) {
-      appAlert.alert(
-        t('vehicles.form.colorInvalidTitle'),
-        t('vehicles.form.colorInvalid'),
-        undefined,
-        'error',
-      );
+    if (vehicleColor.length > 30) {
+      appAlert.alert(t('vehicles.form.colorInvalidTitle'), t('vehicles.form.colorInvalid'), undefined, 'error');
       return false;
     }
-
     return true;
   };
 
   const handleSave = async () => {
-    if (savingRef.current) {
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (savingRef.current || !validateForm()) return;
     const data: VehicleRequest = {
       placa: plateValidation.normalized,
-      color: color.trim(),
-      tipoVehiculo,
-      fkIdMarca: selectedBrand,
+      color: vehicleColor.trim(),
+      tipoVehiculo: vehicleType,
+      fkIdMarca: selectedBrandId,
     };
 
     try {
       savingRef.current = true;
       setSaving(true);
-
       if (isEditing && vehicle) {
-        await vehicleService.update(
-          vehicle.idVehiculo,
-          data,
-        );
-
-        appAlert.alert(
-          t('vehicles.form.updatedTitle'),
-          t('vehicles.form.updatedMessage'),
-          [
-            {
-              text: t('common.accept'),
-              onPress: () => navigation.goBack(),
-            },
-          ],
-          'success',
-        );
+        await vehicleService.update(vehicle.idVehiculo, data);
+        appAlert.alert(t('vehicles.form.updatedTitle'), t('vehicles.form.updatedMessage'), [
+          { text: t('common.accept'), onPress: () => navigation.goBack() },
+        ], 'success');
       } else {
         await vehicleService.create(data);
-
-        appAlert.alert(
-          t('vehicles.form.createdTitle'),
-          t('vehicles.form.createdMessage'),
-          [
-            {
-              text: t('common.accept'),
-              onPress: () => navigation.goBack(),
-            },
-          ],
-          'success',
-        );
+        appAlert.alert(t('vehicles.form.createdTitle'), t('vehicles.form.createdMessage'), [
+          { text: t('common.accept'), onPress: () => navigation.goBack() },
+        ], 'success');
       }
     } catch (error: unknown) {
       let message = t('vehicles.errors.save');
       const errorKind = classifyApiError(error);
-      const responseData: unknown = axios.isAxiosError(error)
-        ? error.response?.data
-        : undefined;
+      const responseData: unknown = axios.isAxiosError(error) ? error.response?.data : undefined;
       const backendValidationMessage = vehiclePlateBackendValidationMessage(responseData);
       const responseMessages = typeof responseData === 'string'
         ? [responseData]
@@ -313,462 +169,68 @@ export default function AddVehicleScreen({
         message = t('vehicles.errors.badRequest');
       }
 
-      appAlert.alert(
-        t('vehicles.errors.title'),
-        message,
-        undefined,
-        'error',
-      );
+      appAlert.alert(t('vehicles.errors.title'), message, undefined, 'error');
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
   };
 
-  const selectedBrandObject = brands.find(
-    (brand) => brand.idMarca === selectedBrand,
-  );
+  const selectedBrandName = brands.find((brand) => brand.idMarca === selectedBrandId)?.nombre;
 
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-      <ScreenHeader
-        accessibilityLabel={t('mobile.serviceDetail.back')}
-        disabled={saving}
-        onBack={() => navigation.goBack()}
-        style={{ marginHorizontal: 18, marginTop: 8 }}
-        subtitle={isEditing ? t('vehicles.form.editSubtitle') : t('vehicles.form.addSubtitle')}
-        title={isEditing ? t('vehicles.form.editTitle') : t('vehicles.form.addTitle')}
-      />
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          {
-            flexGrow: 1,
-            paddingBottom: Math.max(insets.bottom + 16, 24),
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-      >
-        <View
-          style={[
-            styles.introCard,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.introIcon,
-              {
-                backgroundColor: theme.primary,
-              },
-            ]}
-          >
-            <Ionicons
-              name="car-sport-outline"
-              size={26}
-              color={theme.onPrimary}
-            />
-          </View>
-
-          <View style={styles.introText}>
-            <Text
-              style={[
-                styles.introTitle,
-                {
-                  color: theme.text,
-                },
-              ]}
-            >
-              {t('vehicles.form.infoTitle')}
-            </Text>
-
-            <Text
-              style={[
-                styles.introDescription,
-                {
-                  color: theme.textSecondary,
-                },
-              ]}
-            >
-              {t('vehicles.form.infoDescription')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          {t('vehicles.fields.plate')}
-        </Text>
-
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <Ionicons
-            name="card-outline"
-            size={21}
-            color={theme.primary}
-          />
-
-          <TextInput
-            accessibilityLabel={t('vehicles.fields.plate')}
-            value={placa}
-            onChangeText={(value) =>
-              setPlaca(normalizeVehiclePlateInput(value))
-            }
-            placeholder={t('vehicles.form.plateExample')}
-            placeholderTextColor={
-              theme.textSecondary
-            }
-            autoCapitalize="characters"
-            maxLength={6}
-            style={[
-              styles.input,
-              {
-                color: theme.text,
-              },
-            ]}
-          />
-        </View>
-
-        <Text
-          accessibilityRole={invalidPlate ? 'alert' : undefined}
-          accessibilityLiveRegion="polite"
-          style={[
-            styles.helperText,
-            {
-              color: invalidPlate ? theme.errorText : theme.textSecondary,
-            },
-          ]}
-        >
-          {plateFormatMessage}
-        </Text>
-
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          {t('vehicles.fields.brand')}
-        </Text>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${t('vehicles.fields.brand')}: ${loadingBrands ? t('vehicles.form.loadingBrands') : selectedBrandObject?.nombre || t('vehicles.form.selectBrand')}`}
-          accessibilityState={{ disabled: loadingBrands || brandsLoadError || saving, busy: loadingBrands }}
-          style={[
-            styles.selectContainer,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
-          onPress={() => setShowBrands(true)}
-          disabled={loadingBrands || brandsLoadError || saving}
-        >
-          <View style={styles.selectLeft}>
-            <Ionicons
-              name="pricetag-outline"
-              size={21}
-              color={theme.primary}
-            />
-
-            <Text
-              style={[
-                styles.selectText,
-                {
-                  color: selectedBrandObject
-                    ? theme.text
-                    : theme.textSecondary,
-                },
-              ]}
-            >
-              {loadingBrands
-                ? t('vehicles.form.loadingBrands')
-                : selectedBrandObject?.nombre ||
-                  t('vehicles.form.selectBrand')}
-            </Text>
-          </View>
-
-          {loadingBrands ? (
-            <ActivityIndicator
-              size="small"
-              color={theme.primary}
-            />
-          ) : (
-            <Ionicons
-              name={
-                'chevron-forward'
-              }
-              size={20}
-              color={theme.textSecondary}
-            />
-          )}
-        </Pressable>
-
-        {brandsLoadError && (
-          <View style={[styles.brandLoadError, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
-            <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.brandLoadErrorText, { color: theme.errorText }]}>
-              {t('vehicles.errors.brands')}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: loadingBrands, busy: loadingBrands }}
-              disabled={loadingBrands}
-              onPress={() => void loadBrands()}
-            >
-              {loadingBrands ? (
-                <ActivityIndicator color={theme.primary} />
-              ) : (
-                <Text style={[styles.brandRetryText, { color: theme.primary }]}>{t('common.retry')}</Text>
-              )}
-            </Pressable>
-          </View>
-        )}
-
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          {t('vehicles.fields.type')}
-        </Text>
-
-        <View style={styles.typeGrid}>
-          {vehicleTypes.map((type) => {
-            const selected =
-              tipoVehiculo === type.value;
-
-            return (
-              <Pressable
-                accessibilityRole="radio"
-                accessibilityLabel={t(type.labelKey)}
-                accessibilityState={{ selected, disabled: saving }}
-                key={type.value}
-                style={[
-                  styles.typeCard,
-                  {
-                    backgroundColor: selected
-                      ? theme.primarySoft
-                      : theme.card,
-                    borderColor: selected
-                      ? theme.primary
-                      : theme.border,
-                  },
-                ]}
-                onPress={() =>
-                  setTipoVehiculo(type.value)
-                }
-                disabled={saving}
-              >
-                <Ionicons
-                  name={type.icon}
-                  size={25}
-                  color={
-                    selected
-                      ? theme.primary
-                      : theme.textSecondary
-                  }
-                />
-
-                <Text
-                  style={[
-                    styles.typeText,
-                    {
-                      color: selected
-                        ? theme.primary
-                        : theme.text,
-                    },
-                  ]}
-                >
-                  {t(type.labelKey)}
-                </Text>
-
-                {selected && (
-                  <View
-                    style={[
-                      styles.selectedCheck,
-                      {
-                        backgroundColor:
-                          theme.primary,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name="checkmark"
-                      size={11}
-                      color={theme.onPrimary}
-                    />
-                  </View>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.text,
-            },
-          ]}
-        >
-          {t('vehicles.fields.color')}
-        </Text>
-
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <Ionicons
-            name="color-palette-outline"
-            size={21}
-            color={theme.primary}
-          />
-
-          <TextInput
-            accessibilityLabel={t('vehicles.fields.color')}
-            value={color}
-            onChangeText={(value) => setColor(sanitizeHumanText(value))}
-            placeholder={t('vehicles.form.colorPlaceholder')}
-            placeholderTextColor={
-              theme.textSecondary
-            }
-            maxLength={30}
-            style={[
-              styles.input,
-              {
-                color: theme.text,
-              },
-            ]}
-          />
-        </View>
-
-        <Text
-          style={[
-            styles.helperText,
-            {
-              color: theme.textSecondary,
-            },
-          ]}
-        >
-          {t('vehicles.form.colorHelper')}
-        </Text>
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            {
-              backgroundColor: theme.primary,
-              opacity: saving || invalidPlate ? 0.7 : 1,
-            },
-          ]}
-          onPress={handleSave}
-          disabled={saving || invalidPlate}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: saving || invalidPlate, busy: saving }}
-          accessibilityLiveRegion="polite"
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator
-              size="small"
-              color={theme.onPrimary}
-            />
-          ) : (
-            <Ionicons
-              name={
-                isEditing
-                  ? 'checkmark-circle-outline'
-                  : 'add-circle-outline'
-              }
-              size={22}
-              color={theme.onPrimary}
-            />
-          )}
-
-          <Text style={[styles.saveButtonText, { color: theme.onPrimary }]}>
-            {saving
-              ? t('vehicles.form.saving')
-              : isEditing
-              ? t('vehicles.form.saveChanges')
-              : t('vehicles.actions.add')}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.cancelButton,
-            {
-              borderColor: theme.border,
-              backgroundColor: theme.card,
-            },
-          ]}
-          onPress={() => navigation.goBack()}
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScreenHeader
+          accessibilityLabel={t('mobile.serviceDetail.back')}
           disabled={saving}
-          accessibilityRole="button"
-          activeOpacity={0.8}
+          onBack={() => navigation.goBack()}
+          style={{ marginHorizontal: 18, marginTop: 8 }}
+          subtitle={isEditing ? t('vehicles.form.editSubtitle') : t('vehicles.form.addSubtitle')}
+          title={isEditing ? t('vehicles.form.editTitle') : t('vehicles.form.addTitle')}
+        />
+        <ScrollView
+          contentContainerStyle={[styles.content, { flexGrow: 1, paddingBottom: Math.max(insets.bottom + 16, 24) }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
         >
-          <Text
-            style={[
-              styles.cancelButtonText,
-              {
-                color: theme.text,
-              },
-            ]}
-          >
-            {t('common.cancel')}
-          </Text>
-        </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <BrandPickerModal
-        visible={showBrands}
-        brands={brands}
-        selectedBrandId={selectedBrand}
-        query={brandQuery}
-        onQueryChange={setBrandQuery}
-        onSelect={(brandId) => {
-          setSelectedBrand(brandId);
-          setBrandQuery('');
-          setShowBrands(false);
-        }}
-        onClose={() => setShowBrands(false)}
-      />
+          <VehicleForm
+            theme={theme}
+            translate={t}
+            vehicleTypes={vehicleTypes}
+            isEditing={isEditing}
+            plate={plate}
+            onPlateChange={(value) => setPlate(normalizeVehiclePlateInput(value))}
+            plateFormatMessage={plateFormatMessage}
+            invalidPlate={invalidPlate}
+            color={vehicleColor}
+            onColorChange={(value) => setVehicleColor(sanitizeHumanText(value))}
+            selectedBrandName={selectedBrandName}
+            loadingBrands={loadingBrands}
+            brandsLoadError={brandsLoadError}
+            onOpenBrandPicker={() => setShowBrands(true)}
+            onRetryBrandLoad={() => void loadBrands()}
+            saving={saving}
+            selectedVehicleType={vehicleType}
+            onVehicleTypeChange={setVehicleType}
+            onSave={() => void handleSave()}
+            onCancel={() => navigation.goBack()}
+          />
+        </ScrollView>
+        <BrandPickerModal
+          visible={showBrands}
+          brands={brands}
+          selectedBrandId={selectedBrandId}
+          query={brandQuery}
+          onQueryChange={setBrandQuery}
+          onSelect={(brandId) => {
+            setSelectedBrandId(brandId);
+            setBrandQuery('');
+            setShowBrands(false);
+          }}
+          onClose={() => setShowBrands(false)}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -776,220 +238,6 @@ export default function AddVehicleScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  container: {
-    flex: 1,
-  },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 60,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginHorizontal: 18,
-    marginTop: 8,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderRadius: 18,
-  },
-
-  headerText: { flex: 1, minWidth: 0, marginLeft: 12 },
-
-  title: { fontSize: 22, lineHeight: 28, fontWeight: '800' },
-
-  subtitle: { fontSize: 13, lineHeight: 18, marginTop: 3 },
-
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-
-  introCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18,
-  },
-
-  formCard: {
-    borderWidth: 1,
-    borderRadius: 22,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 18,
-    elevation: 1,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-  },
-
-  introIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  introText: {
-    flex: 1,
-    marginLeft: 13,
-  },
-
-  introTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  introDescription: {
-    fontSize: 12,
-    lineHeight: 18,
-    marginTop: 3,
-  },
-
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 9,
-    marginTop: 14,
-  },
-
-  inputContainer: {
-    minHeight: 58,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  input: {
-    flex: 1,
-    fontSize: 15,
-    marginLeft: 11,
-    minHeight: 52,
-    paddingVertical: 8,
-  },
-
-  helperText: {
-    fontSize: 11,
-    marginTop: 6,
-    marginBottom: 17,
-    marginLeft: 3,
-  },
-
-  selectContainer: {
-    minHeight: 58,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  selectLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-
-  selectText: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 15,
-    marginLeft: 11,
-  },
-
-  brandLoadError: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-
-  brandLoadErrorText: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  brandRetryText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  typeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 18,
-  },
-
-  typeCard: {
-    width: '47%',
-    minWidth: 112,
-    flexGrow: 1,
-    minHeight: 82,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    paddingHorizontal: 4,
-  },
-
-  typeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 7,
-    textAlign: 'center',
-  },
-
-  selectedCheck: {
-    position: 'absolute',
-    top: 7,
-    right: 7,
-    width: 17,
-    height: 17,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  saveButton: {
-    minHeight: 58,
-    borderRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-
-  saveButtonText: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  cancelButton: {
-    height: 52,
-    borderRadius: 15,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-
-  cancelButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingBottom: 32 },
 });
