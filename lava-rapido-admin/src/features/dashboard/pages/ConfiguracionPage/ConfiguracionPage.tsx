@@ -8,11 +8,12 @@ import {
   LockKeyhole,
   LogOut,
   Moon,
+  Palette,
   Settings,
   Sun,
   UserRound,
 } from "lucide-react";
-import { ThemeContext, type LanguageOption } from "@/theme/theme";
+import { ThemeContext, type AccentOption, type LanguageOption } from "@/theme/theme";
 import { useAuthStore } from "@/store/authStore";
 import { LogoutModal } from "../../components/LogoutModal";
 import "./ConfiguracionPage.css";
@@ -22,6 +23,13 @@ const languageOptions: Array<{ value: LanguageOption; labelKey: string }> = [
   { value: "en", labelKey: "language.en" },
   { value: "fr", labelKey: "language.fr" },
   { value: "pt", labelKey: "language.pt" },
+];
+
+const accentOptions: Array<{ value: AccentOption; labelKey: string }> = [
+  { value: "blue", labelKey: "color.blue" },
+  { value: "cyan", labelKey: "color.cyan" },
+  { value: "indigo", labelKey: "color.indigo" },
+  { value: "emerald", labelKey: "color.emerald" },
 ];
 
 export const ConfiguracionPage = () => {
@@ -74,10 +82,12 @@ export const ConfiguracionPage = () => {
             <h3>{t("settings.password.title")}</h3>
             <p>{t("settings.password.desc")}</p>
           </div>
-          <Link to="/dashboard/cambiar-contrasena">
-            <LockKeyhole size={16} />{t("ui.cambiar.contrasena")}</Link>
-          <Link to="/forgot-password" state={{ fromDashboard: true }}>
-            <ArrowLeft size={16} />{t("ui.recuperar.por.correo")}</Link>
+          <div className="config-card-actions">
+            <Link to="/dashboard/cambiar-contrasena">
+              <LockKeyhole size={16} />{t("ui.cambiar.contrasena")}</Link>
+            <Link to="/forgot-password" state={{ fromDashboard: true }}>
+              <ArrowLeft size={16} />{t("ui.recuperar.por.correo")}</Link>
+          </div>
         </article>
 
         <article className="config-card">
@@ -95,6 +105,29 @@ export const ConfiguracionPage = () => {
             {theme.darkMode ? <Moon size={18} /> : <Sun size={18} />}
             {theme.darkMode ? t("settings.mode.dark") : t("settings.mode.light")}
           </button>
+        </article>
+
+        <article className="config-card">
+          <Palette size={24} />
+          <div className="config-color-content">
+            <h3>{t("settings.color.title")}</h3>
+            <p>{t("settings.color.desc")}</p>
+            <div className="config-accent-options" role="group" aria-label={t("settings.color.title")}>
+              {accentOptions.map((option) => (
+                <button
+                  className="config-accent-option"
+                  type="button"
+                  key={option.value}
+                  onClick={() => theme.setAccent(option.value)}
+                  aria-label={t(option.labelKey)}
+                  aria-pressed={theme.accent === option.value}
+                >
+                  <span className={`config-accent-swatch config-accent-swatch--${option.value}`} aria-hidden="true" />
+                  {t(option.labelKey)}
+                </button>
+              ))}
+            </div>
+          </div>
         </article>
 
         <article className="config-card">

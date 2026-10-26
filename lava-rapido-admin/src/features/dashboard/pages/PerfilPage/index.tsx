@@ -9,6 +9,7 @@ import { ThemeContext, localizeMessage, useTranslations } from "../../../../them
 import { AvatarDisplay } from "../../components/AvatarDisplay/AvatarDisplay";
 import { getProfile, updateProfile } from "../../services/userService";
 import { AVATAR_OPTIONS, type UserProfile, type AvatarId } from "../../types";
+import { containsEmoji } from "@/shared/textValidation";
 import "@/styles/settingsBackLink.css";
 import "./PerfilPage.css";
 
@@ -26,10 +27,13 @@ const EMPTY_FORM: ProfileForm = {
 const isAvatarId = (value: string): value is AvatarId =>
   AVATAR_OPTIONS.includes(value as AvatarId);
 
-const NAME_REGEX = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
+const NAME_REGEX = /^[\p{L}\p{M}\s'-]+$/u;
 
 const validateProfileField = (name: keyof ProfileFieldErrors, value: string) => {
-  if (name === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && value.trim().length <= 100 ? "" : "profile.emailInvalid";
+  if (name === "email") {
+    if (containsEmoji(value)) return "profile.noEmoji";
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && value.trim().length <= 100 ? "" : "profile.emailInvalid";
+  }
   if (name === "phoneNumber") {
     return /^\d{10}$/.test(value)
       ? ""
@@ -37,6 +41,7 @@ const validateProfileField = (name: keyof ProfileFieldErrors, value: string) => 
   }
 
   if (!value.trim()) return "ui.este.campo.es.obligatorio";
+  if (containsEmoji(value)) return "profile.noEmoji";
   if (!NAME_REGEX.test(value)) return "ui.el.nombre.no.puede.contener.numeros.ni.simbolos";
   return value.trim().length < 3 ? "ui.debe.tener.minimo.3.caracteres" : "";
 };
@@ -82,18 +87,23 @@ export const PerfilPage = () => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     const fieldName = name as keyof ProfileFieldErrors;
-    const sanitizedValue = fieldName === "email" ? value : fieldName === "phoneNumber"
+    if (fieldName !== "phoneNumber" && containsEmoji(value)) {
+      setFieldErrors((current) => ({ ...current, [fieldName]: "profile.noEmoji" }));
+      setMensaje(null);
+      return;
+    }
+    const nextValue = fieldName === "email" ? value : fieldName === "phoneNumber"
       ? value.replace(/\D/g, "")
-      : value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, "");
+      : value;
 
-    setForm((current) => ({ ...current, [name]: sanitizedValue }));
+    setForm((current) => ({ ...current, [name]: nextValue }));
     setFieldErrors((current) => ({
       ...current,
-      [fieldName]: sanitizedValue !== value
+      [fieldName]: nextValue !== value
         ? fieldName === "phoneNumber"
           ? "ui.el.telefono.solo.puede.contener.numeros"
           : "ui.el.nombre.no.puede.contener.numeros.ni.simbolos"
-        : validateProfileField(fieldName, sanitizedValue),
+        : validateProfileField(fieldName, nextValue),
     }));
     setMensaje(null);
   };
@@ -171,7 +181,7 @@ export const PerfilPage = () => {
           </div>
 
           <div className="perfil-info">
-            <h2>{[form.firstName, form.lastName].filter(Boolean).join(" ") || t("profile.role")}</h2>
+            <h2>{[profile?.firstName || loggedUser?.firstName, profile?.lastName].filter(Boolean).join(" ") || t("ui.no.disponible")}</h2>
             <span className="perfil-role">{t("profile.role")}</span>
 
             <dl className="perfil-details">
@@ -185,7 +195,6 @@ export const PerfilPage = () => {
               <label>{t("auth.email")}<input className={fieldErrors.email ? "perfil-input--error" : ""} name="email" type="email" value={form.email} readOnly maxLength={100} required />
                 {fieldErrors.email && <small className="perfil-field-error">{localizeMessage(fieldErrors.email, t)}</small>}
               </label>
-              <Link to="/dashboard/cambiar-correo">{t("emailChange.title")}</Link>
               <label>{t("services.name")}<input className={fieldErrors.firstName ? "perfil-input--error" : ""} name="firstName" value={form.firstName} onChange={handleChange} required />
                 {fieldErrors.firstName && <small className="perfil-field-error">{localizeMessage(fieldErrors.firstName, t)}</small>}
               </label>

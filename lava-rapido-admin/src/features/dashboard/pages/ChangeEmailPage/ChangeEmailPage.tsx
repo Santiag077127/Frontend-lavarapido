@@ -5,6 +5,8 @@ import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 import { formatTranslation, useTranslations } from "@/theme/theme";
 import { changeEmail } from "../../services/userService";
+import { containsEmoji } from "@/shared/textValidation";
+import { PasswordVisibilityField } from "../../components/PasswordVisibilityField/PasswordVisibilityField";
 import "../ChangePasswordPage/ChangePasswordPage.css";
 import "./ChangeEmailPage.css";
 
@@ -18,12 +20,25 @@ export const ChangeEmailPage = () => {
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [emailContainsEmoji, setEmailContainsEmoji] = useState(false);
 
   const normalizedEmail = newEmail.trim().toLowerCase();
+  const handleEmailChange = (value: string) => {
+    if (containsEmoji(value)) {
+      setEmailContainsEmoji(true);
+      setError(t("emailChange.noEmoji"));
+      return;
+    }
+    setEmailContainsEmoji(false);
+    setError("");
+    setNewEmail(value);
+  };
   const validate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (emailContainsEmoji) return;
     setError("");
     if (!normalizedEmail || !currentPassword) return setError(t("emailChange.required"));
+    if (containsEmoji(normalizedEmail)) return setError(t("emailChange.noEmoji"));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 100) return setError(t("emailChange.invalid"));
     if (normalizedEmail === currentEmail.trim().toLowerCase()) return setError(t("emailChange.same"));
     setConfirming(true);
@@ -61,9 +76,9 @@ export const ChangeEmailPage = () => {
       {error && <p className="change-password-error" role="alert">{error}</p>}
       <form onSubmit={validate} noValidate>
         <label htmlFor="new-email">{t("emailChange.new")}</label>
-        <input id="new-email" type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} autoComplete="email" maxLength={100} disabled={saving} required />
-        <label htmlFor="email-current-password">{t("profile.currentPassword")}</label>
-        <input id="email-current-password" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" disabled={saving} required />
+        <input id="new-email" type="email" value={newEmail} onChange={(event) => handleEmailChange(event.target.value)} autoComplete="email" maxLength={100} disabled={saving} required />
+        <PasswordVisibilityField id="email-current-password" label={t("profile.currentPassword")} value={currentPassword}
+          onChange={setCurrentPassword} autoComplete="current-password" disabled={saving} required />
         <small>{t("emailChange.securityHint")}</small>
         <button type="submit" disabled={saving}>{t("emailChange.submit")}</button>
       </form>

@@ -51,4 +51,18 @@ describe("admin translations", () => {
     warn.mockRestore();
     expect(formatTranslation("Hello {name}", { name: "Ada" })).toBe("Hello Ada");
   });
+
+  it("restores and persists the selected accent color", () => {
+    localStorage.setItem("lava-accent-color", "cyan");
+    function AccentControl() {
+      const theme = useContext(ThemeContext)!;
+      return <button onClick={() => theme.setAccent("indigo")}>{theme.accent}</button>;
+    }
+    render(<ThemeProvider><AccentControl /></ThemeProvider>);
+    expect(screen.getByRole("button")).toHaveTextContent("cyan");
+    expect(document.documentElement.dataset.accent).toBe("cyan");
+    fireEvent.click(screen.getByRole("button"));
+    expect(document.documentElement.dataset.accent).toBe("indigo");
+    expect(localStorage.getItem("lava-accent-color")).toBe("indigo");
+  });
 });

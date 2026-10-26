@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "@/store/authStore";
@@ -20,11 +20,23 @@ describe("PerfilPage", () => {
     services.login.mockResolvedValue({ token: "new-token", user: { userId: "user-1", firstName: "Maria", email: "new@example.com", role: "ADMIN" } });
   });
 
-  it("guarda el correo, renueva la sesi?n y recarga el perfil", async () => {
+  it("shows the authenticated user's real name and no longer links to email changes", async () => {
     const { container } = render(<MemoryRouter><PerfilPage /></MemoryRouter>);
     await screen.findByDisplayValue("old@example.com");
+    expect(screen.getByRole("heading", { name: "Maria Perez" })).toBeInTheDocument();
     expect(container.querySelector('input[name="email"]')).toHaveAttribute("readonly");
-    expect(screen.getByRole("link", { name: /cambiar correo/i })).toHaveAttribute("href", "/dashboard/cambiar-correo");
+    expect(screen.queryByRole("link", { name: /cambiar correo/i })).not.toBeInTheDocument();
     expect(services.email).not.toHaveBeenCalled();
+  });
+
+  it("prevents emoji in names while preserving valid accented letters", async () => {
+    render(<MemoryRouter><PerfilPage /></MemoryRouter>);
+    const firstName = await screen.findByDisplayValue("Maria");
+    fireEvent.change(firstName, { target: { value: "María🚗" } });
+    expect(firstName).toHaveValue("Maria");
+    expect(screen.getByText("Este campo no puede contener emojis.")).toBeInTheDocument();
+    fireEvent.change(firstName, { target: { value: "João" } });
+    expect(firstName).toHaveValue("João");
+    await waitFor(() => expect(screen.queryByText("Este campo no puede contener emojis.")).not.toBeInTheDocument());
   });
 });

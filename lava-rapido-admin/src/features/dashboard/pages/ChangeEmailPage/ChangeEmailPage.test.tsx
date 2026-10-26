@@ -31,4 +31,17 @@ describe("ChangeEmailPage", () => {
     expect(await screen.findByText("Inicio de sesión")).toBeInTheDocument();
     expect(useAuthStore.getState().token).toBeNull();
   });
+
+  it("rejects emoji in email addresses and preserves the entered value", () => {
+    render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
+      <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />
+    </Routes></MemoryRouter>);
+    const email = screen.getByLabelText("Nuevo correo electrónico");
+    fireEvent.change(email, { target: { value: "person🚗@example.com" } });
+    fireEvent.change(screen.getByLabelText("Contraseña actual"), { target: { value: "secret" } });
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar correo" }));
+    expect(email).toHaveValue("");
+    expect(screen.getByRole("alert")).toHaveTextContent("El correo no puede contener emojis.");
+    expect(changeEmail).not.toHaveBeenCalled();
+  });
 });

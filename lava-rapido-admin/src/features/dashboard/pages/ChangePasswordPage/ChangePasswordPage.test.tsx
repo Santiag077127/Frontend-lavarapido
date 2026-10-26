@@ -55,6 +55,27 @@ describe("ChangePasswordPage", () => {
     expect(screen.getByLabelText("Nueva contraseña")).toHaveValue("");
   });
 
+  it("keeps every password hidden initially and toggles each field independently", () => {
+    renderPage();
+    const current = screen.getByLabelText("Contraseña actual");
+    const next = screen.getByLabelText("Nueva contraseña");
+    const confirmation = screen.getByLabelText("Confirmar nueva contraseña");
+    expect(current).toHaveAttribute("type", "password");
+    expect(next).toHaveAttribute("type", "password");
+    expect(confirmation).toHaveAttribute("type", "password");
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Mostrar contraseña" })[1]);
+    expect(current).toHaveAttribute("type", "password");
+    expect(next).toHaveAttribute("type", "text");
+    expect(confirmation).toHaveAttribute("type", "password");
+    expect(screen.getByRole("button", { name: "Ocultar contraseña" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("preserves legitimate password characters and validates the existing byte limit", () => {
+    expect(isValidNewPassword("Clavé🚗12")).toBe(true);
+    expect(isValidNewPassword("🚗".repeat(19))).toBe(false);
+  });
+
   it("does not duplicate a request while it is pending", async () => {
     let resolveRequest: (() => void) | undefined;
     mockedChangePassword.mockReturnValue(new Promise<void>((resolve) => { resolveRequest = resolve; }));
