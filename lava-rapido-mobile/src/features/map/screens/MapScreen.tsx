@@ -33,7 +33,7 @@ export default function MapScreen() {
   const { i18n } = useTranslation()
   const copy = getMapCopy(i18n.resolvedLanguage || i18n.language || 'es')
   const { width } = useWindowDimensions()
-  const mapRef = useRef<WebView>(null)
+  const mapRef = useRef<WebView<{}>>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [mapError, setMapError] = useState(false)
@@ -111,7 +111,7 @@ export default function MapScreen() {
       ) : (
         <ScrollView style={[styles.contentScroll, { backgroundColor: theme.background }]} contentContainerStyle={[styles.content, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
           <View style={[styles.mapFrame, { borderColor: theme.border }]}>
-            <WebView
+            <WebView<{}>
               key={mapKey}
               ref={mapRef}
               testID="locations-map"

@@ -10,7 +10,8 @@ const installationKey = 'push-installation-id'
 let handlerConfigured = false
 
 export function isRemotePushSupported(): boolean {
-  return Platform.OS === 'android' && Constants.appOwnership !== 'expo'
+  const isExpoGo = Constants.appOwnership === 'expo' || Constants.expoVersion !== null
+  return Platform.OS === 'android' && !isExpoGo
 }
 
 function notificationsModule(): ExpoNotifications | null {

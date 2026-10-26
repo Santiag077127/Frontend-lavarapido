@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { AppState, Linking, StatusBar } from 'react-native'
+import { AppState, Linking } from 'react-native'
+import { StatusBar } from 'expo-status-bar'
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -41,9 +42,7 @@ function AppNavigation({
   return (
     <>
       <StatusBar
-        barStyle={darkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={theme.background}
-        translucent={false}
+        style={darkMode ? 'light' : 'dark'}
       />
       <NavigationContainer
         ref={navigationRef}

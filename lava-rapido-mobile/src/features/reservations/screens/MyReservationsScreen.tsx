@@ -506,7 +506,7 @@ export default function MyReservationsScreen() {
             <Text style={{ color: textColor, flex: 1 }}>{`${t(`apiErrors.${error}`)} ${t('apiErrors.staleData')}`}</Text>
             <Pressable accessibilityRole="button" onPress={() => void loadReservations(false)}><Text style={{ color: primaryColor, fontWeight: '700' }}>{t('mobile.reservations.retry')}</Text></Pressable>
           </View>
-        ) : null}
+        ) : undefined}
       />
       <ConfirmationModal
         visible={Boolean(pendingCancellation)}

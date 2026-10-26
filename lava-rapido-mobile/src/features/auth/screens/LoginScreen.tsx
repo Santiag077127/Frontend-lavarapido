@@ -10,9 +10,9 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  StatusBar,
   Keyboard,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -126,11 +126,7 @@ export default function LoginScreen({
   return (
     <>
       <StatusBar
-        barStyle={
-          darkMode ? 'light-content' : 'dark-content'
-        }
-        backgroundColor={backgroundColor}
-        translucent={false}
+        style={darkMode ? 'light' : 'dark'}
       />
 
       <KeyboardAvoidingView
