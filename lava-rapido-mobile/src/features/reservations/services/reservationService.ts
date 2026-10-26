@@ -3,12 +3,27 @@ import {
   CreateReservationData,
   ReservationResponse,
 } from '../types/reservation.types';
+import type { CancellationPolicyAcceptance } from '../../auth/legalContent';
 
 export type ReservationCancellationResult = 'CANCELLED' | 'ALREADY_CANCELLED';
 
 export interface ReservationCancellationResponse {
   reservation: ReservationResponse;
   result: ReservationCancellationResult;
+}
+
+type HttpFailure = {
+  response?: { status?: number; data?: { code?: unknown } };
+};
+
+export function getReservationCancellationFailure(error: unknown): { status?: number; code?: string } {
+  if (!error || typeof error !== 'object') return {};
+  const response = (error as HttpFailure).response;
+  const code = response?.data?.code;
+  return {
+    status: response?.status,
+    code: typeof code === 'string' ? code : undefined,
+  };
 }
 
 function isReservationResponse(value: unknown): value is ReservationResponse {
@@ -57,21 +72,13 @@ export const reservationService = {
     return response.data;
   },
 
-  cancel: async (
-    id: string
-  ): Promise<ReservationResponse> => {
-    const response = await api.patch<ReservationResponse>(
-      `/api/reservas/${id}/cancelar`
-    );
-
-    return response.data;
-  },
-
   cancelForCheckout: async (
-    id: string
+    id: string,
+    acceptance?: CancellationPolicyAcceptance,
   ): Promise<ReservationCancellationResponse> => {
     const response = await api.patch<ReservationResponse>(
-      `/api/reservas/${id}/cancelar`
+      `/api/reservas/${id}/cancelar`,
+      acceptance,
     );
     const result = response.headers?.['x-reservation-cancellation-result'];
     const reservation = response.data;

@@ -181,6 +181,17 @@ test('valida que exista un servicio antes de crear una reserva', async () => {
   expect(reservationService.create).not.toHaveBeenCalled();
 });
 
+test('shows cancellation terms before reservation confirmation', async () => {
+  const view = await renderReservation();
+
+  expect(view.getByText('mobile.reservation.cancellationPolicySummary')).toBeTruthy();
+  fireEvent.press(view.getByRole('link', { name: 'mobile.reservation.readCancellationPolicy' }));
+
+  expect(view.getByText('Términos y condiciones')).toBeTruthy();
+  expect(view.getByText('6. Cancelación voluntaria')).toBeTruthy();
+  expect(reservationService.create).not.toHaveBeenCalled();
+});
+
 test('no permite continuar sin vehículos activos', async () => {
   (vehicleService.getMyVehicles as jest.Mock).mockResolvedValue([]);
   const view = await renderReservation();

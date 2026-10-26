@@ -1,5 +1,19 @@
 export type LegalDocument = 'privacy' | 'terms';
 
+export const CANCELLATION_POLICY_VERSION = '2026-10-26';
+
+export type CancellationPolicyAcceptance = {
+  policyAccepted: true;
+  policyVersion: typeof CANCELLATION_POLICY_VERSION;
+};
+
+export function createCancellationPolicyAcceptance(): CancellationPolicyAcceptance {
+  return {
+    policyAccepted: true,
+    policyVersion: CANCELLATION_POLICY_VERSION,
+  };
+}
+
 export type LegalSection = {
   title: string;
   body: string;
@@ -21,8 +35,10 @@ export const legalContent: Record<LegalDocument, LegalDocumentContent> = {
       { title: '3. Uso permitido', body: 'Debes proporcionar información verídica, respetar las reservas y utilizar la plataforma de forma lícita. No intentes acceder a cuentas ajenas ni interferir con el funcionamiento del servicio.' },
       { title: '4. Cuenta y seguridad', body: 'Eres responsable de mantener tu contraseña en secreto y de avisar al equipo de Lava Rápido si sospechas un acceso no autorizado.' },
       { title: '5. Reservas y pagos', body: 'Revisa los datos de tu vehículo, horario y servicio antes de confirmar. Los pagos se procesan mediante el proveedor mostrado en el flujo de pago. La confirmación de una reserva y la de un pago pueden ocurrir en momentos distintos.' },
-      { title: '6. Disponibilidad', body: 'Podemos actualizar servicios y horarios. Si hay un error o interrupción, consulta el estado de la reserva antes de repetir un pago o crear otra reserva.' },
-      { title: '7. Contenido', body: 'El diseño, nombre y contenido de Lava Rápido pertenecen a sus titulares y no pueden reutilizarse sin autorización.' },
+      { title: '6. Cancelación voluntaria', body: 'Puedes solicitar la cancelación de una reserva propia mientras permanezca pendiente. La solicitud no se completa si existe un pago aprobado o un pago o intento pendiente de confirmación. Si no existe pago o todos los intentos fueron rechazados de forma terminal y confirmada por el proveedor, el sistema puede permitir la cancelación. La decisión final se verifica en el servidor.' },
+      { title: '7. Reembolsos y derechos del consumidor', body: 'Cancelar una reserva no genera por sí sola un reembolso automático. Esto no limita los derechos legales aplicables de retracto, devolución, reclamación o reversión de pago. Los pagos aprobados, incluso si su confirmación llega después de una cancelación, deben conservarse para revisión y atención del caso.' },
+      { title: '8. Disponibilidad', body: 'Podemos actualizar servicios y horarios. Si hay un error o interrupción, consulta el estado de la reserva antes de repetir un pago o crear otra reserva.' },
+      { title: '9. Contenido', body: 'El diseño, nombre y contenido de Lava Rápido pertenecen a sus titulares y no pueden reutilizarse sin autorización.' },
     ],
   },
   privacy: {

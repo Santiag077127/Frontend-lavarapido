@@ -115,11 +115,15 @@ test('preserves date and time picker callbacks and schedule hint', () => {
 })
 
 test('renders the unchanged reservation summary values', () => {
+  const onOpenTerms = jest.fn()
   const view = render(
-    <ReservationSummaryCard serviceName="Lavado" selectedDateText="2026-11-10" selectedTimeText="08:00:00" formattedPrice="$25.000" colors={colors(lightTheme)} />,
+    <ReservationSummaryCard serviceName="Lavado" selectedDateText="2026-11-10" selectedTimeText="08:00:00" formattedPrice="$25.000" colors={colors(lightTheme)} onOpenTerms={onOpenTerms} />,
   )
   expect(view.getByText('Lavado')).toBeTruthy()
   expect(view.getByText('2026-11-10')).toBeTruthy()
   expect(view.getByText('08:00:00')).toBeTruthy()
   expect(view.getByText('$25.000')).toBeTruthy()
+  expect(view.getByText('mobile.reservation.cancellationPolicySummary')).toBeTruthy()
+  fireEvent.press(view.getByRole('link', { name: 'mobile.reservation.readCancellationPolicy' }))
+  expect(onOpenTerms).toHaveBeenCalledTimes(1)
 })

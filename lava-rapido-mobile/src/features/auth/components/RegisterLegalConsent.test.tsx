@@ -51,6 +51,10 @@ test.each([
 
   expect(view.getByRole('header')).toHaveTextContent(title);
   expect(view.getByText(section)).toBeTruthy();
+  if (document === 'terms') {
+    expect(view.getByText('6. Cancelación voluntaria')).toBeTruthy();
+    expect(view.getByText('7. Reembolsos y derechos del consumidor')).toBeTruthy();
+  }
   fireEvent.press(view.getByRole('button', { name: 'Cerrar' }));
   expect(onClose).toHaveBeenCalledTimes(1);
 });

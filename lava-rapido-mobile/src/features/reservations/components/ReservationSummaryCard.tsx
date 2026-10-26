@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import type { ReservationColors } from './reservationFormTypes'
 import styles from './reservationFormStyles'
@@ -10,9 +10,10 @@ type Props = {
   selectedTimeText: string
   formattedPrice: string
   colors: ReservationColors
+  onOpenTerms: () => void
 }
 
-export default function ReservationSummaryCard({ serviceName, selectedDateText, selectedTimeText, formattedPrice, colors }: Props) {
+export default function ReservationSummaryCard({ serviceName, selectedDateText, selectedTimeText, formattedPrice, colors, onOpenTerms }: Props) {
   const { t } = useTranslation()
   return (
         <View
@@ -157,6 +158,16 @@ export default function ReservationSummaryCard({ serviceName, selectedDateText, 
             >
               {formattedPrice}
             </Text>
+          </View>
+          <View style={[styles.policyNotice, { borderTopColor: colors.border }]}>
+            <Text style={[styles.policyText, { color: colors.secondaryText }]}>
+              {t('mobile.reservation.cancellationPolicySummary')}
+            </Text>
+            <Pressable accessibilityRole="link" onPress={onOpenTerms}>
+              <Text style={[styles.policyLink, { color: colors.primary }]}>
+                {t('mobile.reservation.readCancellationPolicy')}
+              </Text>
+            </Pressable>
           </View>
         </View>
   )

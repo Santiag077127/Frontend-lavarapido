@@ -54,14 +54,6 @@ test('lists reservations for the requested user', async () => {
   expect(mockApi.get).toHaveBeenCalledWith('/api/reservas/usuario/user-1');
 });
 
-test('cancels the requested reservation through the existing endpoint', async () => {
-  const data = { idReserva: 'reservation-1', estado: 'CANCELADA' };
-  mockApi.patch.mockResolvedValue({ data } as never);
-
-  await expect(reservationService.cancel('reservation-1')).resolves.toEqual(data);
-  expect(mockApi.patch).toHaveBeenCalledWith('/api/reservas/reservation-1/cancelar');
-});
-
 test.each(['CANCELLED', 'ALREADY_CANCELLED'] as const)(
   'returns the validated %s checkout cancellation result',
   async (result) => {
@@ -79,7 +71,7 @@ test.each(['CANCELLED', 'ALREADY_CANCELLED'] as const)(
     await expect(
       reservationService.cancelForCheckout('reservation-1'),
     ).resolves.toEqual({ reservation, result });
-    expect(mockApi.patch).toHaveBeenCalledWith('/api/reservas/reservation-1/cancelar');
+    expect(mockApi.patch).toHaveBeenCalledWith('/api/reservas/reservation-1/cancelar', undefined);
   },
 );
 
@@ -97,6 +89,24 @@ test('rejects checkout cancellation responses with an invalid body', async () =>
   await expect(
     reservationService.cancelForCheckout('reservation-1'),
   ).rejects.toThrow('Respuesta de cancelación de reserva inválida');
+});
+
+test('sends cancellation policy acceptance only when the caller provides it', async () => {
+  const reservation = {
+    idReserva: 'reservation-1',
+    fechaReserva: '2026-10-16',
+    horaReserva: '12:00:00',
+    estado: 'CANCELADA',
+  };
+  mockApi.patch.mockResolvedValue({ data: reservation, headers: {} } as never);
+
+  const acceptance = { policyAccepted: true, policyVersion: '2026-10-26' } as const;
+  await reservationService.cancelForCheckout('reservation-1', acceptance);
+
+  expect(mockApi.patch).toHaveBeenCalledWith(
+    '/api/reservas/reservation-1/cancelar',
+    acceptance,
+  );
 });
 
 test('accepts a valid cancellation body when an older backend omits the optional result header', async () => {

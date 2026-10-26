@@ -10,13 +10,21 @@ import { useTranslation } from 'react-i18next';
 import ScreenHeader from '../../../components/common/ScreenHeader';
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
+import RegisterLegalDocumentModal from '../../auth/components/RegisterLegalDocumentModal';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/types';
 import { paymentService, type ReservationPayment, type WompiCheckoutData } from '../../../services/paymentService';
 import { pendingCheckoutRecovery } from '../../../services/pendingCheckoutRecovery';
 import { classifyApiError } from '../../../services/api';
-import { reservationService } from '../services/reservationService';
+import {
+  getReservationCancellationFailure,
+  reservationService,
+} from '../services/reservationService';
 import type { ReservationStatus } from '../types/reservation.types';
+import {
+  CANCELLATION_POLICY_VERSION,
+  createCancellationPolicyAcceptance,
+} from '../../auth/legalContent';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReservationPayment'>;
 
@@ -40,16 +48,6 @@ type TransactionDiagnostic = {
 type HttpFailure = {
   response?: { status?: number; data?: { code?: unknown } };
 };
-
-function cancellationError(error: unknown): { status?: number; code?: string } {
-  if (!error || typeof error !== 'object') return {};
-  const response = (error as HttpFailure).response;
-  const code = response?.data?.code;
-  return {
-    status: response?.status,
-    code: typeof code === 'string' ? code : undefined,
-  };
-}
 
 function makeWidgetHtml(checkout: WompiCheckoutData, loadingText: string): string {
   const config = JSON.stringify({
@@ -124,6 +122,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   const [exitMode, setExitMode] = useState<'cancel' | 'approved'>('cancel');
   const [cancellingReservation, setCancellingReservation] = useState(false);
   const [allowRemoval, setAllowRemoval] = useState(false);
+  const [termsVisible, setTermsVisible] = useState(false);
   const requestLock = useRef(false);
   const cancellationLock = useRef(false);
   const initialCheckDone = useRef(false);
@@ -176,7 +175,10 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     cancellationLock.current = true;
     setCancellingReservation(true);
     try {
-      const outcome = await reservationService.cancelForCheckout(reservation.idReserva);
+      const outcome = await reservationService.cancelForCheckout(
+        reservation.idReserva,
+        createCancellationPolicyAcceptance(),
+      );
       await pendingCheckoutRecovery.clear(reservation.idReserva, reservation.idUsuario).catch(() => {});
       setExitConfirmationVisible(false);
       if (outcome.result === 'CANCELLED') {
@@ -197,7 +199,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       navigateToServices('CANCELADA');
     } catch (requestError) {
       setExitConfirmationVisible(false);
-      const failure = cancellationError(requestError);
+      const failure = getReservationCancellationFailure(requestError);
       if (failure.status === 409 && failure.code === 'PAGO_PENDIENTE') {
         appAlert.alert(
           t('mobile.paymentFlow.pendingCancellationTitle'),
@@ -221,6 +223,16 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             onPress: () => navigateToServices('PENDIENTE'),
           }],
           'info',
+        );
+      } else if (failure.status === 409 && failure.code === 'RESERVA_NO_PENDIENTE') {
+        appAlert.alert(
+          t('mobile.paymentFlow.notPendingCancellationTitle'),
+          t('mobile.paymentFlow.notPendingCancellationMessage'),
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: () => navigateToServices('PENDIENTE'),
+          }],
+          'warning',
         );
       } else if (failure.status === 403) {
         appAlert.alert(
@@ -257,7 +269,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       cancellationLock.current = false;
       setCancellingReservation(false);
     }
-  }, [exitMode, navigateToServices, payment?.estado, reservation.idReserva, t]);
+  }, [exitMode, navigateToServices, payment?.estado, reservation.idReserva, reservation.idUsuario, t]);
 
   const showRequestError = useCallback((requestError: unknown) => {
     // Keep technical/backend details out of the user-facing screen.
@@ -349,7 +361,14 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         setWidgetOpened(false);
       }
     } catch (requestError) {
-      showRequestError(requestError);
+      const status = (requestError as HttpFailure).response?.status;
+      if (status === 404) {
+        setPayment(null);
+        setCheckout(null);
+        setStartError(null);
+      } else {
+        showRequestError(requestError);
+      }
     } finally {
       setChecking(false);
       requestLock.current = false;
@@ -425,10 +444,10 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   useFocusEffect(useCallback(() => {
     if (!initialCheckDone.current) {
       initialCheckDone.current = true;
-      void preparePayment();
+      void refreshStatus();
     }
     return undefined;
-  }, [preparePayment]));
+  }, [refreshStatus]));
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -506,6 +525,19 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         {!checkout && !approved && (
           <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
+            <Text style={[styles.policyText, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.policySummary')}</Text>
+            <Text style={[styles.policyVersion, { color: theme.textSecondary }]}>
+              {t('mobile.paymentFlow.policyVersion', { version: CANCELLATION_POLICY_VERSION })}
+            </Text>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => setTermsVisible(true)}
+              style={styles.policyLink}
+            >
+              <Text style={[styles.policyLinkText, { color: theme.primary }]}>
+                {t('mobile.reservation.readCancellationPolicy')}
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -596,18 +628,18 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
                 <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
               </Pressable>
               <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void resumePendingCheckout()} disabled={checking}>
-                <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.continue')}</Text>
+                <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.acceptAndContinue')}</Text>
               </Pressable>
             </>
           )}
           {!payment && !checkout && !loading && (
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void preparePayment()} disabled={checking}>
-              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retry')}</Text>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.acceptAndContinue')}</Text>
             </Pressable>
           )}
           {payment?.estado === 'rechazado' && (
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: loading, busy: loading }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void retryPayment()} disabled={loading}>
-              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retryPayment')}</Text>
+              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.acceptAndRetry')}</Text>
             </Pressable>
           )}
           {approved && (
@@ -640,6 +672,15 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         busy={cancellingReservation}
         busyLabel={t('mobile.paymentFlow.cancellingReservation')}
       />
+      <RegisterLegalDocumentModal
+        document={termsVisible ? 'terms' : null}
+        onClose={() => setTermsVisible(false)}
+        surfaceColor={theme.card}
+        textColor={theme.text}
+        secondaryTextColor={theme.textSecondary}
+        buttonColor={theme.primary}
+        onPrimaryColor={theme.onPrimary}
+      />
     </SafeAreaView>
   );
 }
@@ -651,6 +692,10 @@ const styles = StyleSheet.create({
   paymentIntro: { borderWidth: 1, borderRadius: 20, padding: 16, marginHorizontal: 16, marginBottom: 14, elevation: 1, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
   title: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
   paymentStatus: { fontSize: 13, lineHeight: 19, marginTop: 4 },
+  policyText: { fontSize: 13, lineHeight: 19, marginTop: 10 },
+  policyVersion: { fontSize: 12, lineHeight: 18, marginTop: 4, fontWeight: '600' },
+  policyLink: { alignSelf: 'flex-start', paddingVertical: 6, marginTop: 2 },
+  policyLinkText: { fontSize: 13, lineHeight: 18, fontWeight: '700', textDecorationLine: 'underline' },
   webViewContainer: { flex: 1, minHeight: 0, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderRadius: 20, overflow: 'hidden', elevation: 2 },
   webViewContainerCheckout: { marginHorizontal: 0, marginBottom: 0, borderWidth: 0, borderRadius: 0, elevation: 0 },
   webview: { flex: 1 },
