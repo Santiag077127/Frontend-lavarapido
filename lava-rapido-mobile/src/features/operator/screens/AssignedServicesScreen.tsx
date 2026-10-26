@@ -220,7 +220,7 @@ export default function AssignedServicesScreen() {
             <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
             <TouchableOpacity accessibilityRole="button" onPress={loadAssignments}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
           </View>
-        ) : null}
+        ) : undefined}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text

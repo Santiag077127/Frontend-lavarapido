@@ -190,7 +190,7 @@ export default function MyVehiclesScreen({
             <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
             <TouchableOpacity accessibilityRole="button" onPress={loadVehicles}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
           </View>
-        ) : null}
+        ) : undefined}
         ListEmptyComponent={
           loadError ? <View style={styles.emptyContainer}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.errorBackground }]}><Ionicons name="cloud-offline-outline" size={48} color={theme.errorText} /></View>
