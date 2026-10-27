@@ -40,6 +40,7 @@ export type RootStackParamList = {
 
   ReservationPayment: {
     reservation: ReservationResponse;
+    autoStart?: boolean;
   };
 
   Map: undefined;

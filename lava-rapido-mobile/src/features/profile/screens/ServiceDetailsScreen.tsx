@@ -112,16 +112,38 @@ export default function ServiceDetailsScreen({
     setPaymentLoading(true)
     setPaymentLoadError(false)
     try {
-      const currentPayment = await paymentService.getByReservation(reservation.idReserva)
-      if (isActive()) setPayment(currentPayment)
-    } catch (error) {
-      if (!isActive()) return
-      if ((error as { response?: { status?: number } }).response?.status === 404) {
-        // No Pago row means the reservation is still eligible to start one.
-        setPayment(null)
-      } else {
-        setPaymentLoadError(true)
+      const latestReservation = await reservationService.getById(reservation.idReserva)
+      if (isActive()) setReservation(latestReservation)
+      if (latestReservation.estado !== 'PENDIENTE') {
+        if (isActive()) setPayment(null)
+        return
       }
+      let currentPayment: ReservationPayment
+      try {
+        currentPayment = await paymentService.getByReservation(reservation.idReserva)
+      } catch (error) {
+        if ((error as { response?: { status?: number } }).response?.status === 404) {
+          if (isActive()) setPayment(null)
+          return
+        }
+        throw error
+      }
+      if (currentPayment.estado === 'pendiente'
+        && currentPayment.intentoActual?.referencia
+        && currentPayment.intentoActual.wompiTransactionId) {
+        try {
+          currentPayment = await paymentService.verify(
+            reservation.idReserva,
+            currentPayment.intentoActual.referencia,
+            currentPayment.intentoActual.wompiTransactionId,
+          )
+        } catch {
+          if (isActive()) setPaymentLoadError(true)
+        }
+      }
+      if (isActive()) setPayment(currentPayment)
+    } catch {
+      if (isActive()) setPaymentLoadError(true)
     } finally {
       if (isActive()) setPaymentLoading(false)
       paymentLoadLock.current = false
@@ -130,6 +152,8 @@ export default function ServiceDetailsScreen({
 
   useFocusEffect(useCallback(() => {
     let active = true
+    paymentNavigationLock.current = false
+    setOpeningPayment(false)
     void loadPaymentState(() => active)
     return () => { active = false }
   }, [loadPaymentState]))
@@ -252,7 +276,6 @@ export default function ServiceDetailsScreen({
   const statusColors = renderStatusColors(reservation.estado)
   const canRetryPayment = reservation.estado === 'PENDIENTE'
     && !paymentLoading
-    && !paymentLoadError
     && payment?.estado !== 'aprobado'
 
   const openPayment = () => {
@@ -261,7 +284,7 @@ export default function ServiceDetailsScreen({
     setOpeningPayment(true)
     // ReservationPaymentScreen performs the authoritative GET/POST sequence
     // before rendering Wompi. This navigation never creates a reservation.
-    navigation.navigate('ReservationPayment', { reservation })
+    navigation.navigate('ReservationPayment', { reservation, autoStart: true })
   }
 
   return (
@@ -275,9 +298,15 @@ export default function ServiceDetailsScreen({
         />
         <View style={[styles.hero, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={[styles.heroIcon, { backgroundColor: theme.primarySoft }]}><Ionicons name="car-sport" size={28} color={theme.primary} /></View>
-          <View style={styles.heroText}><Text style={[styles.heroTitle, { color: theme.text }]} numberOfLines={2}>{reservation.nombreServicio || t('mobile.services.serviceFallback')}</Text><Text style={[styles.reservationId, { color: theme.textSecondary }]} numberOfLines={1}>{t('mobile.reservationDetail.reservation')} #{reservation.idReserva}</Text></View>
+          <View testID="service-title-description" style={styles.heroText}>
+            <Text testID="service-name-title" style={[styles.heroTitle, { color: theme.text }]} numberOfLines={2}>{reservation.nombreServicio || t('mobile.services.serviceFallback')}</Text>
+          </View>
           <View style={[styles.statusBadge, { backgroundColor: statusColors.background }]}><Text style={[styles.statusText, { color: statusColors.foreground }]}>{renderStatusText(reservation.estado)}</Text></View>
         </View>
+        {!!reservation.descripcionServicio && <View testID="reservation-description-card" style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <SectionHeading icon="document-text-outline" title={t('mobile.reservationDetail.description')} theme={theme} />
+          <Text testID="reservation-description" style={[styles.serviceDescription, { color: theme.textSecondary }]}>{reservation.descripcionServicio}</Text>
+        </View>}
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <SectionHeading icon="reader-outline" title={t('mobile.reservationDetail.serviceInfo')} theme={theme} />
           <View style={styles.infoGrid}>
@@ -295,26 +324,19 @@ export default function ServiceDetailsScreen({
         </View>
         {reservation.estado === 'PENDIENTE' && <View style={[styles.paymentCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <SectionHeading icon="card-outline" title={t('mobile.paymentFlow.status')} theme={theme} />
-          {paymentLoading ? <ActivityIndicator color={theme.primary} /> : paymentLoadError ? <>
+          {paymentLoading ? <View testID="payment-loading-container" style={styles.paymentLoadingContainer}><ActivityIndicator color={theme.primary} /></View> : paymentLoadError ? <>
             <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.paymentMessage, { color: theme.errorText }]}>{t('mobile.paymentFlow.error')}</Text>
-            <TouchableOpacity accessibilityRole="button" style={[styles.paymentButton, { borderColor: theme.primary }]} onPress={() => { void loadPaymentState(() => true) }}>
-              <Text style={[styles.paymentButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
-            </TouchableOpacity>
           </> : payment?.estado === 'aprobado' ? <Text accessibilityLiveRegion="polite" style={[styles.paymentMessage, { color: theme.success }]}>{t('mobile.paymentFlow.approved')}</Text> : <>
-            {payment?.estado === 'pendiente' && <Text style={[styles.paymentMessage, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.pendingHint')}</Text>}
+            {payment?.estado === 'pendiente' && <Text style={[styles.paymentMessage, { color: theme.textSecondary }]}>{payment.intentoActual?.wompiStatus === 'PENDING' ? t('mobile.paymentFlow.processingPreviousPayment') : t('mobile.paymentFlow.pendingHint')}</Text>}
             {payment?.estado === 'rechazado' && <Text style={[styles.paymentMessage, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.declined')}</Text>}
-            <TouchableOpacity accessibilityRole="button" accessibilityState={{ disabled: openingPayment, busy: openingPayment }} style={[styles.paymentButton, { backgroundColor: theme.primary, opacity: openingPayment ? 0.65 : 1 }]} onPress={openPayment} disabled={openingPayment}>
-              {openingPayment ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.paymentButtonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retryPayment')}</Text>}
-            </TouchableOpacity>
           </>}
+          {canRetryPayment && <TouchableOpacity accessibilityRole="button" accessibilityState={{ disabled: openingPayment, busy: openingPayment }} style={[styles.paymentButton, { backgroundColor: theme.primary, opacity: openingPayment ? 0.65 : 1 }]} onPress={openPayment} disabled={openingPayment}>
+            {openingPayment ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.paymentButtonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.payNow')}</Text>}
+          </TouchableOpacity>}
         </View>}
         {reservation.estado === 'FINALIZADA' && <View style={[styles.ratingCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <SectionHeading icon="star-outline" title={t('ratingFlow.rateService')} theme={theme} />
           {ratingLoading ? <ActivityIndicator color={theme.primary} /> : ratingLoadError ? <><Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.ratingMessage, { color: theme.textSecondary }]}>{t('ratingFlow.loadError')}</Text><TouchableOpacity accessibilityRole="button" style={[styles.ratingButton, { backgroundColor: theme.primary }]} onPress={() => { void loadRatingState(() => true) }}><Text style={[styles.ratingButtonText, { color: theme.onPrimary }]}>{t('mobile.services.retry')}</Text></TouchableOpacity></> : rating ? <><Text accessibilityLiveRegion="polite" style={[styles.ratingMessage, { color: theme.text }]}>{ratingSuccess ? t('ratingFlow.success') : t('ratingFlow.alreadyRatedLabel')}</Text><View style={styles.ratingStars}>{[1,2,3,4,5].map(star => <Ionicons key={star} name={star <= rating.puntuacion ? 'star' : 'star-outline'} size={25} color={theme.warning} />)}<Text style={[styles.ratingValue,{color:theme.text}]}>{rating.puntuacion}/5</Text></View>{!!rating.comentario && <Text style={[styles.ratingComment,{color:theme.textSecondary}]}>{rating.comentario}</Text>}</> : canRate ? <><Text style={[styles.ratingMessage,{color:theme.textSecondary}]}>{t('ratingFlow.question')}</Text><TouchableOpacity accessibilityRole="button" style={[styles.ratingButton,styles.fullButton,{backgroundColor:theme.primary}]} onPress={() => {setSelectedRating(0);setComment('');setRatingError(null);setRatingModalVisible(true)}} activeOpacity={0.85}><Ionicons name="star" size={19} color={theme.onPrimary}/><Text style={[styles.ratingButtonText,{color:theme.onPrimary}]}>{t('ratingFlow.rateService')}</Text></TouchableOpacity></> : null}
-        </View>}
-        {!!reservation.descripcionServicio && <View testID="reservation-description-card" style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <SectionHeading icon="document-text-outline" title={t('mobile.reservationDetail.description')} theme={theme} />
-          <Text style={[styles.serviceDescription, { color: theme.textSecondary }]}>{reservation.descripcionServicio}</Text>
         </View>}
       </ScrollView>
       <Modal visible={ratingModalVisible} transparent animationType="slide" onRequestClose={() => { if (!submitting) setRatingModalVisible(false) }}>
@@ -340,8 +362,8 @@ function TimelineStep({label,active,color,theme}:{label:string;active:boolean;co
 
 const styles=StyleSheet.create({
  safeArea:{flex:1},pageContent:{paddingHorizontal:18,paddingTop:10,paddingBottom:32,gap:14},topBar:{minHeight:74,borderWidth:1,borderRadius:18,padding:12,flexDirection:'row',alignItems:'center',gap:12},topBarText:{flex:1,minWidth:0},pageTitle:{fontSize:20,fontWeight:'800'},pageSubtitle:{fontSize:13,marginTop:3},
- hero:{borderWidth:1,borderRadius:20,padding:16,flexDirection:'row',alignItems:'center',gap:12},heroIcon:{width:52,height:52,borderRadius:16,alignItems:'center',justifyContent:'center'},heroText:{flex:1,minWidth:0},heroTitle:{fontSize:17,fontWeight:'800'},reservationId:{fontSize:11,marginTop:5},statusBadge:{paddingHorizontal:11,paddingVertical:8,borderRadius:20,maxWidth:'42%'},statusText:{fontWeight:'700',fontSize:11,textAlign:'center'},serviceDescription:{fontSize:14,lineHeight:20,flexShrink:1},
- card:{borderWidth:1,borderRadius:20,padding:16},sectionHeading:{flexDirection:'row',alignItems:'center',gap:10,marginBottom:14},sectionIcon:{width:34,height:34,borderRadius:11,alignItems:'center',justifyContent:'center'},sectionTitle:{flex:1,fontSize:16,fontWeight:'800'},infoGrid:{flexDirection:'row',flexWrap:'wrap',gap:10},infoTile:{width:'48%',minWidth:130,flexGrow:1,borderWidth:1,borderRadius:14,padding:11,minHeight:78,justifyContent:'center'},tileLabelRow:{flexDirection:'row',alignItems:'center',gap:6,marginBottom:7},label:{flex:1,fontSize:11,fontWeight:'600'},value:{fontSize:14,fontWeight:'700',flexShrink:1},
+ hero:{borderWidth:1,borderRadius:20,padding:16,flexDirection:'row',alignItems:'center',gap:12},heroIcon:{width:52,height:52,borderRadius:16,alignItems:'center',justifyContent:'center'},heroText:{flex:1,minWidth:0},heroTitle:{fontSize:19,lineHeight:25,fontWeight:'800',flexShrink:1},statusBadge:{paddingHorizontal:11,paddingVertical:8,borderRadius:20,maxWidth:'42%'},statusText:{fontWeight:'700',fontSize:11,textAlign:'center'},serviceDescription:{fontSize:14,lineHeight:21,flexShrink:1},
+ card:{borderWidth:1,borderRadius:20,padding:16},paymentLoadingContainer:{minHeight:96,alignItems:'center',justifyContent:'center',paddingVertical:16},sectionHeading:{flexDirection:'row',alignItems:'center',gap:10,marginBottom:14},sectionIcon:{width:34,height:34,borderRadius:11,alignItems:'center',justifyContent:'center'},sectionTitle:{flex:1,fontSize:16,fontWeight:'800'},infoGrid:{flexDirection:'row',flexWrap:'wrap',gap:10},infoTile:{width:'48%',minWidth:130,flexGrow:1,borderWidth:1,borderRadius:14,padding:11,minHeight:78,justifyContent:'center'},tileLabelRow:{flexDirection:'row',alignItems:'center',gap:6,marginBottom:7},label:{flex:1,fontSize:11,fontWeight:'600'},value:{fontSize:14,fontWeight:'700',flexShrink:1},
  timeline:{paddingLeft:5},step:{minHeight:30,flexDirection:'row',alignItems:'center'},dot:{width:13,height:13,borderRadius:7},line:{width:2,height:18,marginLeft:5.5,marginVertical:2},stepText:{marginLeft:13,fontSize:14,flex:1},paymentCard:{borderWidth:1,borderRadius:20,padding:16,gap:10},paymentMessage:{fontSize:14,lineHeight:20,fontWeight:'600',textAlign:'center'},paymentButton:{minHeight:50,borderRadius:14,paddingHorizontal:18,borderWidth:1,alignItems:'center',justifyContent:'center'},paymentButtonText:{fontSize:15,fontWeight:'800'},ratingCard:{borderWidth:1,borderRadius:20,padding:16,gap:10},ratingButton:{minHeight:50,borderRadius:14,paddingHorizontal:18,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:9},fullButton:{alignSelf:'stretch',marginTop:3},ratingButtonText:{fontSize:15,fontWeight:'800'},ratingMessage:{fontSize:14,lineHeight:20,fontWeight:'600',textAlign:'center'},ratingStars:{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3},ratingValue:{marginLeft:7,fontWeight:'800'},ratingComment:{fontSize:14,alignSelf:'stretch',lineHeight:20},
  modalBackdrop:{flex:1,justifyContent:'flex-end'},ratingModal:{maxHeight:'92%',borderWidth:1,borderTopLeftRadius:26,borderTopRightRadius:26,paddingHorizontal:20,paddingTop:10,paddingBottom:28},ratingModalScrollContent:{flexGrow:1,paddingBottom:24},modalHandle:{alignSelf:'center',width:38,height:4,borderRadius:4,marginBottom:16},modalHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:12},modalTitleWrap:{flex:1,minWidth:0},modalTitle:{fontSize:21,fontWeight:'800'},modalSubtitle:{fontSize:13,marginTop:3},closeButton:{width:40,height:40,borderRadius:13,alignItems:'center',justifyContent:'center'},ratingQuestion:{textAlign:'center',marginTop:4,fontSize:15,lineHeight:21},starSelector:{flexDirection:'row',alignItems:'center',justifyContent:'space-evenly',borderWidth:1,borderRadius:18,paddingHorizontal:7,paddingVertical:12,marginVertical:16},starPressable:{flex:1,alignItems:'center',paddingVertical:3},inputLabel:{fontSize:14,fontWeight:'700',marginBottom:8},commentInput:{minHeight:116,maxHeight:180,borderWidth:1,borderRadius:15,padding:14,fontSize:15,lineHeight:21},characterCount:{textAlign:'right',fontSize:12,marginTop:6},formError:{fontSize:13,textAlign:'center',marginTop:10},submitButton:{marginTop:16,marginBottom:5}
 })

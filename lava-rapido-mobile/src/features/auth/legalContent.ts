@@ -17,6 +17,8 @@ export function createCancellationPolicyAcceptance(): CancellationPolicyAcceptan
 export type LegalSection = {
   title: string;
   body: string;
+  titleKey?: string;
+  bodyKey?: string;
 };
 
 export type LegalDocumentContent = {
@@ -39,6 +41,7 @@ export const legalContent: Record<LegalDocument, LegalDocumentContent> = {
       { title: '7. Reembolsos y derechos del consumidor', body: 'Cancelar una reserva no genera por sí sola un reembolso automático. Esto no limita los derechos legales aplicables de retracto, devolución, reclamación o reversión de pago. Los pagos aprobados, incluso si su confirmación llega después de una cancelación, deben conservarse para revisión y atención del caso.' },
       { title: '8. Disponibilidad', body: 'Podemos actualizar servicios y horarios. Si hay un error o interrupción, consulta el estado de la reserva antes de repetir un pago o crear otra reserva.' },
       { title: '9. Contenido', body: 'El diseño, nombre y contenido de Lava Rápido pertenecen a sus titulares y no pueden reutilizarse sin autorización.' },
+      { title: '10. Pagos interrumpidos', body: '', titleKey: 'legal.paymentInterruption.title', bodyKey: 'legal.paymentInterruption.body' },
     ],
   },
   privacy: {

@@ -18,7 +18,7 @@ export const cancellationCopy = {
       readCancellationPolicy: 'Leer política de cancelación y devoluciones',
     },
     paymentFlow: {
-      policySummary: 'Antes de continuar a Wompi, confirma que leíste la política: un pago aprobado o pendiente impide la cancelación voluntaria hasta que el proveedor confirme un estado terminal.',
+      policySummary: 'Antes de continuar, confirma que leíste la política: un pago aprobado o pendiente impide cancelar la reserva hasta que se confirme su estado final.',
       policyVersion: 'Versión de la política: {{version}}',
       acceptAndContinue: 'Acepto la política y continuar',
       acceptAndRetry: 'Acepto la política y reintentar pago',
@@ -46,7 +46,7 @@ export const cancellationCopy = {
       readCancellationPolicy: 'Read cancellation and refund policy',
     },
     paymentFlow: {
-      policySummary: 'Before continuing to Wompi, confirm that you read the policy: an approved or pending payment prevents voluntary cancellation until the provider confirms a terminal state.',
+      policySummary: 'Before continuing, review the policy: an approved or pending payment prevents cancellation until its final status is confirmed.',
       policyVersion: 'Policy version: {{version}}',
       acceptAndContinue: 'Accept policy and continue',
       acceptAndRetry: 'Accept policy and retry payment',
@@ -74,7 +74,7 @@ export const cancellationCopy = {
       readCancellationPolicy: 'Ler política de cancelamento e reembolso',
     },
     paymentFlow: {
-      policySummary: 'Antes de continuar para a Wompi, confirme que leu a política: um pagamento aprovado ou pendente impede o cancelamento voluntário até o provedor confirmar um estado terminal.',
+      policySummary: 'Antes de continuar, leia a política: um pagamento aprovado ou pendente impede o cancelamento até que seu estado final seja confirmado.',
       policyVersion: 'Versão da política: {{version}}',
       acceptAndContinue: 'Aceitar política e continuar',
       acceptAndRetry: 'Aceitar política e tentar pagamento novamente',
@@ -102,7 +102,7 @@ export const cancellationCopy = {
       readCancellationPolicy: 'Lire la politique d’annulation et de remboursement',
     },
     paymentFlow: {
-      policySummary: 'Avant de continuer vers Wompi, confirmez avoir lu la politique : un paiement approuvé ou en attente empêche l’annulation volontaire jusqu’à ce que le prestataire confirme un état final.',
+      policySummary: 'Avant de continuer, consultez la politique : un paiement approuvé ou en attente empêche l’annulation jusqu’à la confirmation de son état final.',
       policyVersion: 'Version de la politique : {{version}}',
       acceptAndContinue: 'Accepter la politique et continuer',
       acceptAndRetry: 'Accepter la politique et réessayer le paiement',

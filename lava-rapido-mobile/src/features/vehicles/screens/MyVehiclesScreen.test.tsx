@@ -105,6 +105,14 @@ test('loads vehicles once and applies the confirmed status change once', async (
   expect(vehicleService.getMine).toHaveBeenCalledTimes(2);
 });
 
+test('positions the add vehicle button above the device bottom safe area', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('ABC123')).toBeTruthy());
+
+  const addButton = view.getByRole('button', { name: 'vehicles.actions.add' });
+  expect(addButton.props.style).toEqual(expect.objectContaining({ bottom: 36 }));
+});
+
 test('does not send duplicate status requests when confirmation is triggered twice before rerender', async () => {
   const view = renderScreen();
   await waitFor(() => expect(view.getByText('ABC123')).toBeTruthy());

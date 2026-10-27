@@ -3,6 +3,13 @@ import { fireEvent, render } from '@testing-library/react-native';
 import RegisterLegalConsent from './RegisterLegalConsent';
 import RegisterLegalDocumentModal from './RegisterLegalDocumentModal';
 
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => ({
+    'legal.paymentInterruption.title': '10. Pagos interrumpidos',
+    'legal.paymentInterruption.body': 'Consulta el estado de tu pago antes de volver a pagar.',
+  }[key] ?? key) }),
+}));
+
 const consentProps = {
   acceptsPrivacy: false,
   acceptsTerms: false,
@@ -54,6 +61,8 @@ test.each([
   if (document === 'terms') {
     expect(view.getByText('6. Cancelación voluntaria')).toBeTruthy();
     expect(view.getByText('7. Reembolsos y derechos del consumidor')).toBeTruthy();
+    expect(view.getByText('10. Pagos interrumpidos')).toBeTruthy();
+    expect(view.getByText('Consulta el estado de tu pago antes de volver a pagar.')).toBeTruthy();
   }
   fireEvent.press(view.getByRole('button', { name: 'Cerrar' }));
   expect(onClose).toHaveBeenCalledTimes(1);

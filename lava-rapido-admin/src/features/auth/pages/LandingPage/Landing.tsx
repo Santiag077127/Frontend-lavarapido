@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   CreditCard,
   Download,
+  Droplets,
   LockKeyhole,
   MapPin,
   Moon,
@@ -47,6 +48,11 @@ const featureCards = [
     titleKey: "landing.feature.vehicles.title",
     descriptionKey: "landing.feature.vehicles.desc",
   },
+  {
+    icon: Droplets,
+    titleKey: "landing.feature.services.title",
+    descriptionKey: "landing.feature.services.desc",
+  },
 ];
 
 const LandingPage = () => {
@@ -61,12 +67,6 @@ const LandingPage = () => {
           <img src={logo} alt="" />
           <span>{t("landing.brand")}</span>
         </Link>
-
-        <div className="landing-nav-links">
-          <a href="#funciones">{t("landing.features")}</a>
-          <a href="#operacion">{t("landing.operation")}</a>
-          <a href="#seguridad">{t("landing.security")}</a>
-        </div>
 
         <div className="landing-nav-actions">
           {theme && (
@@ -116,7 +116,7 @@ const LandingPage = () => {
             <button className="hero-primary" type="button" onClick={() => navigate("/register")}>
               {t("landing.register")}
             </button>
-            <button className="hero-secondary" type="button" onClick={() => navigate("/forgot-password")}>
+            <button className="hero-primary" type="button" onClick={() => navigate("/forgot-password")}>
               {t("landing.resetPassword")}
             </button>
             <a
@@ -198,7 +198,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="funciones" className="landing-section">
+      <section className="landing-section">
         <div className="section-intro">
           <p>Lava Rápido Vehicular</p>
           <h2>{t("landing.section.title")}</h2>
@@ -219,13 +219,12 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="operacion" className="landing-band">
+      <section className="landing-band">
         <div>
           <span>{t("landing.band")}</span>
         </div>
       </section>
 
-      <span id="seguridad" className="landing-anchor" aria-hidden="true" />
     </main>
   );
 };

@@ -1,6 +1,6 @@
 // Prueba el comportamiento de cambio de contraseña de la cuenta.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AxiosError } from "axios";
 
@@ -69,6 +69,17 @@ describe("ChangePasswordPage", () => {
     expect(next).toHaveAttribute("type", "text");
     expect(confirmation).toHaveAttribute("type", "password");
     expect(screen.getByRole("button", { name: "Ocultar contraseña" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("places the settings link first and navigates back to settings", () => {
+    const { container } = render(<MemoryRouter initialEntries={["/dashboard/cambiar-contrasena"]}><Routes>
+      <Route path="/dashboard/cambiar-contrasena" element={<ChangePasswordPage />} />
+      <Route path="/dashboard/configuracion" element={<p>Configuración</p>} />
+    </Routes></MemoryRouter>);
+    const backLink = screen.getByRole("link", { name: "Volver a configuración" });
+    expect(container.querySelector("main > a.settings-back-link")).toBe(backLink);
+    fireEvent.click(backLink);
+    expect(screen.getByText("Configuración")).toBeInTheDocument();
   });
 
   it("preserves legitimate password characters and validates the existing byte limit", () => {

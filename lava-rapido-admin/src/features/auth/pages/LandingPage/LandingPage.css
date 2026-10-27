@@ -13,7 +13,7 @@
   top: 0;
   z-index: 10;
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) 454px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
   min-height: 72px;
@@ -24,7 +24,6 @@
 }
 
 .landing-brand,
-.landing-nav-links,
 .landing-nav-actions,
 .hero-actions,
 .landing-band div {
@@ -48,12 +47,6 @@
   filter: drop-shadow(0 8px 16px rgba(30, 144, 255, 0.2));
 }
 
-.landing-nav-links {
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.landing-nav-links a,
 .nav-pill,
 .admin-access,
 .landing-band a {
@@ -61,19 +54,6 @@
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 700;
-}
-
-.landing-nav-links a {
-  width: 105px;
-  padding: 0.7rem 0.25rem;
-  border-radius: 8px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.landing-nav-links a:hover {
-  background: #e6f1ff;
-  color: #1565c0;
 }
 
 .landing-nav-actions {
@@ -487,17 +467,11 @@
   border-radius: 8px;
 }
 
-.landing-anchor {
-  display: block;
-  height: 1px;
-}
-
 :root .hero-eyebrow,
 :root .section-intro p,
 :root .feature-card svg,
 :root .mockup-floating-card svg,
 :root .mockup-row small,
-:root .landing-nav-links a:hover,
 :root .nav-pill:hover,
 :root .admin-access:hover {
   color: var(--accent);
@@ -544,7 +518,6 @@
   color: var(--page-title);
 }
 
-:root[data-theme="dark"] .landing-nav-links a,
 :root[data-theme="dark"] .nav-pill,
 :root[data-theme="dark"] .admin-access,
 :root[data-theme="dark"] .hero-description,
@@ -579,9 +552,6 @@
     padding: 0 5vw;
   }
 
-  .landing-nav-links {
-    display: none;
-  }
 }
 
 @media (max-width: 1120px) {

@@ -45,6 +45,18 @@ describe("ChangeEmailPage", () => {
     expect(changeEmail).not.toHaveBeenCalled();
   });
 
+  it("keeps the settings link at the top and hides the current password by default", () => {
+    const { container } = render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
+      <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />
+      <Route path="/dashboard/configuracion" element={<p>Configuración</p>} />
+    </Routes></MemoryRouter>);
+    const backLink = screen.getByRole("link", { name: "Volver a configuración" });
+    expect(container.querySelector("main > a.settings-back-link")).toBe(backLink);
+    expect(screen.getByLabelText("Contraseña actual")).toHaveAttribute("type", "password");
+    fireEvent.click(backLink);
+    expect(screen.getByText("Configuración")).toBeInTheDocument();
+  });
+
   it("shows Spanish format validation, trims outer spaces on blur and allows correcting the address", async () => {
     render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
       <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />

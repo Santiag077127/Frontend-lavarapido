@@ -24,6 +24,7 @@ import {
 
 import { ThemeContext } from '../../../theme/ThemeContext'
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal'
+import LogoutButton from '../../../components/profile/LogoutButton'
 
 import {
   appAlert as Alert,
@@ -514,28 +515,7 @@ export default function OperatorProfileScreen({
 
       {/* CERRAR SESIÓN */}
 
-      <TouchableOpacity
-        accessibilityRole="button"
-        activeOpacity={0.8}
-        style={[styles.logout, { backgroundColor: theme.errorAction, shadowColor: theme.errorAction }]}
-        onPress={handleLogout}
-      >
-        <View
-          style={[styles.logoutIcon, { backgroundColor: theme.errorBackground }]}
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color={theme.errorOnAction}
-          />
-        </View>
-
-        <Text
-          style={[styles.logoutText, { color: theme.errorOnAction }]}
-        >
-          {t('operator.profile.logout')}
-        </Text>
-      </TouchableOpacity>
+      <LogoutButton label={t('operator.profile.logout')} theme={theme} onPress={handleLogout} />
 
       {/* SEGURIDAD */}
 

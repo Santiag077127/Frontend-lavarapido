@@ -17,7 +17,8 @@
 
 /* ── Tarjeta del modal ───────────────────────────────────────── */
 .modal-card {
-  background: #fff;
+  background: var(--surface);
+  color: var(--page-text);
   border-radius: 16px;
   padding: 32px;
   width: 100%;
@@ -70,8 +71,15 @@
 .modal-field input:focus,
 .modal-field textarea:focus {
   border-color: var(--accent);
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+}
+
+.modal-field input:focus-visible,
+.modal-field textarea:focus-visible,
+.modal-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .modal-field .modal-input-error {
@@ -85,6 +93,9 @@
   font-size: 0.78rem;
   line-height: 1.35;
 }
+
+:root[data-theme="dark"] .modal-field label { color: var(--page-muted); }
+:root[data-theme="dark"] .modal-field .modal-input-error { background: var(--error-bg); }
 
 /* ── Botones de acción ───────────────────────────────────────── */
 .modal-actions {
@@ -111,6 +122,9 @@
 }
 .modal-btn-cancelar:hover,
 .modal-btn-guardar:hover { opacity: 0.85; }
+
+.modal-btn-cancelar:focus-visible,
+.modal-btn-guardar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (max-width: 768px) {
   .modal-card {

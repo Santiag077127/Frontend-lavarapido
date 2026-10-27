@@ -9,6 +9,9 @@ import AssignedServiceCard from './AssignedServiceCard';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'es-CO' } }),
 }));
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: (props: any) => require('react').createElement(require('react-native').Text, props),
+}));
 
 const assignment: Assignment = {
   idAsignacion: 'assignment-1',
@@ -35,6 +38,8 @@ const assignment: Assignment = {
 function renderCard(item: Assignment, isUpdating = false, dark = false, onChangeStatus = jest.fn()) {
   const action = item.estado === 'asignada'
     ? { label: 'operator.actions.start', status: 'en_proceso' as const }
+    : item.estado === 'en_proceso'
+      ? { label: 'operator.actions.finish', status: 'completada' as const }
     : null;
   return render(
     <ThemeContext.Provider value={{ theme: dark ? darkTheme : lightTheme }}>
@@ -69,4 +74,15 @@ test('uses the light and dark status colors', () => {
   const dark = renderCard(assignment, false, true);
   expect(StyleSheet.flatten(light.getByText('operator.status.assigned').props.style).color).toBe(lightTheme.infoText);
   expect(StyleSheet.flatten(dark.getByText('operator.status.assigned').props.style).color).toBe(darkTheme.infoText);
+});
+
+test('uses a distinct accessible finish action color in both themes', () => {
+  const light = renderCard({ ...assignment, estado: 'en_proceso' });
+  const dark = renderCard({ ...assignment, estado: 'en_proceso' }, false, true);
+  const lightButton = light.getByRole('button', { name: 'operator.actions.finish' });
+  const darkButton = dark.getByRole('button', { name: 'operator.actions.finish' });
+  expect(StyleSheet.flatten(lightButton.props.style).backgroundColor).toBe(lightTheme.successBackground);
+  expect(StyleSheet.flatten(light.getByText('operator.actions.finish').props.style).color).toBe(lightTheme.successText);
+  expect(StyleSheet.flatten(darkButton.props.style).backgroundColor).toBe(darkTheme.successBackground);
+  expect(StyleSheet.flatten(dark.getByText('operator.actions.finish').props.style).color).toBe(darkTheme.successText);
 });
