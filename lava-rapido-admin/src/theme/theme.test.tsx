@@ -52,17 +52,19 @@ describe("admin translations", () => {
     expect(formatTranslation("Hello {name}", { name: "Ada" })).toBe("Hello Ada");
   });
 
-  it("restores and persists the selected accent color", () => {
-    localStorage.setItem("lava-accent-color", "cyan");
-    function AccentControl() {
+  it("resets a previously saved accent to the default without changing other preferences", () => {
+    localStorage.setItem("lava-accent-color", "emerald");
+    localStorage.setItem("lava-dark-mode", "true");
+    localStorage.setItem("lava-language", "fr");
+    function ThemePreferences() {
       const theme = useContext(ThemeContext)!;
-      return <button onClick={() => theme.setAccent("indigo")}>{theme.accent}</button>;
+      return <p>{`${theme.darkMode}:${theme.language}`}</p>;
     }
-    render(<ThemeProvider><AccentControl /></ThemeProvider>);
-    expect(screen.getByRole("button")).toHaveTextContent("cyan");
-    expect(document.documentElement.dataset.accent).toBe("cyan");
-    fireEvent.click(screen.getByRole("button"));
-    expect(document.documentElement.dataset.accent).toBe("indigo");
-    expect(localStorage.getItem("lava-accent-color")).toBe("indigo");
+    render(<ThemeProvider><ThemePreferences /></ThemeProvider>);
+    expect(screen.getByText("true:fr")).toBeInTheDocument();
+    expect(document.documentElement.dataset.accent).toBeUndefined();
+    expect(localStorage.getItem("lava-accent-color")).toBeNull();
+    expect(localStorage.getItem("lava-dark-mode")).toBe("true");
+    expect(localStorage.getItem("lava-language")).toBe("fr");
   });
 });

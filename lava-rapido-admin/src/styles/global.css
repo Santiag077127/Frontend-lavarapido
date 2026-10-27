@@ -167,7 +167,7 @@ iframe {
   color: var(--page-muted) !important;
 }
 
-:root[data-accent] :is(
+:root :is(
   .lf-btn,
   .fpp-btn,
   .fpp-btn-link,
@@ -189,7 +189,7 @@ iframe {
   color: #fff !important;
 }
 
-:root[data-accent] :is(
+:root :is(
   .hero-primary,
   .monthly-card--primary,
   .mockup-header
@@ -197,7 +197,7 @@ iframe {
   background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent) 48%, var(--accent-strong) 100%) !important;
 }
 
-:root[data-accent] :is(
+:root :is(
   .lf-input:focus,
   .fpp-input:focus,
   .rsp-input:focus,
@@ -211,7 +211,7 @@ iframe {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
 
-:root[data-accent] :is(
+:root :is(
   .rp-consent input,
   input[type="checkbox"],
   input[type="radio"]
@@ -219,7 +219,7 @@ iframe {
   accent-color: var(--accent);
 }
 
-:root[data-accent] :is(
+:root :is(
   .rp-link,
   .rp-back-btn,
   .auth-home-button,
@@ -230,16 +230,15 @@ iframe {
   color: var(--accent) !important;
 }
 
-:root[data-accent] :is(.filtro-btn, .gt-filtro-btn) {
+:root :is(.filtro-btn, .gt-filtro-btn) {
   color: var(--accent-strong) !important;
   background: var(--surface) !important;
   border-color: color-mix(in srgb, var(--accent) 32%, var(--surface-border)) !important;
 }
 
-:root[data-accent] :is(
+:root :is(
   .filtro-activo,
   .gt-filtro-activo,
-  .accent-option[aria-pressed="true"],
   .config-toggle[aria-pressed="true"],
   .btn-toggle,
   .perfil-avatar-check

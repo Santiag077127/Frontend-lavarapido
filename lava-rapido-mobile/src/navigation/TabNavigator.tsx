@@ -53,10 +53,10 @@ export default function TabNavigator({
   const bottomInset = Math.max(0, insets.bottom)
   const language = i18n.resolvedLanguage || i18n.language || 'es'
   const labels: Record<string, Record<string, string>> = {
-    es: { Home: 'Inicio', 'Mis servicios': 'Mis servicios', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
-    en: { Home: 'Home', 'Mis servicios': 'My services', Mapa: 'Map', Perfil: 'Profile', Notificaciones: 'Alerts' },
-    pt: { Home: 'Inicio', 'Mis servicios': 'Meus serviços', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
-    fr: { Home: 'Accueil', 'Mis servicios': 'Mes services', Mapa: 'Carte', Perfil: 'Profil', Notificaciones: 'Alertes' },
+    es: { Home: 'Inicio', 'Mis servicios': 'Reservas', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    en: { Home: 'Home', 'Mis servicios': 'Reservations', Mapa: 'Map', Perfil: 'Profile', Notificaciones: 'Alerts' },
+    pt: { Home: 'Inicio', 'Mis servicios': 'Reservas', Mapa: 'Mapa', Perfil: 'Perfil', Notificaciones: 'Avisos' },
+    fr: { Home: 'Accueil', 'Mis servicios': 'Réservations', Mapa: 'Carte', Perfil: 'Profil', Notificaciones: 'Alertes' },
   }
   const tabLabels = labels[language] || labels.es
 

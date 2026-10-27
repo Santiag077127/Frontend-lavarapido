@@ -185,17 +185,17 @@ test('opens the full cancellation terms before starting Wompi', async () => {
   expect(paymentService.start).not.toHaveBeenCalled();
 });
 
-test('pago aprobado conserva la navegación existente a Mis servicios', async () => {
+test('pago aprobado abre directamente la lista de reservas sin confirmación intermedia', async () => {
   (paymentService.getByReservation as jest.Mock).mockResolvedValue(payment('aprobado'));
   const view = renderPayment();
   await waitFor(() => expect(view.getByText('Ver mis servicios')).toBeTruthy());
 
   fireEvent.press(view.getByText('Ver mis servicios'));
 
-  expect(mockNavigate).toHaveBeenCalledWith('MainTabs', {
-    screen: 'Mis servicios',
-    params: { initialStatus: 'PENDIENTE' },
-  });
+  await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith(navigationAction('PENDIENTE')));
+  expect(mockNavigate).not.toHaveBeenCalled();
+  expect(view.queryByText('Pago confirmado')).toBeNull();
+  expect(mockAppAlert).not.toHaveBeenCalled();
   expect(paymentService.start).not.toHaveBeenCalled();
 });
 

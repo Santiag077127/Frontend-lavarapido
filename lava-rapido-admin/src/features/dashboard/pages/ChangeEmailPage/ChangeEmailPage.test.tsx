@@ -44,4 +44,25 @@ describe("ChangeEmailPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("El correo no puede contener emojis.");
     expect(changeEmail).not.toHaveBeenCalled();
   });
+
+  it("shows Spanish format validation, trims outer spaces on blur and allows correcting the address", async () => {
+    render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
+      <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />
+    </Routes></MemoryRouter>);
+
+    const email = screen.getByLabelText("Nuevo correo electrónico");
+    fireEvent.change(email, { target: { value: "invalid-address" } });
+    fireEvent.change(screen.getByLabelText("Contraseña actual"), { target: { value: "secret" } });
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar correo" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Ingresa un correo electrónico válido de máximo 100 caracteres.");
+    expect(changeEmail).not.toHaveBeenCalled();
+
+    fireEvent.change(email, { target: { value: "  corrected@example.com  " } });
+    fireEvent.blur(email);
+    expect(email).toHaveValue("corrected@example.com");
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar correo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sí, cambiar correo" }));
+
+    await waitFor(() => expect(changeEmail).toHaveBeenCalledWith("corrected@example.com", "secret"));
+  });
 });

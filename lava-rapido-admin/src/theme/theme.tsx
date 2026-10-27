@@ -5,15 +5,12 @@ import { extraTranslations } from "./extraTranslations";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type LanguageOption = "es" | "en" | "fr" | "pt";
-export type AccentOption = "blue" | "cyan" | "indigo" | "emerald";
 
 interface ThemeContextValue {
   darkMode: boolean;
   setDarkMode: (value: boolean) => void;
   language: LanguageOption;
   setLanguage: (value: LanguageOption) => void;
-  accent: AccentOption;
-  setAccent: (value: AccentOption) => void;
   t: (key: string) => string;
 }
 
@@ -58,8 +55,6 @@ export function useLocale(): string {
 }
 
 const getStoredBoolean = (key: string) => localStorage.getItem(key) === "true";
-const isAccentOption = (value: string | null): value is AccentOption =>
-  value === "blue" || value === "cyan" || value === "indigo" || value === "emerald";
 
 export const translations: Record<LanguageOption, Record<string, string>> = {
   es: {
@@ -120,8 +115,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.mode.desc": "Cambia entre modo claro y modo oscuro en todo el panel.",
     "settings.mode.dark": "Modo oscuro",
     "settings.mode.light": "Modo claro",
-    "settings.color.title": "Color de interfaz",
-    "settings.color.desc": "Elige el acento visual principal para botones, enlaces y estados activos.",
     "settings.language.title": "Idioma",
     "settings.language.desc": "Cambia el idioma visible de la interfaz administrativa.",
     "settings.logout.title": "Cerrar sesión",
@@ -129,10 +122,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.logout.action": "Cerrar sesión",
     "logout.confirmTitle": "¿Deseas cerrar sesión?",
     "logout.confirmDesc": "Tu sesión actual finalizará. Deberás ingresar tus credenciales nuevamente para acceder al sistema.",
-    "color.blue": "Azul",
-    "color.cyan": "Celeste",
-    "color.indigo": "Índigo",
-    "color.emerald": "Verde",
     "language.es": "Español",
     "language.en": "Inglés",
     "language.fr": "Francés",
@@ -147,6 +136,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "landing.description": "Agenda servicios, gestiona turnos, controla operadores, vehículos, marcas y pagos desde una plataforma administrativa clara y eficiente.",
     "landing.register": "Registrar usuario",
     "landing.resetPassword": "Restablecer contraseña",
+    "landing.downloadAndroid": "Descargar app para Android",
+    "landing.androidAppNote": "Aplicación disponible para dispositivos Android · APK · versión 1.0.0.",
     "landing.note": "Web exclusiva para administradores. Usuarios y operadores acceden desde la app móvil.",
     "landing.section.title": "Una operación más clara para cada servicio",
     "landing.band": "Reservas, catálogo, operadores, vehículos, marcas, ubicaciones y pagos.",
@@ -300,8 +291,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.mode.desc": "Switch between light and dark mode across the panel.",
     "settings.mode.dark": "Dark mode",
     "settings.mode.light": "Light mode",
-    "settings.color.title": "Interface color",
-    "settings.color.desc": "Choose the main accent for buttons, links and active states.",
     "settings.language.title": "Language",
     "settings.language.desc": "Change the visible language of the admin interface.",
     "settings.logout.title": "Sign out",
@@ -309,10 +298,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.logout.action": "Sign out",
     "logout.confirmTitle": "Do you want to sign out?",
     "logout.confirmDesc": "Your current session will end. You will need to enter your credentials again to access the system.",
-    "color.blue": "Blue",
-    "color.cyan": "Cyan",
-    "color.indigo": "Indigo",
-    "color.emerald": "Green",
     "language.es": "Spanish",
     "language.en": "English",
     "language.fr": "French",
@@ -327,6 +312,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "landing.description": "Schedule services, manage appointments, control operators, vehicles, brands and payments from a clear and efficient admin platform.",
     "landing.register": "Register user",
     "landing.resetPassword": "Reset password",
+    "landing.downloadAndroid": "Download the Android app",
+    "landing.androidAppNote": "Available for Android devices · APK · version 1.0.0.",
     "landing.note": "Admin-only web. Users and operators access from the mobile app.",
     "landing.section.title": "A clearer operation for every service",
     "landing.band": "Appointments, catalog, operators, vehicles, brands, locations and payments.",
@@ -480,8 +467,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.mode.desc": "Passez du mode clair au mode sombre dans tout le panneau.",
     "settings.mode.dark": "Mode sombre",
     "settings.mode.light": "Mode clair",
-    "settings.color.title": "Couleur d'interface",
-    "settings.color.desc": "Choisissez l'accent principal pour boutons, liens et états actifs.",
     "settings.language.title": "Langue",
     "settings.language.desc": "Changez la langue visible de l'interface administrative.",
     "settings.logout.title": "Fermer la session",
@@ -489,10 +474,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.logout.action": "Fermer la session",
     "logout.confirmTitle": "Voulez-vous fermer la session ?",
     "logout.confirmDesc": "Votre session actuelle se terminera. Vous devrez saisir à nouveau vos identifiants.",
-    "color.blue": "Bleu",
-    "color.cyan": "Céleste",
-    "color.indigo": "Indigo",
-    "color.emerald": "Vert",
     "language.es": "Espagnol",
     "language.en": "Anglais",
     "language.fr": "Français",
@@ -507,6 +488,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "landing.description": "Planifiez les services, gérez les réservations, contrôlez les opérateurs, véhicules, marques et paiements depuis une plateforme claire.",
     "landing.register": "Inscrire un utilisateur",
     "landing.resetPassword": "Réinitialiser le mot de passe",
+    "landing.downloadAndroid": "Télécharger l’application Android",
+    "landing.androidAppNote": "Disponible pour les appareils Android · APK · version 1.0.0.",
     "landing.note": "Web réservée aux administrateurs. Utilisateurs et opérateurs accèdent depuis l'app mobile.",
     "landing.section.title": "Une opération plus claire pour chaque service",
     "landing.band": "Réservations, catalogue, opérateurs, véhicules, marques, emplacements et paiements.",
@@ -660,8 +643,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.mode.desc": "Alterne entre modo claro e escuro em todo o painel.",
     "settings.mode.dark": "Modo escuro",
     "settings.mode.light": "Modo claro",
-    "settings.color.title": "Cor da interface",
-    "settings.color.desc": "Escolha o destaque principal para botões, links e estados ativos.",
     "settings.language.title": "Idioma",
     "settings.language.desc": "Altere o idioma visível da interface administrativa.",
     "settings.logout.title": "Encerrar sessão",
@@ -669,10 +650,6 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "settings.logout.action": "Encerrar sessão",
     "logout.confirmTitle": "Deseja encerrar a sessão?",
     "logout.confirmDesc": "Sua sessão atual será encerrada. Você deverá inserir suas credenciais novamente para acessar o sistema.",
-    "color.blue": "Azul",
-    "color.cyan": "Celeste",
-    "color.indigo": "Índigo",
-    "color.emerald": "Verde",
     "language.es": "Espanhol",
     "language.en": "Inglês",
     "language.fr": "Francês",
@@ -687,6 +664,8 @@ export const translations: Record<LanguageOption, Record<string, string>> = {
     "landing.description": "Agende serviços, gerencie turnos, controle operadores, veículos, marcas e pagamentos em uma plataforma administrativa clara.",
     "landing.register": "Registrar usuário",
     "landing.resetPassword": "Redefinir senha",
+    "landing.downloadAndroid": "Baixar aplicativo para Android",
+    "landing.androidAppNote": "Disponível para dispositivos Android · APK · versão 1.0.0.",
     "landing.note": "Web exclusiva para administradores. Usuários e operadores acessam pelo app móvel.",
     "landing.section.title": "Uma operação mais clara para cada serviço",
     "landing.band": "Agendamentos, catálogo, operadores, veículos, marcas, localizações e pagamentos.",
@@ -790,10 +769,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("lava-language");
     return stored === "en" || stored === "fr" || stored === "pt" ? stored : "es";
   });
-  const [accent, setAccent] = useState<AccentOption>(() => {
-    const stored = localStorage.getItem("lava-accent-color");
-    return isAccentOption(stored) ? stored : "blue";
-  });
 
   useEffect(() => {
     // Aplica el tema al documento y recuerda la elección entre visitas.
@@ -802,9 +777,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [darkMode]);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accent;
-    localStorage.setItem("lava-accent-color", accent);
-  }, [accent]);
+    delete document.documentElement.dataset.accent;
+    localStorage.removeItem("lava-accent-color");
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -818,11 +793,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setDarkMode,
       language,
       setLanguage,
-      accent,
-      setAccent,
       t: (key: string) => translate(language, key),
     }),
-    [accent, darkMode, language]
+    [darkMode, language]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

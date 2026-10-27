@@ -21,7 +21,15 @@
       "expo-notifications",
       "expo-secure-store",
       "expo-status-bar",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class * extends androidx.work.InputMerger { <init>(); }"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {

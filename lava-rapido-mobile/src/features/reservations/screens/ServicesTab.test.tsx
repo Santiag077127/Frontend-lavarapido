@@ -14,10 +14,11 @@ jest.mock('../../../features/map/screens/MapScreen', () => () => null)
 jest.mock('../../../features/profile/screens/MyServicesScreen', () => () => null)
 jest.mock('../../../features/notifications/screens/NotificationsScreen', () => () => null)
 
-test('MainTabs registra Mis servicios y no expone la antigua pantalla Reservas', () => {
+test('MainTabs keeps the Mis servicios route and shows the Reservas label in Spanish', () => {
   const view = render(<TabNavigator isLoggedIn setIsLoggedIn={jest.fn()} />)
   expect(view.getByText('Mis servicios')).toBeTruthy()
-  expect(view.queryByText('Reservas')).toBeNull()
+  const navigatorProps = (globalThis as { tabNavigatorProps?: { screenOptions?: (props: { route: { name: string } }) => { tabBarLabel?: string } } }).tabNavigatorProps
+  expect(navigatorProps?.screenOptions?.({ route: { name: 'Mis servicios' } }).tabBarLabel).toBe('Reservas')
 })
 
 test('MainTabs pinta cada escena con el fondo opaco del tema', () => {

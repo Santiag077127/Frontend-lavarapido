@@ -6,6 +6,7 @@ import {
   Car,
   CheckCircle2,
   CreditCard,
+  Download,
   LockKeyhole,
   MapPin,
   Moon,
@@ -118,8 +119,17 @@ const LandingPage = () => {
             <button className="hero-secondary" type="button" onClick={() => navigate("/forgot-password")}>
               {t("landing.resetPassword")}
             </button>
+            <a
+              className="hero-primary hero-download"
+              href="https://expo.dev/artifacts/eas/kuA0DnLqABvS9iDJgxupUqvjiwnEJnt4OnR22NoIF9c.apk"
+              download
+            >
+              <Download size={18} aria-hidden="true" />
+              {t("landing.downloadAndroid")}
+            </a>
           </div>
 
+          <p className="android-app-note">{t("landing.androidAppNote")}</p>
           <p className="hero-note">
             {t("landing.note")}
           </p>
