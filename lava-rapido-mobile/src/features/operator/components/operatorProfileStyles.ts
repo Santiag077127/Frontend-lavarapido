@@ -358,35 +358,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  logout: {
-    height: 57,
-    borderRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 5,
-  },
-
-  logoutIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  logoutText: {
-    fontWeight: '800',
-    fontSize: 15.5,
-    marginLeft: 8,
-  },
-
   securityInfo: {
     flexDirection: 'row',
     alignItems: 'center',

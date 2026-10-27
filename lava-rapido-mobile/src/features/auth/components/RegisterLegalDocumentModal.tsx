@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { legalContent, type LegalDocument } from '../legalContent';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   document: LegalDocument | null;
@@ -21,6 +22,7 @@ export default function RegisterLegalDocumentModal({
   buttonColor,
   onPrimaryColor,
 }: Props) {
+  const { t } = useTranslation();
   const content = document ? legalContent[document] : null;
   return (
     <Modal visible={document !== null} transparent animationType="slide" onRequestClose={onClose}>
@@ -32,8 +34,8 @@ export default function RegisterLegalDocumentModal({
               <Text style={[styles.intro, { color: textColor }]}>{content.intro}</Text>
               {content.sections.map((section) => (
                 <View key={section.title} style={styles.paragraph}>
-                  <Text style={[styles.heading, { color: textColor }]}>{section.title}</Text>
-                  <Text style={[styles.text, { color: secondaryTextColor }]}>{section.body}</Text>
+                  <Text style={[styles.heading, { color: textColor }]}>{section.titleKey ? t(section.titleKey) : section.title}</Text>
+                  <Text style={[styles.text, { color: secondaryTextColor }]}>{section.bodyKey ? t(section.bodyKey) : section.body}</Text>
                 </View>
               ))}
             </ScrollView>

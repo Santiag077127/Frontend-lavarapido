@@ -87,7 +87,7 @@ test('applies the active dark theme to the screen and unchecked consent controls
     </ThemeContext.Provider>,
   );
 
-  const rootStyle = view.UNSAFE_getByType(require('react-native').View).props.style;
+  const rootStyle = view.UNSAFE_getByType(require('react-native-safe-area-context').SafeAreaView).props.style;
   expect(rootStyle).toEqual(expect.arrayContaining([expect.objectContaining({ backgroundColor: '#101010' })]));
   const privacyCheckbox = view.getByRole('checkbox', { name: 'He leído la política de privacidad' });
   expect(privacyCheckbox.props.style).toEqual(expect.arrayContaining([expect.objectContaining({ backgroundColor: '#303030' })]));

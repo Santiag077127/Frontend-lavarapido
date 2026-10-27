@@ -339,53 +339,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  logout: {
-    minHeight: 60,
-    borderRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    elevation: 1,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-
-  legalLink: {
-    minHeight: 60,
-    borderRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-
-  logoutContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  logoutIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  logoutText: {
-    fontWeight: '800',
-    fontSize: 15.5,
-    marginLeft: 8,
-  },
-
   securityInfo: {
     flexDirection: 'row',
     alignItems: 'center',

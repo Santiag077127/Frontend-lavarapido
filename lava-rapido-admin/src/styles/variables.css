@@ -26,6 +26,9 @@
   --error-bg:     #fff0f0;
   --error-texto:  #c0392b;
   --error-borde:  #f5c6cb;
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --success-border: #86efac;
   --radio:        12px;
   --transicion:   0.25s ease;
 }
@@ -47,4 +50,7 @@
   --error-bg: #3a1116;
   --error-texto: #fecaca;
   --error-borde: #7f1d1d;
+  --success-bg: #123728;
+  --success-text: #86efac;
+  --success-border: #28634b;
 }

@@ -18,6 +18,7 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { classifyApiError, type ApiErrorKind } from '../../../services/api';
@@ -40,6 +41,8 @@ export default function MyVehiclesScreen({
 }: Props) {
   const { theme } = useContext(ThemeContext);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const addButtonBottom = Math.max(insets.bottom, 12) + 12;
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +147,7 @@ export default function MyVehiclesScreen({
 
   return (
     <SafeAreaView
-      edges={['top', 'bottom']}
+      edges={['top']}
       style={[
         styles.container,
         {
@@ -174,6 +177,7 @@ export default function MyVehiclesScreen({
         )}
         contentContainerStyle={[
           styles.listContent,
+          { paddingBottom: 52 + addButtonBottom + 16 },
           vehicles.length === 0 &&
             styles.emptyListContent,
         ]}
@@ -265,6 +269,7 @@ export default function MyVehiclesScreen({
           accessibilityLabel={t('vehicles.actions.add')}
           style={[
             styles.floatingButton,
+            { bottom: addButtonBottom },
             {
               backgroundColor: theme.primary,
             },
@@ -347,7 +352,7 @@ const styles = StyleSheet.create({
 
   listContent: {
     paddingHorizontal: 18,
-    paddingBottom: 110,
+    paddingBottom: 80,
   },
 
   emptyListContent: {
@@ -402,7 +407,6 @@ const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
     right: 20,
-    bottom: 24,
     height: 52,
     paddingHorizontal: 18,
     borderRadius: 27,

@@ -1,5 +1,6 @@
 // Gestiona operadores y asignaciones, adaptando la respuesta del backend a la vista.
 import { api } from "@/services/api";
+import type { Reserva } from "./reservaService";
 
 export interface Operador {
   idOperador: string;
@@ -13,6 +14,44 @@ export interface Operador {
 export interface CrearOperadorPayload { email: string; documentNumber: string; }
 export interface Asignacion { idAsignacion: string; idReserva: string; idOperador: string; estado?: string; }
 export interface CrearAsignacionPayload { idReserva: string; idOperador: string; }
+
+const ACTIVE_RESERVATION_STATES = new Set(["PENDIENTE", "ASIGNADA", "EN_PROCESO"]);
+
+const normalizeName = (name: string) => name.trim().replace(/\s+/g, " ").toLocaleLowerCase();
+const normalizeOperatorName = (operator: Operador) => normalizeName(`${operator.nombre} ${operator.apellidos}`);
+
+/**
+ * Counts active reservations only when the API's operator name maps to one
+ * unique operator. A null result means the existing response is insufficient
+ * to identify this operator safely.
+ */
+export const countActiveReservationsForOperator = (
+  operatorId: string,
+  operators: Operador[],
+  reservations: Reserva[],
+  excludedReservationId: string,
+): number | null => {
+  const operator = operators.find((item) => item.idOperador === operatorId);
+  if (!operator || !operator.estado) return null;
+
+  const operatorName = normalizeOperatorName(operator);
+  if (!operatorName) return null;
+
+  const matchingOperators = operators.filter((item) => normalizeOperatorName(item) === operatorName);
+  if (matchingOperators.length !== 1) return null;
+
+  const activeReservationIds = new Set(
+    reservations
+      .filter((reservation) =>
+        reservation.idReserva !== excludedReservationId
+        && ACTIVE_RESERVATION_STATES.has(reservation.estado)
+        && normalizeName(reservation.operadorNombre ?? "") === operatorName,
+      )
+      .map((reservation) => reservation.idReserva),
+  );
+
+  return activeReservationIds.size;
+};
 
 type OperadorResponse = {
   idOperador: string;

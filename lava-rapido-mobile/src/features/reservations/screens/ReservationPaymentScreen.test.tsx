@@ -2,7 +2,7 @@
 import React from 'react';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import ReservationPaymentScreen from './ReservationPaymentScreen';
-import { paymentService } from '../../../services/paymentService';
+import { paymentService, type PaymentAttemptStatus, type ReservationPayment } from '../../../services/paymentService';
 import { reservationService } from '../services/reservationService';
 
 const mockNavigate = jest.fn();
@@ -18,8 +18,11 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.pending': 'Pendiente de confirmación',
   'mobile.paymentFlow.declined': 'Pago rechazado',
   'mobile.paymentFlow.retryPayment': 'Reintentar pago',
-  'mobile.paymentFlow.acceptAndContinue': 'Acepto la política y continuar',
-  'mobile.paymentFlow.acceptAndRetry': 'Acepto la política y reintentar pago',
+  'mobile.paymentFlow.payNow': 'Pagar ahora',
+  'mobile.paymentFlow.processingPreviousPayment': 'Estamos confirmando tu pago anterior. Vuelve a intentarlo cuando termine la verificación para evitar un cobro duplicado.',
+  'mobile.paymentFlow.pendingHint': 'El pago sigue pendiente.',
+  'mobile.paymentFlow.acceptAndContinue': 'Pagar ahora',
+  'mobile.paymentFlow.acceptAndRetry': 'Pagar ahora',
   'mobile.paymentFlow.policySummary': 'Condiciones de cancelación antes de pagar.',
   'mobile.paymentFlow.policyVersion': 'Versión de la política: 2026-10-26',
   'mobile.reservation.readCancellationPolicy': 'Leer política de cancelación y devoluciones',
@@ -122,17 +125,24 @@ jest.mock('../services/reservationService', () => ({
 }));
 
 const reservation = { idReserva: 'res-1', idUsuario: 'user-1' };
-const payment = (estado: 'aprobado' | 'rechazado' | 'pendiente', intentoEstado: string = estado) => ({
+const payment = (estado: 'aprobado' | 'rechazado' | 'pendiente', intentoEstado: PaymentAttemptStatus = estado): ReservationPayment => ({
   idPago: 'pay-1',
   idReserva: 'res-1',
+  metodoPago: 'online',
+  monto: 25000,
   estado,
-  intentoActual: { estado: intentoEstado },
+  fechaPago: null,
+  intentoActual: {
+    idIntento: 'attempt-1', estado: intentoEstado, referencia: 'ref-1', wompiTransactionId: null,
+    wompiPaymentMethodType: null, wompiStatus: null, wompiEnvironment: 'test', fechaConfirmacion: null,
+    createdAt: '2026-10-27T00:00:00Z',
+  },
   intentos: [],
 });
 const exitAction = { type: 'GO_BACK' };
-const renderPayment = () => render(
+const renderPayment = (params: Record<string, unknown> = {}) => render(
   <ReservationPaymentScreen
-    route={{ params: { reservation } } as any}
+    route={{ params: { reservation, ...params } } as any}
     navigation={{ navigate: mockNavigate, dispatch: mockDispatch, goBack: mockGoBack } as any}
   />,
 );
@@ -144,8 +154,8 @@ const confirmCancellation = (view: ReturnType<typeof render>) => {
   fireEvent.press(view.getByRole('button', { name: 'Salir y cancelar reserva' }));
 };
 const beginCheckout = async (view: ReturnType<typeof render>) => {
-  await waitFor(() => expect(view.getByRole('button', { name: 'Acepto la política y continuar' })).toBeTruthy());
-  fireEvent.press(view.getByRole('button', { name: 'Acepto la política y continuar' }));
+  await waitFor(() => expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(1));
 };
 const navigationAction = (status: string) => expect.objectContaining({
@@ -172,6 +182,73 @@ test('does not start Wompi until the user explicitly accepts the policy', async 
   expect(paymentService.start).not.toHaveBeenCalled();
 
   await beginCheckout(view);
+});
+
+test('Pagar ahora automatically starts the existing reservation when no payment exists', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
+  expect(view.getByTestId('payment-webview')).toBeTruthy();
+  expect(paymentService.getByReservation).toHaveBeenCalledTimes(1);
+});
+
+test('Pagar ahora reuses a pending backend attempt without creating another attempt', async () => {
+  const existing = payment('pendiente');
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(existing);
+  (paymentService.start as jest.Mock).mockResolvedValue({ idIntento: 'attempt-1', reutilizado: true });
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
+  expect(view.getByTestId('payment-webview')).toBeTruthy();
+  expect(paymentService.verify).not.toHaveBeenCalled();
+});
+
+test('does not open checkout if the backend does not confirm reuse of the pending attempt', async () => {
+  const existing = payment('pendiente');
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(existing);
+  (paymentService.start as jest.Mock).mockResolvedValue({ idIntento: 'different-attempt', reutilizado: false });
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
+  expect(view.queryByTestId('payment-webview')).toBeNull();
+  expect(view.getByRole('alert').props.children).toBeTruthy();
+});
+
+test('does not start another charge while automatic Wompi verification remains pending', async () => {
+  const existing = payment('pendiente');
+  existing.intentoActual!.wompiTransactionId = 'txn-1';
+  existing.intentoActual!.wompiStatus = 'PENDING';
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(existing);
+  (paymentService.verify as jest.Mock).mockResolvedValue(existing);
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(paymentService.verify).toHaveBeenCalledWith('res-1', 'ref-1', 'txn-1'));
+  expect(view.getByText('Estamos confirmando tu pago anterior. Vuelve a intentarlo cuando termine la verificación para evitar un cobro duplicado.')).toBeTruthy();
+  expect(paymentService.start).not.toHaveBeenCalled();
+});
+
+test('starts another attempt only after automatic verification confirms the previous rejection', async () => {
+  const pending = payment('pendiente');
+  pending.intentoActual!.wompiTransactionId = 'txn-1';
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(pending);
+  (paymentService.verify as jest.Mock).mockResolvedValue(payment('rechazado'));
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
+  expect(view.getByTestId('payment-webview')).toBeTruthy();
+  expect(paymentService.verify).toHaveBeenCalledTimes(1);
+});
+
+test('does not reopen Wompi after automatic verification confirms approval', async () => {
+  const pending = payment('pendiente');
+  pending.intentoActual!.wompiTransactionId = 'txn-1';
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(pending);
+  (paymentService.verify as jest.Mock).mockResolvedValue(payment('aprobado'));
+  const view = renderPayment({ autoStart: true });
+
+  await waitFor(() => expect(view.getByText('Pago aprobado')).toBeTruthy());
+  expect(paymentService.start).not.toHaveBeenCalled();
 });
 
 test('opens the full cancellation terms before starting Wompi', async () => {
@@ -205,7 +282,25 @@ test.each(['pendiente', 'rechazado'] as const)('pago %s no presenta confirmació
   await waitFor(() => expect(paymentService.getByReservation).toHaveBeenCalled());
   await waitFor(() => expect(view.queryByText('mobile.paymentFlow.processing')).toBeNull());
   expect(view.queryByText('Ver mis servicios')).toBeNull();
+  if (estado === 'pendiente') expect(view.getAllByText('Pendiente de confirmación').length).toBeGreaterThan(0);
   expect(reservationService.cancelForCheckout).not.toHaveBeenCalled();
+});
+
+test('reconciles a rejected payment before starting a retry', async () => {
+  const pending = payment('pendiente');
+  pending.intentoActual!.wompiTransactionId = 'txn-1';
+  pending.intentoActual!.wompiStatus = 'PENDING';
+  (paymentService.getByReservation as jest.Mock)
+    .mockResolvedValueOnce(payment('rechazado'))
+    .mockResolvedValueOnce(pending);
+  (paymentService.verify as jest.Mock).mockResolvedValue(pending);
+  const view = renderPayment();
+
+  const retry = await view.findByRole('button', { name: 'Pagar ahora' });
+  fireEvent.press(retry);
+
+  await waitFor(() => expect(view.getAllByText('Pendiente de confirmación').length).toBeGreaterThan(0));
+  expect(paymentService.start).not.toHaveBeenCalled();
 });
 
 test('seguir pagando cierra la confirmación sin solicitar cancelación ni navegar', async () => {
@@ -279,7 +374,7 @@ test('reserva ya cancelada informa el resultado sin repetir operaciones', async 
   await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith(navigationAction('CANCELADA')));
 });
 
-test('pago pendiente no confirma cancelación y permite seguir pagando o consultar la reserva', async () => {
+test('pago pendiente ofrece una sola acción y abre el detalle de la reserva correspondiente', async () => {
   (reservationService.cancelForCheckout as jest.Mock).mockRejectedValue({
     response: { status: 409, data: { code: 'PAGO_PENDIENTE' } },
   });
@@ -295,12 +390,30 @@ test('pago pendiente no confirma cancelación y permite seguir pagando o consult
     'warning',
   ));
   const buttons = mockAppAlert.mock.calls[0][2] as Array<{ text: string; onPress?: () => void }>;
-  expect(buttons.map(button => button.text)).toEqual(['Consultar reserva', 'Seguir pagando']);
-  act(() => buttons[1].onPress?.());
-  expect(mockDispatch).not.toHaveBeenCalled();
+  expect(buttons.map(button => button.text)).toEqual(['Consultar reserva']);
   act(() => buttons[0].onPress?.());
-  await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith(navigationAction('PENDIENTE')));
+  await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({
+    type: 'NAVIGATE',
+    payload: { name: 'ServiceDetails', params: { reservation } },
+  })));
   expect(mockAppAlert).not.toHaveBeenCalledWith('Reserva cancelada', expect.anything(), expect.anything(), 'success');
+});
+
+test('la doble pulsación al iniciar el pago genera una sola solicitud para la reserva', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  let finishStart: (value: any) => void = () => {};
+  (paymentService.start as jest.Mock).mockImplementation(() => new Promise(resolve => { finishStart = resolve; }));
+  const view = renderPayment();
+  const button = await view.findByRole('button', { name: 'Pagar ahora' });
+
+  await act(async () => {
+    fireEvent.press(button);
+    fireEvent.press(button);
+  });
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(1));
+  expect(paymentService.start).toHaveBeenCalledWith('res-1');
+
+  await act(async () => finishStart({ referencia: 'ref-1' }));
 });
 
 test('pago aprobado bloquea cancelación y dirige a consultar el estado actualizado', async () => {

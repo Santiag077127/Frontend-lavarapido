@@ -9,6 +9,12 @@ import AssignedServicesScreen from './AssignedServicesScreen';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'es-CO' } }),
 }));
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]),
+}));
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: (props: any) => require('react').createElement(require('react-native').Text, props),
+}));
 jest.mock('../../../services/assignmentService', () => ({
   assignmentService: { getMine: jest.fn(), updateStatus: jest.fn() },
 }));
@@ -84,6 +90,37 @@ test('shows the empty state after an empty response', async () => {
   expect(view.getByText('operator.empty.description')).toBeTruthy();
 });
 
+test('filters assigned, in-progress, and completed services using assignment states', async () => {
+  (assignmentService.getMine as jest.Mock).mockResolvedValueOnce({ data: [
+    assignment,
+    { ...assignment, idAsignacion: 'assignment-2', idReserva: 'reservation-2', estado: 'en_proceso' },
+    { ...assignment, idAsignacion: 'assignment-3', idReserva: 'reservation-3', estado: 'completada' },
+    { ...assignment, idAsignacion: 'assignment-4', idReserva: 'reservation-4', estado: 'cancelada' },
+  ] });
+  const view = renderScreen();
+  await waitFor(() => expect(view.getAllByText('Lavado exterior')).toHaveLength(4));
+
+  fireEvent.press(view.getByRole('button', { name: 'operator.filters.assigned' }));
+  expect(view.getAllByText('Lavado exterior')).toHaveLength(1);
+  expect(view.getByRole('button', { name: 'operator.actions.start' })).toBeTruthy();
+
+  fireEvent.press(view.getByRole('button', { name: 'operator.filters.inProgress' }));
+  expect(view.getAllByText('Lavado exterior')).toHaveLength(1);
+  expect(view.getByRole('button', { name: 'operator.actions.finish' })).toBeTruthy();
+
+  fireEvent.press(view.getByRole('button', { name: 'operator.filters.completed' }));
+  expect(view.getAllByText('Lavado exterior')).toHaveLength(1);
+  expect(view.queryByRole('button', { name: 'operator.actions.finish' })).toBeNull();
+});
+
+test('shows a clear empty state for a selected filter without results', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('Lavado exterior')).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'operator.filters.completed' }));
+  expect(view.getByText('operator.filters.empty')).toBeTruthy();
+  expect(view.getByText('operator.filters.emptyDescription')).toBeTruthy();
+});
+
 test('shows a load error and retries the same request', async () => {
   (assignmentService.getMine as jest.Mock).mockRejectedValueOnce(new Error('offline'));
   const view = renderScreen();
@@ -135,7 +172,7 @@ test('prevents concurrent status requests', async () => {
   const view = renderScreen();
   await waitFor(() => expect(view.getByText('Lavado interior')).toBeTruthy());
   fireEvent.press(view.getAllByRole('button', { name: 'operator.actions.start' })[0]);
-  fireEvent.press(view.getByRole('button', { name: 'operator.actions.start' }));
+  fireEvent.press(view.getAllByRole('button', { name: /operator\.actions\.start/ })[0]);
   expect(assignmentService.updateStatus).toHaveBeenCalledTimes(1);
   await act(async () => resolveUpdate({ data: { ...assignment, estado: 'en_proceso' } }));
 });

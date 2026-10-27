@@ -224,8 +224,7 @@ iframe {
   .rp-back-btn,
   .auth-home-button,
   .pago-refrescar,
-  .gt-btn-ver,
-  .landing-nav-links a:hover
+  .gt-btn-ver
 ) {
   color: var(--accent) !important;
 }

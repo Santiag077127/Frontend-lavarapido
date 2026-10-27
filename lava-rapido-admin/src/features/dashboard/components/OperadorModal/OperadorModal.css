@@ -128,6 +128,7 @@
 
 .om-btn-cancelar:hover { background: #e5e7eb; }
 .om-btn-guardar:hover  { opacity: 0.88; }
+.om-btn-guardar:disabled { cursor: not-allowed; opacity: 0.55; }
 
 @media (max-width: 768px) {
   .om-card {

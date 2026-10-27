@@ -131,7 +131,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   const isFinal = payment?.estado === 'aprobado' || payment?.estado === 'rechazado';
   const approved = payment?.estado === 'aprobado' && payment.intentoActual?.estado !== 'aprobado_duplicado';
 
-  UNSTABLE_usePreventRemove(!allowRemoval, ({ data }) => {
+  UNSTABLE_usePreventRemove(!allowRemoval && !route.params.autoStart, ({ data }) => {
     if (cancellationLock.current) return;
     pendingRemovalAction.current = data.action;
     setExitMode(payment?.estado === 'aprobado' ? 'approved' : 'cancel');
@@ -158,6 +158,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setExitConfirmationVisible(false);
     setAllowRemoval(true);
   }, []);
+
+  const navigateToReservationDetails = useCallback(() => {
+    pendingRemovalAction.current = CommonActions.navigate('ServiceDetails', { reservation });
+    setExitConfirmationVisible(false);
+    setAllowRemoval(true);
+  }, [reservation]);
 
   const confirmExit = useCallback(async () => {
     if (payment?.estado === 'aprobado') {
@@ -204,14 +210,10 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         appAlert.alert(
           t('mobile.paymentFlow.pendingCancellationTitle'),
           t('mobile.paymentFlow.pendingCancellationMessage'),
-          [
-            {
-              text: t('mobile.paymentFlow.viewReservations'),
-              style: 'cancel',
-              onPress: () => navigateToServices('PENDIENTE'),
-            },
-            { text: t('mobile.paymentFlow.continuePaying') },
-          ],
+          [{
+            text: t('mobile.paymentFlow.viewReservations'),
+            onPress: navigateToReservationDetails,
+          }],
           'warning',
         );
       } else if (failure.status === 409 && failure.code === 'PAGO_APROBADO') {
@@ -269,7 +271,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       cancellationLock.current = false;
       setCancellingReservation(false);
     }
-  }, [exitMode, navigateToServices, payment?.estado, reservation.idReserva, reservation.idUsuario, t]);
+  }, [exitMode, navigateToReservationDetails, navigateToServices, payment?.estado, reservation.idReserva, reservation.idUsuario, t]);
 
   const showRequestError = useCallback((requestError: unknown) => {
     // Keep technical/backend details out of the user-facing screen.
@@ -280,8 +282,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setError(true);
   }, [t]);
 
-  const requestCheckout = useCallback(async () => {
+  const requestCheckout = useCallback(async (expectedAttemptId?: string) => {
     const data = await paymentService.start(reservation.idReserva);
+    if (expectedAttemptId && (!data.reutilizado || data.idIntento !== expectedAttemptId)) {
+      throw new Error('pending-payment-attempt-was-not-reused');
+    }
+    setPayment(null);
     setCheckout(data);
     setWidgetOpened(false);
     setWidgetError(false);
@@ -289,8 +295,42 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
 
   }, [reservation.idReserva]);
 
-  // First read the existing backend state. Only an absent payment starts a new one.
-  // For a pending payment, POST returns the same pending attempt and its widget data.
+  const startFromPaymentState = useCallback(async (existing: ReservationPayment | null) => {
+    if (!existing) {
+      setPayment(null);
+      await requestCheckout();
+      return;
+    }
+
+    setPayment(existing);
+    if (existing.estado === 'aprobado') return;
+    if (existing.estado === 'rechazado') {
+      await requestCheckout();
+      return;
+    }
+
+    const attempt = existing.intentoActual;
+    if (attempt?.wompiTransactionId && attempt.referencia) {
+      const verified = await paymentService.verify(
+        reservation.idReserva,
+        attempt.referencia,
+        attempt.wompiTransactionId,
+      );
+      setPayment(verified);
+      if (verified.estado === 'rechazado') await requestCheckout();
+      // An approved or still-pending Wompi transaction must not start another charge.
+      return;
+    }
+
+    // The backend guarantees this POST reuses the same pending attempt.
+    if (!attempt?.idIntento) {
+      showRequestError(new Error('pending-payment-attempt-unavailable'));
+      return;
+    }
+    await requestCheckout(attempt.idIntento);
+  }, [requestCheckout, reservation.idReserva, showRequestError]);
+
+  // Read and verify the existing server state before reusing or creating an attempt.
   const preparePayment = useCallback(async () => {
     if (requestLock.current) return;
     requestLock.current = true;
@@ -310,20 +350,14 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         if (status !== 404) throw readError;
       }
 
-      if (existing?.estado === 'aprobado' || existing?.estado === 'rechazado') return;
-      if (existing?.estado === 'pendiente') {
-        await requestCheckout();
-        return;
-      }
-
-      await requestCheckout();
+      await startFromPaymentState(existing);
     } catch (requestError) {
       showRequestError(requestError);
     } finally {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, reservation.idReserva, reservation.idUsuario, showRequestError]);
+  }, [reservation.idReserva, reservation.idUsuario, showRequestError, startFromPaymentState]);
 
   React.useEffect(() => {
     if (payment?.estado !== 'aprobado') return;
@@ -337,16 +371,21 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setError(false);
     setStartError(null);
     try {
-      // This is only available after backend status is rejected; the backend owns retry rules.
-      await requestCheckout();
-      setPayment(null);
+      const currentPayment = await paymentService.getByReservation(reservation.idReserva);
+      await startFromPaymentState(currentPayment);
     } catch (requestError) {
-      showRequestError(requestError);
+      if ((requestError as HttpFailure).response?.status === 404) {
+        setPayment(null);
+        setCheckout(null);
+        await requestCheckout().catch(showRequestError);
+      } else {
+        showRequestError(requestError);
+      }
     } finally {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, showRequestError]);
+  }, [requestCheckout, reservation.idReserva, showRequestError, startFromPaymentState]);
 
   const refreshStatus = useCallback(async () => {
     if (requestLock.current) return;
@@ -356,7 +395,12 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     try {
       const data = await paymentService.getByReservation(reservation.idReserva);
       setPayment(data);
-      if (data.estado !== 'pendiente') {
+      let current = data;
+      if (current.estado === 'pendiente' && current.intentoActual?.wompiTransactionId && current.intentoActual.referencia) {
+        current = await paymentService.verify(reservation.idReserva, current.intentoActual.referencia, current.intentoActual.wompiTransactionId);
+        setPayment(current);
+      }
+      if (current.estado !== 'pendiente') {
         setCheckout(null);
         setWidgetOpened(false);
       }
@@ -383,21 +427,19 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setStartError(null);
     try {
       const data = await paymentService.getByReservation(reservation.idReserva);
-      setPayment(data);
-      if (data.estado === 'pendiente') {
-        // The backend reuses the current pending attempt and returns its widget data.
-        await requestCheckout();
-      } else {
-        setCheckout(null);
-        setWidgetOpened(false);
-      }
+      await startFromPaymentState(data);
     } catch (requestError) {
-      showRequestError(requestError);
+      if ((requestError as HttpFailure).response?.status === 404) {
+        setPayment(null);
+        await requestCheckout().catch(showRequestError);
+      } else {
+        showRequestError(requestError);
+      }
     } finally {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, reservation.idReserva, showRequestError]);
+  }, [requestCheckout, reservation.idReserva, showRequestError, startFromPaymentState]);
 
   const verifyAfterCheckout = useCallback(async (diagnostic?: TransactionDiagnostic) => {
     if (verificationLock.current || requestLock.current) return;
@@ -444,10 +486,11 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   useFocusEffect(useCallback(() => {
     if (!initialCheckDone.current) {
       initialCheckDone.current = true;
-      void refreshStatus();
+      if (route.params.autoStart) void preparePayment();
+      else void refreshStatus();
     }
     return undefined;
-  }, [refreshStatus]));
+  }, [preparePayment, refreshStatus, route.params.autoStart]));
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -550,6 +593,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
             ]}
           >
             <WebView
+              testID="payment-webview"
               key={widgetReloadKey}
               style={styles.webview}
               source={{ html: makeWidgetHtml(checkout, t('mobile.paymentFlow.processing')) }}
@@ -623,23 +667,20 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           )}
           {!checkout && payment?.estado === 'pendiente' && !loading && (
             <>
-              <Text style={[styles.hint, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.pendingHint')}</Text>
-              <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void refreshStatus()} disabled={checking}>
-                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.checkAgain')}</Text>
-              </Pressable>
+              <Text style={[styles.hint, { color: theme.textSecondary }]}>{payment.intentoActual?.wompiStatus === 'PENDING' ? t('mobile.paymentFlow.processingPreviousPayment') : t('mobile.paymentFlow.pendingHint')}</Text>
               <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => void resumePendingCheckout()} disabled={checking}>
-                <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.acceptAndContinue')}</Text>
+                {checking ? <ActivityIndicator color={theme.primary} /> : <Text style={[styles.secondaryButtonText, { color: theme.primary }]}>{t('mobile.paymentFlow.payNow')}</Text>}
               </Pressable>
             </>
           )}
           {!payment && !checkout && !loading && (
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: checking, busy: checking }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void preparePayment()} disabled={checking}>
-              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.acceptAndContinue')}</Text>
+              {checking ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.payNow')}</Text>}
             </Pressable>
           )}
           {payment?.estado === 'rechazado' && (
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: loading, busy: loading }} style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => void retryPayment()} disabled={loading}>
-              <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.acceptAndRetry')}</Text>
+              {loading ? <ActivityIndicator color={theme.onPrimary} /> : <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.payNow')}</Text>}
             </Pressable>
           )}
           {approved && (

@@ -38,14 +38,68 @@ describe("TurnosPage - reserva presencial", () => {
     fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
 
-    const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("Completa todos los campos de la reserva.");
-    expect(alert.closest("form")).toHaveClass("gt-form");
+    expect(screen.getAllByText("Completa todos los campos de la reserva.")[0].closest("label")).toHaveAttribute("for", "walk-in-vehicle");
+    expect(screen.getByText("Selecciona una fecha para continuar.").closest("label")).toHaveAttribute("for", "walk-in-date");
     expect(reservasMock.crear).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("clears every field and validation state when cancelling and reopening the form", async () => {
+    vehiculosMock.mockResolvedValue([{ idVehiculo: "veh-1", estado: true, placa: "AAA123", nombreUsuario: "Prueba" }]);
+    serviciosMock.mockResolvedValue([{ idServicio: "svc-1", estado: true, nombre: "Lavado", duracionMinutos: 30 }]);
+    reservasMock.crear.mockRejectedValue(new Error("fallo de prueba"));
+    const { container } = render(<TurnosPage />);
+    fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
+    await screen.findByText("AAA123 · Prueba");
+    fireEvent.change(screen.getByLabelText("Vehículo"), { target: { value: "veh-1" } });
+    fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
+    fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    expect(await screen.findByText("No se pudo registrar la reserva.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
+    expect(screen.getByLabelText("Vehículo")).toHaveValue("");
+    expect(screen.getByLabelText("Servicio")).toHaveValue("");
+    expect(screen.getByLabelText("Fecha")).toHaveValue("");
+    expect(screen.getByLabelText("Hora")).toHaveValue("");
+    expect(screen.queryByText("No se pudo registrar la reserva.")).not.toBeInTheDocument();
+  });
+
+  it("does not create a booking if the fresh availability check fails", async () => {
+    vehiculosMock.mockResolvedValue([{ idVehiculo: "veh-1", estado: true, placa: "AAA123", nombreUsuario: "Prueba" }]);
+    serviciosMock.mockResolvedValue([{ idServicio: "svc-1", estado: true, nombre: "Lavado", duracionMinutos: 30 }]);
+    reservasMock.listar.mockResolvedValueOnce([]).mockRejectedValueOnce(new Error("offline"));
+    const { container } = render(<TurnosPage />);
+    fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
+    await screen.findByText("AAA123 · Prueba");
+    fireEvent.change(screen.getByLabelText("Vehículo"), { target: { value: "veh-1" } });
+    fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
+    fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo comprobar la disponibilidad actual.");
+    expect(reservasMock.crear).not.toHaveBeenCalled();
+  });
+
+  it("maps the backend past-time rejection to a translated field message", async () => {
+    vehiculosMock.mockResolvedValue([{ idVehiculo: "veh-1", estado: true, placa: "AAA123", nombreUsuario: "Prueba" }]);
+    serviciosMock.mockResolvedValue([{ idServicio: "svc-1", estado: true, nombre: "Lavado", duracionMinutos: 30 }]);
+    reservasMock.crear.mockRejectedValue({ isAxiosError: true, response: { status: 400, data: { error: "La hora elegida ya pasó" } } });
+    const { container } = render(<TurnosPage />);
+    fireEvent.click(container.querySelector(".gt-btn-nuevo")!);
+    await screen.findByText("AAA123 · Prueba");
+    fireEvent.change(screen.getByLabelText("Vehículo"), { target: { value: "veh-1" } });
+    fireEvent.change(screen.getByLabelText("Servicio"), { target: { value: "svc-1" } });
+    fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
+    fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:00" } });
+    fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    const message = await screen.findByText("La hora elegida ya pasó. Selecciona una fecha y hora futuras.");
+    expect(message.closest("label")).toHaveAttribute("for", "walk-in-time");
   });
 
   it("muestra el error de la API dentro del formulario sin cerrar el modal", async () => {
@@ -85,7 +139,7 @@ describe("TurnosPage - reserva presencial", () => {
     fireEvent.change(screen.getByLabelText("Fecha"), { target: { value: "2099-10-01" } });
     fireEvent.change(screen.getByLabelText("Hora"), { target: { value: "09:15" } });
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
-    expect(screen.getByRole("alert")).toHaveTextContent(/ocupada/);
+    expect(screen.getByText(/ocupada/).closest("label")).toHaveAttribute("for", "walk-in-time");
     expect(reservasMock.crear).not.toHaveBeenCalled();
   });
 
@@ -114,6 +168,7 @@ describe("TurnosPage - reserva presencial", () => {
     fireEvent.click(screen.getByRole("button", { name: "Registrar" }));
 
     await waitFor(() => expect(screen.queryByRole("heading", { name: "Reserva presencial" })).not.toBeInTheDocument());
+    expect(reservasMock.listar).toHaveBeenCalledTimes(2);
     expect(screen.getByText("AAA123")).toBeInTheDocument();
     expect(screen.getByText("Lavado")).toBeInTheDocument();
     expect(reservasMock.crear).toHaveBeenCalledWith({

@@ -1,21 +1,23 @@
 import React, {
   useCallback,
   useContext,
-  useEffect,
   useRef,
   useState,
 } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemeContext } from '../../../theme/ThemeContext';
 import AssignedServiceCard from '../components/AssignedServiceCard';
@@ -26,6 +28,7 @@ import {
   Assignment,
   AssignmentStatus,
 } from '../../../services/assignmentService';
+import { getFilteredAssignments, type AssignmentFilter } from '../services/assignmentFilters';
 
 // =========================================================
 // PANTALLA
@@ -41,6 +44,7 @@ export default function AssignedServicesScreen() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const updatingRef = useRef(false);
   const [loadError, setLoadError] = useState<ApiErrorKind | null>(null);
+  const [filter, setFilter] = useState<AssignmentFilter>('all');
 
   // =======================================================
   // CARGAR ASIGNACIONES
@@ -65,9 +69,10 @@ export default function AssignedServicesScreen() {
   // CARGAR AL ABRIR LA PANTALLA
   // =======================================================
 
-  useEffect(() => {
-    loadAssignments();
-  }, [loadAssignments]);
+  useFocusEffect(useCallback(() => {
+    void loadAssignments();
+    return undefined;
+  }, [loadAssignments]));
 
   // =======================================================
   // ACTUALIZAR ESTADO
@@ -116,13 +121,16 @@ export default function AssignedServicesScreen() {
     return null;
   };
 
+  const visibleAssignments = getFilteredAssignments(assignments, filter);
+  const filters: AssignmentFilter[] = ['all', 'assigned', 'inProgress', 'completed'];
+
   // =======================================================
   // LOADING
   // =======================================================
 
   if (loading) {
     return (
-      <View
+      <SafeAreaView edges={['top']}
         style={[
           styles.center,
           {
@@ -145,7 +153,7 @@ export default function AssignedServicesScreen() {
         >
           {t('operator.loading')}
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -154,7 +162,8 @@ export default function AssignedServicesScreen() {
   // =======================================================
 
   return (
-    <View
+    <SafeAreaView
+      edges={['top']}
       style={[
         styles.container,
         {
@@ -194,14 +203,41 @@ export default function AssignedServicesScreen() {
           LISTA
       =================================================== */}
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filters}
+        accessibilityLabel={t('operator.filters.label')}
+      >
+        {filters.map((item) => {
+          const selected = filter === item;
+          return (
+            <TouchableOpacity
+              key={item}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => setFilter(item)}
+              style={[styles.filterButton, {
+                backgroundColor: selected ? theme.primary : theme.card,
+                borderColor: selected ? theme.primary : theme.border,
+              }]}
+            >
+              <Text style={{ color: selected ? theme.onPrimary : theme.text, fontWeight: '700' }}>
+                {t(`operator.filters.${item}`)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       <FlatList
-        data={assignments}
+        data={visibleAssignments}
         keyExtractor={(item) =>
           item.idAsignacion
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          assignments.length > 0
+          visibleAssignments.length > 0
             ? styles.list
             : styles.emptyList
         }
@@ -215,7 +251,7 @@ export default function AssignedServicesScreen() {
             tintColor={theme.primary}
           />
         }
-        ListHeaderComponent={loadError && assignments.length > 0 ? (
+        ListHeaderComponent={loadError && visibleAssignments.length > 0 ? (
           <View style={[styles.errorBanner, { backgroundColor: theme.errorBackground, borderColor: theme.errorBorder }]}>
             <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={{ color: theme.errorText, flex: 1 }}>{`${t(`apiErrors.${loadError}`)} ${t('apiErrors.staleData')}`}</Text>
             <TouchableOpacity accessibilityRole="button" onPress={loadAssignments}><Text style={[styles.errorRetry, { color: theme.primary }]}>{t('common.retry')}</Text></TouchableOpacity>
@@ -231,7 +267,7 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              {loadError ? t('operator.errors.loadTitle') : t('operator.empty.title')}
+              {loadError ? t('operator.errors.loadTitle') : filter !== 'all' ? t('operator.filters.empty') : t('operator.empty.title')}
             </Text>
 
             <Text
@@ -242,7 +278,7 @@ export default function AssignedServicesScreen() {
                 },
               ]}
             >
-              {loadError ? t(`apiErrors.${loadError}`) : t('operator.empty.description')}
+              {loadError ? t(`apiErrors.${loadError}`) : filter !== 'all' ? t('operator.filters.emptyDescription') : t('operator.empty.description')}
             </Text>
             {loadError && <TouchableOpacity accessibilityRole="button" onPress={loadAssignments} style={styles.retryButton}><Text style={{ color: theme.primary, fontWeight: '700' }}>{t('common.retry')}</Text></TouchableOpacity>}
           </View>
@@ -256,7 +292,7 @@ export default function AssignedServicesScreen() {
           />
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -268,7 +304,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 56,
+    paddingTop: 16,
   },
 
   center: {
@@ -285,6 +321,9 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 20,
   },
+
+  filters: { gap: 8, paddingBottom: 14 },
+  filterButton: { minHeight: 42, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
 
   title: {
     fontSize: 28,

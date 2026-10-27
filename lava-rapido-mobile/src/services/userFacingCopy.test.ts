@@ -1,26 +1,44 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { apiCopy } from '../i18n/apiCopy.ts';
+import { paymentCopy } from '../i18n/paymentCopy.ts';
 import { passwordCopy } from '../i18n/passwordCopy.ts';
 import { recoveryCopy } from '../i18n/recoveryCopy.ts';
 
 test('the Spanish connection copy distinguishes transport and server failures', () => {
   assert.equal(
     apiCopy.es.apiErrors.network,
-    'Error de conexión. Verifica tu conexión a internet e inténtalo nuevamente.',
+    'No pudimos conectarnos. Revisa tu conexión e inténtalo nuevamente.',
   );
   assert.equal(
     apiCopy.es.apiErrors.server_unavailable,
-    'Servidor no disponible. Inténtalo nuevamente más tarde.',
+    'El servicio no está disponible. Inténtalo más tarde.',
   );
   assert.equal(
     apiCopy.es.apiErrors.timeout,
-    'La conexión tardó demasiado. Inténtalo nuevamente.',
+    'La solicitud tardó demasiado. Revisa tu conexión e inténtalo nuevamente.',
   );
   assert.equal(
     apiCopy.es.apiErrors.server,
-    'El servidor está presentando problemas. Inténtalo nuevamente más tarde.',
+    'Ocurrió un problema inesperado. Inténtalo más tarde.',
   );
+});
+
+test('Spanish user copy contains readable UTF-8 words and no encoding artifacts', () => {
+  const spanish = JSON.parse(readFileSync(new URL('../i18n/locales/es.json', import.meta.url), 'utf8')) as {
+    mobile: { reservation: Record<string, unknown>; paymentFlow: Record<string, unknown> };
+    vehicles: { title: string };
+    map: { address: string };
+  };
+  const visibleCopy = JSON.stringify(spanish);
+  assert.match(visibleCopy, /contraseña/i);
+  assert.match(visibleCopy, /confirmación/i);
+  assert.match(visibleCopy, /vehículo/i);
+  assert.match(visibleCopy, /dirección/i);
+  assert.match(visibleCopy, /sesión/i);
+  assert.match(paymentCopy.es.paymentFlow.exitMessage, /¿Deseas continuar\?/);
+  assert.doesNotMatch(visibleCopy, /Ãƒ|Ã‚|ï¿½|\p{L}\?\p{L}/u);
 });
 
 test('password and recovery copy never expose byte or encoding terminology', () => {

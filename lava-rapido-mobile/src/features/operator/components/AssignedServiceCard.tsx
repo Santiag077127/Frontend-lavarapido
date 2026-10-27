@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import type { Assignment, AssignmentStatus } from '../../../services/assignmentService';
@@ -74,6 +75,8 @@ export default function AssignedServiceCard({ item, action, isUpdating, onChange
     completada: { backgroundColor: theme.successBackground, color: theme.successText },
     cancelada: { backgroundColor: theme.errorBackground, color: theme.errorText },
   }[item.estado];
+  const actionBackground = action?.status === 'completada' ? theme.successBackground : theme.primary;
+  const actionForeground = action?.status === 'completada' ? theme.successText : theme.onPrimary;
 
   return (
             <View
@@ -445,8 +448,7 @@ export default function AssignedServiceCard({ item, action, isUpdating, onChange
                   style={[
                     styles.button,
                     {
-                      backgroundColor:
-                        theme.primary,
+                      backgroundColor: actionBackground,
                       opacity: isUpdating
                         ? 0.65
                         : 1,
@@ -458,11 +460,14 @@ export default function AssignedServiceCard({ item, action, isUpdating, onChange
                       color={theme.onPrimary}
                     />
                   ) : (
-                    <Text
-                      style={[styles.buttonText, { color: theme.onPrimary }]}
-                    >
-                      {action.label}
-                    </Text>
+                    <>
+                      <Ionicons
+                        name={action.status === 'completada' ? 'checkmark-done-outline' : 'play-outline'}
+                        size={19}
+                        color={actionForeground}
+                      />
+                      <Text style={[styles.buttonText, { color: actionForeground }]}>{action.label}</Text>
+                    </>
                   )}
                 </TouchableOpacity>
               )}
@@ -610,16 +615,18 @@ const styles = StyleSheet.create({
 
   button: {
     marginTop: 18,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    gap: 9,
+    minHeight: 52,
+    paddingHorizontal: 18,
   },
 
   buttonText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 
   completedContainer: {

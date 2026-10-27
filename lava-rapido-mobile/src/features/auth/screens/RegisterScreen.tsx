@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import { authService } from '../../../services/authService';
 import { classifyApiError } from '../../../services/api';
@@ -167,7 +168,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.root, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={styles.scroll}
@@ -253,7 +254,7 @@ export default function RegisterScreen({ setIsLoggedIn }: Props) {
         buttonColor={theme.primaryDark}
         onPrimaryColor={theme.onPrimary}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

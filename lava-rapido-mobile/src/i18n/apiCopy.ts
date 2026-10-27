@@ -1,17 +1,17 @@
 export const apiCopy = {
   es: {
     apiErrors: {
-      network: 'Error de conexión. Verifica tu conexión a internet e inténtalo nuevamente.',
-      server_unavailable: 'Servidor no disponible. Inténtalo nuevamente más tarde.',
-      timeout: 'La conexión tardó demasiado. Inténtalo nuevamente.',
-      server: 'El servidor está presentando problemas. Inténtalo nuevamente más tarde.',
-      bad_request: 'Los datos enviados no son válidos.',
+      network: 'No pudimos conectarnos. Revisa tu conexión e inténtalo nuevamente.',
+      server_unavailable: 'El servicio no está disponible. Inténtalo más tarde.',
+      timeout: 'La solicitud tardó demasiado. Revisa tu conexión e inténtalo nuevamente.',
+      server: 'Ocurrió un problema inesperado. Inténtalo más tarde.',
+      bad_request: 'No pudimos procesar la información. Revísala e inténtalo nuevamente.',
       unauthorized: 'Tu sesión expiró. Inicia sesión nuevamente.',
-      forbidden: 'No tienes permiso para realizar esta operación.',
-      not_found: 'No se encontró la información solicitada.',
-      conflict: 'La operación entra en conflicto con el estado actual.',
-      validation: 'Revisa los datos ingresados e inténtalo nuevamente.',
-      unknown: 'No fue posible completar la solicitud. Inténtalo nuevamente.',
+      forbidden: 'No tienes permiso para realizar esta acción.',
+      not_found: 'No encontramos la información solicitada.',
+      conflict: 'No pudimos completar la acción en el estado actual.',
+      validation: 'Revisa la información e inténtalo nuevamente.',
+      unknown: 'No pudimos completar la solicitud. Inténtalo nuevamente.',
     },
   },
   en: {

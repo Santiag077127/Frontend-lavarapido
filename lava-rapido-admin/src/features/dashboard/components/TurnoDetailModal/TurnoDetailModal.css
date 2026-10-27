@@ -12,7 +12,8 @@
 }
 
 .tdm-card {
-  background: #ffffff;
+  background: var(--surface);
+  color: var(--page-text);
   border-radius: 14px;
   padding: 28px;
   width: 100%;
@@ -32,7 +33,7 @@
 .tdm-header h2 {
   margin: 0;
   font-size: 1.15rem;
-  color: #111827;
+  color: var(--page-title);
 }
 
 .tdm-seccion {
@@ -44,17 +45,17 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #9ca3af;
+  color: var(--page-muted);
 }
 
 .tdm-seccion p {
   margin: 0;
-  color: #111827;
+  color: var(--page-text);
   font-size: 0.95rem;
 }
 
 .tdm-secundario {
-  color: #6b7280 !important;
+  color: var(--page-muted) !important;
   font-size: 0.85rem !important;
   margin-top: 2px !important;
 }
@@ -69,7 +70,9 @@
   flex: 1;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--page-title);
   font-size: 0.85rem;
 }
 
@@ -115,15 +118,51 @@
 .tdm-btn-cerrar {
   padding: 9px 16px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #111827;
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
+  color: var(--page-text);
   font-size: 0.85rem;
   cursor: pointer;
 }
 
 .tdm-btn-cerrar:hover {
-  background: #f3f4f6;
+  background: var(--surface-soft);
+}
+
+.tdm-checking {
+  margin-top: 10px !important;
+  color: var(--page-muted) !important;
+  font-size: 0.85rem !important;
+}
+
+.tdm-assignment-warning {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #d97706;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.tdm-card .tdm-assignment-warning p {
+  color: inherit;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.tdm-assignment-warning__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+:root[data-theme="dark"] .tdm-checking { color: var(--page-muted) !important; }
+:root[data-theme="dark"] .tdm-assignment-warning {
+  border-color: #92400e;
+  background: #451a03;
+  color: #fde68a;
 }
 
 @media (max-width: 768px) {
@@ -149,4 +188,6 @@
   .tdm-btn-asignar {
     width: 100%;
   }
+
+  .tdm-assignment-warning__actions { flex-direction: column; }
 }

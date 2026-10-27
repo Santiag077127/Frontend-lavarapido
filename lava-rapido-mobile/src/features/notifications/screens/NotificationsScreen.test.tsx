@@ -6,7 +6,7 @@ import { notificationService } from '../../../services/notificationService'
 
 let mockLanguage = 'es'
 const mockCopy: Record<string, string> = {
-  'notifications.title': 'Notificaciones', 'notifications.unread': '{{count}} sin leer', 'notifications.all': 'Todas', 'notifications.only': 'No leídas', 'notifications.readAll': 'Marcar todas como leídas', 'notifications.loading': 'Cargando notificaciones', 'notifications.errorTitle': 'No pudimos cargar tus notificaciones', 'notifications.error': 'Comprueba tu conexión e inténtalo de nuevo.', 'notifications.retry': 'Reintentar', 'notifications.emptyTitle': 'Aún no tienes notificaciones', 'notifications.empty': 'Las novedades de tus reservas, servicios y pagos aparecerán aquí.', 'notifications.read': 'Marcar como leída', 'notifications.booking': 'Ver reserva', 'notifications.payment': 'Ver pago', 'notifications.assignments': 'Ver asignaciones', 'notifications.new': 'Nueva', 'notifications.categories.booking': 'Reserva', 'notifications.categories.payment': 'Pago', 'notifications.categories.status': 'Servicio', 'notifications.categories.system': 'Sistema', 'notifications.page': 'Página {{current}} de {{total}}',
+  'notifications.title': 'Notificaciones', 'notifications.unread': '{{count}} sin leer', 'notifications.all': 'Todas', 'notifications.only': 'No leídas', 'notifications.readAll': 'Marcar todas como leídas', 'notifications.loading': 'Cargando notificaciones', 'notifications.errorTitle': 'No pudimos cargar tus notificaciones', 'notifications.error': 'Comprueba tu conexión e inténtalo de nuevo.', 'notifications.retry': 'Reintentar', 'notifications.emptyTitle': 'Aún no tienes notificaciones', 'notifications.empty': 'Las novedades de tus reservas, servicios y pagos aparecerán aquí.', 'notifications.read': 'Marcar como leída', 'notifications.booking': 'Ver reserva', 'notifications.payment': 'Ver pago', 'notifications.assignments': 'Ver asignaciones', 'notifications.new': 'Nueva', 'notifications.categories.booking': 'Reserva', 'notifications.categories.payment': 'Pago', 'notifications.categories.status': 'Servicio', 'notifications.categories.system': 'Sistema', 'notifications.page': 'Página {{current}} de {{total}}', 'notifications.pageNumber': 'Página {{page}}', 'notifications.pagination': 'Paginación de notificaciones', 'notifications.previous': 'Anterior', 'notifications.next': 'Siguiente',
 }
 const mockT = (key: string, values?: Record<string, string | number>) => {
   const translated = mockLanguage === 'en' && key === 'notifications.title' ? 'Notifications' : mockCopy[key] ?? key
@@ -80,4 +80,38 @@ test('utiliza el idioma activo para los textos de interfaz', async () => {
   mockLanguage = 'en'; list.mockResolvedValue(emptyPage)
   const view = await render(<NotificationsScreen />)
   await waitFor(() => expect(view.getByText('Notifications')).toBeTruthy())
+})
+
+test('renders number controls for 11 notifications and moves to the requested page', async () => {
+  list.mockResolvedValue({ ...emptyPage, totalPages: 2, totalElements: 11 })
+  const view = await render(<NotificationsScreen />)
+  await waitFor(() => expect(view.getByRole('button', { name: 'Página 1' })).toBeTruthy())
+  expect(view.getByRole('button', { name: 'Página 2' })).toBeTruthy()
+  expect(view.queryByText('Página 1 de 2')).toBeNull()
+  expect(view.getByRole('button', { name: 'Anterior' }).props.accessibilityState.disabled).toBe(true)
+
+  fireEvent.press(view.getByRole('button', { name: 'Página 2' }))
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(1, false))
+  expect(view.getByRole('button', { name: 'Siguiente' }).props.accessibilityState.disabled).toBe(true)
+})
+
+test('shows compact page numbers with ellipses for a large result and resets page on filter change', async () => {
+  list.mockResolvedValue({ ...emptyPage, totalPages: 101, totalElements: 1001 })
+  const view = await render(<NotificationsScreen />)
+  await waitFor(() => expect(view.getByRole('button', { name: 'Página 2' })).toBeTruthy())
+  expect(view.getByRole('button', { name: 'Página 101' })).toBeTruthy()
+  expect(view.getByTestId('pagination-ellipsis')).toBeTruthy()
+  expect(view.queryByRole('button', { name: 'Página 51' })).toBeNull()
+  fireEvent.press(view.getByRole('button', { name: 'Página 2' }))
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(1, false))
+
+  fireEvent.press(view.getByRole('button', { name: 'No leídas' }))
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, true))
+})
+
+test.each([0, 1, 10])('does not render page controls when %i notifications fit on one page', async (totalElements) => {
+  list.mockResolvedValue({ ...emptyPage, totalPages: totalElements === 0 ? 0 : 1, totalElements })
+  const view = await render(<NotificationsScreen />)
+  await waitFor(() => expect(list).toHaveBeenCalled())
+  expect(view.queryByRole('button', { name: 'Página 1' })).toBeNull()
 })

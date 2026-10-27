@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 
 import ServiceDetailsScreen from './ServiceDetailsScreen';
 import { paymentService } from '../../../services/paymentService';
@@ -38,7 +38,7 @@ jest.mock('react-i18next', () => ({
       'mobile.serviceDetail.back': 'Volver',
       'mobile.reservationDetail.title': 'Detalle',
       'mobile.reservationDetail.serviceInfo': 'Información del servicio',
-      'mobile.reservationDetail.description': 'Descripción',
+      'mobile.reservationDetail.description': 'Descripción del servicio',
       'mobile.reservationDetail.reservation': 'Reserva',
       'mobile.reservationDetail.date': 'Fecha',
       'mobile.reservationDetail.time': 'Hora',
@@ -56,6 +56,8 @@ jest.mock('react-i18next', () => ({
       'mobile.services.notAvailable': 'No disponible',
       'mobile.paymentFlow.status': 'Estado del pago',
       'mobile.paymentFlow.retryPayment': 'Reintentar pago',
+      'mobile.paymentFlow.payNow': 'Pagar ahora',
+      'mobile.paymentFlow.processingPreviousPayment': 'Estamos confirmando tu pago anterior. Vuelve a intentarlo cuando termine la verificación para evitar un cobro duplicado.',
       'mobile.paymentFlow.approved': 'Pago aprobado',
       'mobile.paymentFlow.pendingHint': 'El pago sigue pendiente.',
       'mobile.paymentFlow.declined': 'Pago rechazado',
@@ -103,7 +105,7 @@ jest.mock('../../../utils/formatters', () => ({
   formatCurrency: (value: number) => `$${value}`,
 }));
 jest.mock('../../../services/paymentService', () => ({
-  paymentService: { getByReservation: jest.fn() },
+  paymentService: { getByReservation: jest.fn(), verify: jest.fn() },
 }));
 jest.mock('../../reservations/services/reservationService', () => ({
   reservationService: { getById: jest.fn() },
@@ -116,19 +118,21 @@ const renderDetails = () => render(
   />,
 );
 
-test('renders the service description in a theme-colored card at the bottom of the details', () => {
+test('renders the service description in its own card beneath the reservation summary', () => {
   const view = renderDetails();
+  const description = view.getByTestId('reservation-description');
+  const content = view.getByTestId('service-title-description');
   const descriptionCard = view.getByTestId('reservation-description-card');
-
-  expect(view.getByText('Descripción')).toBeTruthy();
-  expect(view.getByText('Servicio de prueba')).toBeTruthy();
+  expect(view.getAllByText('Servicio de prueba')).toHaveLength(1);
+  expect(view.getByText('Descripción del servicio')).toBeTruthy();
   expect(view.getByText('Servicio de prueba').props.numberOfLines).toBeUndefined();
-  expect(view.getByText('Servicio de prueba').props.style).toEqual(expect.arrayContaining([
+  expect(description.props.style).toEqual(expect.arrayContaining([
     expect.objectContaining({ color: '#4A5568' }),
   ]));
-  expect(descriptionCard.props.style).toEqual(expect.arrayContaining([
-    expect.objectContaining({ backgroundColor: '#FFFFFF', borderColor: '#DDE4EF' }),
-  ]));
+  expect(within(content).getByTestId('service-name-title')).toBeTruthy();
+  expect(within(content).queryByTestId('reservation-description')).toBeNull();
+  expect(within(descriptionCard).getByTestId('reservation-description')).toBeTruthy();
+  expect(view.queryByText(/Reserva #/)).toBeNull();
 });
 
 beforeEach(() => {
@@ -137,13 +141,13 @@ beforeEach(() => {
   (paymentService.getByReservation as jest.Mock).mockResolvedValue({ estado: 'rechazado' });
 });
 
-test('shows retry payment for a pending reservation with a rejected payment', async () => {
+test('shows Pagar ahora for a pending reservation with a rejected payment', async () => {
   const view = renderDetails();
 
-  await waitFor(() => expect(view.getByRole('button', { name: 'Reintentar pago' })).toBeTruthy());
-  fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
+  await waitFor(() => expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
 
-  expect(mockNavigate).toHaveBeenCalledWith('ReservationPayment', { reservation });
+  expect(mockNavigate).toHaveBeenCalledWith('ReservationPayment', { reservation, autoStart: true });
 });
 
 test('does not show retry payment when the backend reports an approved payment', async () => {
@@ -151,27 +155,78 @@ test('does not show retry payment when the backend reports an approved payment',
   const view = renderDetails();
 
   await waitFor(() => expect(view.getByText('Pago aprobado')).toBeTruthy());
-  expect(view.queryByRole('button', { name: 'Reintentar pago' })).toBeNull();
+  expect(view.queryByRole('button', { name: 'Pagar ahora' })).toBeNull();
+});
+
+test('offers Pagar ahora for a pending attempt and does not require a manual status button', async () => {
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue({ estado: 'pendiente' });
+  const view = renderDetails();
+
+  await waitFor(() => expect(view.getByText('El pago sigue pendiente.')).toBeTruthy());
+  expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy();
+  expect(view.queryByRole('button', { name: 'Consultar estado' })).toBeNull();
+});
+
+test('automatically verifies a pending Wompi transaction and keeps Pagar ahora available while it processes', async () => {
+  const pendingPayment = {
+    estado: 'pendiente',
+    intentoActual: { referencia: 'ref-1', wompiTransactionId: 'txn-1', wompiStatus: 'PENDING', estado: 'pendiente' },
+  };
+  (paymentService.getByReservation as jest.Mock).mockResolvedValue(pendingPayment);
+  (paymentService.verify as jest.Mock).mockResolvedValue(pendingPayment);
+  const view = renderDetails();
+
+  await waitFor(() => expect(paymentService.verify).toHaveBeenCalledWith('reservation-1', 'ref-1', 'txn-1'));
+  expect(view.getByText('Estamos confirmando tu pago anterior. Vuelve a intentarlo cuando termine la verificación para evitar un cobro duplicado.')).toBeTruthy();
+  expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy();
+});
+
+test('keeps the payment spinner centered inside its card during status loading', async () => {
+  let resolvePayment: (value: unknown) => void = () => {};
+  (paymentService.getByReservation as jest.Mock).mockReturnValue(new Promise(resolve => { resolvePayment = resolve; }));
+  const view = renderDetails();
+
+  await waitFor(() => expect(view.getByTestId('payment-loading-container')).toBeTruthy());
+  await waitFor(() => expect(paymentService.getByReservation).toHaveBeenCalled());
+  expect(view.getByTestId('payment-loading-container').props.style).toEqual(expect.objectContaining({
+    minHeight: 96,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }));
+  await act(async () => resolvePayment({ estado: 'pendiente' }));
 });
 
 test('reuses the same navigation action on a double press', async () => {
   const view = renderDetails();
-  await waitFor(() => expect(view.getByRole('button', { name: 'Reintentar pago' })).toBeTruthy());
+  await waitFor(() => expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy());
 
   await act(async () => {
-    fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
-    fireEvent.press(view.getByRole('button', { name: 'Reintentar pago' }));
+    fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
+    fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
   });
 
   expect(mockNavigate).toHaveBeenCalledTimes(1);
 });
 
-test('keeps retry hidden when payment status cannot be confirmed', async () => {
+test('keeps Pagar ahora available after a status lookup error; the payment screen rechecks before starting', async () => {
   (paymentService.getByReservation as jest.Mock).mockRejectedValue(new Error('network'));
   const view = renderDetails();
 
   await waitFor(() => expect(view.getByText('No fue posible consultar el pago.')).toBeTruthy());
-  expect(view.queryByRole('button', { name: 'Reintentar pago' })).toBeNull();
-  expect(view.getByRole('button', { name: 'Consultar estado' })).toBeTruthy();
+  expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy();
+  expect(view.queryByRole('button', { name: 'Consultar estado' })).toBeNull();
+});
+
+test('allows starting payment only when payment lookup confirms no payment exists', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  const view = renderDetails();
+  await waitFor(() => expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy());
+});
+
+test('does not offer retry when the latest reservation is no longer pending', async () => {
+  (reservationService.getById as jest.Mock).mockResolvedValue({ ...reservation, estado: 'ASIGNADA' });
+  const view = renderDetails();
+  await waitFor(() => expect(view.queryByRole('button', { name: 'Pagar ahora' })).toBeNull());
+  expect(paymentService.getByReservation).not.toHaveBeenCalled();
 });
 
