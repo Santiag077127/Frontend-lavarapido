@@ -1,0 +1,97 @@
+.service-ratings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(13 27 62 / 58%);
+}
+
+.service-ratings-modal {
+  width: min(100%, 620px);
+  max-height: min(80vh, 720px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  color: var(--page-text);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.service-ratings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.service-ratings-header h2 {
+  margin: 0;
+  color: var(--page-title);
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.service-ratings-close {
+  display: inline-grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--surface-border);
+  border-radius: 9px;
+  color: var(--page-title);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.service-ratings-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.service-ratings-state,
+.service-ratings-error {
+  margin: 1.5rem 0;
+  color: var(--page-muted);
+  text-align: center;
+}
+
+.service-ratings-error { color: var(--error-texto); }
+
+.service-ratings-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.service-rating {
+  min-width: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: 11px;
+  padding: 0.9rem 1rem;
+  background: var(--surface-soft);
+}
+
+.service-rating-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.service-rating-stars {
+  display: inline-flex;
+  color: var(--accent-strong);
+}
+
+.service-rating-score { color: var(--page-title); }
+.service-rating-comment,
+.service-rating-date { margin: 0.65rem 0 0; color: var(--page-text); overflow-wrap: anywhere; }
+.service-rating-comment span,
+.service-rating-date span { color: var(--page-muted); font-weight: 700; }

@@ -2,6 +2,7 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { ServiciosTable } from "@/features/dashboard/components/ServiciosTable";
+import { ServiceRatingsModal } from "@/features/dashboard/components/ServiceRatingsModal/ServiceRatingsModal";
 import { ServicioModal } from "@/features/dashboard/components/ServicioModal";
 import { ThemeContext, localizeMessage, useTranslations } from "@/theme/theme";
 import {
@@ -35,6 +36,7 @@ export const ServiciosPage = () => {
   const [cambiandoId, setCambiandoId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ServiceStatusFilter>("ALL");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [ratingsService, setRatingsService] = useState<Servicio | null>(null);
 
   const cargarServicios = async () => {
     setCargando(true);
@@ -161,6 +163,7 @@ export const ServiciosPage = () => {
             onEditar={handleEditar}
             onCambiarEstado={handleCambiarEstado}
             cambiandoId={cambiandoId}
+            onVerCalificaciones={setRatingsService}
           />
         </div>
       )}
@@ -173,6 +176,7 @@ export const ServiciosPage = () => {
           onCerrar={() => setModalAbierto(false)}
         />
       )}
+      {ratingsService && <ServiceRatingsModal servicio={ratingsService} onClose={() => setRatingsService(null)} />}
     </div>
   );
 };

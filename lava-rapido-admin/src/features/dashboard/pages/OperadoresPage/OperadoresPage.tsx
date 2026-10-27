@@ -102,7 +102,7 @@ export const OperadoresPage = () => {
         ? formatTranslation(t("operators.count"), { count: operadores.length, max: MAX_OPERATORS })
         : t("operators.countUnavailable")}</p>
       {conteoDisponible && operadores.length >= MAX_OPERATORS && <p className="op-capacity__limit" role="status">{t("operators.limitReached")}</p>}
-      </div><button className="op-refresh" onClick={() => void cargarOperadores()} disabled={cargando || verificandoCupo}>{t("operators.refresh")}</button>
+      </div>
     </div>
     {error && <p className="page-error">{localizeMessage(error, t)}</p>}
     {exito !== null && <p className="op-success">{formatTranslation(t(exito === 1 ? "operators.deactivatedOne" : "operators.deactivatedMany"), { count: exito })}</p>}

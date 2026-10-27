@@ -8,6 +8,8 @@ const servicesMock = vi.hoisted(() => ({
   create: vi.fn(),
   update: vi.fn(),
   state: vi.fn(),
+  listReservations: vi.fn(),
+  getRating: vi.fn(),
 }));
 
 vi.mock("@/features/dashboard/services/servicioService", () => ({
@@ -16,6 +18,8 @@ vi.mock("@/features/dashboard/services/servicioService", () => ({
   updateServicio: servicesMock.update,
   cambiarEstadoServicio: servicesMock.state,
 }));
+vi.mock("@/features/dashboard/services/reservaService", () => ({ listarReservas: servicesMock.listReservations }));
+vi.mock("@/features/dashboard/services/serviceRatingService", () => ({ getRatingForReservation: servicesMock.getRating }));
 
 describe("ServiciosPage", () => {
   it("keeps the modal values and shows the backend conflict message", async () => {
@@ -73,5 +77,18 @@ describe("ServiciosPage", () => {
     expect(await screen.findByRole("button", { name: "Activar" })).toBeTruthy();
     expect(screen.getByText("Inactivo")).toBeTruthy();
     expect(screen.getByRole("status")).toHaveTextContent("Servicio desactivado correctamente.");
+  });
+
+  it("opens the selected service ratings from the services list", async () => {
+    servicesMock.get.mockResolvedValue([{ idServicio: "rated-service", nombre: "Rated service", descripcion: "", precio: 1000, duracionMinutos: 20, estado: true }]);
+    servicesMock.listReservations.mockResolvedValue([]);
+
+    render(<ThemeProvider><ServiciosPage /></ThemeProvider>);
+    await screen.findByText("Rated service");
+    fireEvent.click(screen.getByRole("button", { name: "Ver calificaciones" }));
+
+    expect(await screen.findByRole("heading", { name: "Calificaciones de Rated service" })).toBeInTheDocument();
+    expect(servicesMock.listReservations).toHaveBeenCalledTimes(1);
+    expect(servicesMock.getRating).not.toHaveBeenCalled();
   });
 });

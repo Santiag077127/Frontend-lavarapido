@@ -30,7 +30,7 @@ const renderPage = () => render(<ThemeProvider><OperadoresPage /></ThemeProvider
 
 beforeEach(() => {
   localStorage.clear();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   mocks.listarOperadores.mockResolvedValue(operators(0));
   mocks.crearOperador.mockImplementation(async (data: { email: string }) => ({
     idOperador: "new-operator",
@@ -103,16 +103,14 @@ describe("operator registration capacity", () => {
     expect(screen.getByRole("button", { name: "+ Nuevo operador" })).toBeDisabled();
   });
 
-  it("re-enables registration after a refreshed list reflects a freed spot", async () => {
+  it("loads the initial operator count without exposing manual refresh", async () => {
     mocks.listarOperadores
       .mockResolvedValueOnce(operators(15))
       .mockResolvedValueOnce(operators(14));
     renderPage();
     expect(await screen.findByRole("button", { name: "+ Nuevo operador" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Actualizar lista" }));
-    expect(await screen.findByText("Operadores registrados: 14 de 15")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "+ Nuevo operador" })).toBeEnabled();
-    expect(mocks.listarOperadores).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("button", { name: "Actualizar lista" })).toBeNull();
+    expect(mocks.listarOperadores).toHaveBeenCalledTimes(1);
   });
 
   it("does not enable registration when the initial operator count is unknown", async () => {

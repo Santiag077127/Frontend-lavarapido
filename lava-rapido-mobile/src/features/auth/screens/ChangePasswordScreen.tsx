@@ -28,6 +28,12 @@ import type { RootStackParamList } from '../../../navigation/types';
 type PasswordField = 'currentPassword' | 'newPassword' | 'confirmPassword';
 
 export type ConfirmationState = 'valid' | 'invalid' | 'neutral';
+type ConfirmationColors = Pick<typeof import('../../../theme/themeTokens').lightTheme, 'success' | 'error' | 'border'>;
+
+export const getConfirmationBorderColor = (
+  state: ConfirmationState,
+  colors: ConfirmationColors,
+): string => state === 'valid' ? colors.success : state === 'invalid' ? colors.error : colors.border;
 
 export const getConfirmationState = (
   newPassword: string,
@@ -55,13 +61,10 @@ export default function ChangePasswordScreen() {
   const [error, setError] = useState('');
   const [retryableError, setRetryableError] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const [focusedField, setFocusedField] = useState<PasswordField | null>(null);
 
   const confirmationState = getConfirmationState(newPassword, confirmPassword, confirmTouched);
-  const passwordPairBorderColor = confirmationState === 'valid'
-    ? theme.success
-    : confirmationState === 'invalid'
-      ? theme.errorBorder
-      : theme.border;
+  const passwordPairBorderColor = getConfirmationBorderColor(confirmationState, theme);
 
   const fields: Array<{
     key: PasswordField;
@@ -160,14 +163,19 @@ export default function ChangePasswordScreen() {
                   <View style={[styles.inputContainer, {
                     backgroundColor: theme.inputBackground,
                     borderColor: key === 'newPassword' || key === 'confirmPassword'
-                      ? passwordPairBorderColor
+                      ? confirmationState === 'neutral' && focusedField === key ? theme.primary : passwordPairBorderColor
                       : error ? theme.errorBorder : theme.border,
+                    borderWidth: key === 'newPassword' || key === 'confirmPassword'
+                      ? confirmationState !== 'neutral' || focusedField === key ? 2 : 1
+                      : error ? 2 : 1,
                   }]}>
                     <Ionicons name="lock-closed-outline" size={20} color={theme.textSecondary} />
                     <TextInput
                       accessibilityLabel={label}
                       accessibilityLabelledBy={`${key}-label`}
-                      accessibilityHint={key === 'newPassword' ? t('accessibility.passwordRequirements') : undefined}
+                      accessibilityHint={confirmationState === 'invalid' && (key === 'newPassword' || key === 'confirmPassword')
+                        ? t('changePassword.mismatch')
+                        : key === 'newPassword' ? t('accessibility.passwordRequirements') : undefined}
                       autoCapitalize="none"
                       autoComplete={key === 'currentPassword' ? 'password' : 'new-password'}
                       autoCorrect={false}
@@ -179,8 +187,10 @@ export default function ChangePasswordScreen() {
                         setRetryableError(false);
                       }}
                       onBlur={() => {
+                        setFocusedField((current) => current === key ? null : current);
                         if (key === 'confirmPassword') setConfirmTouched(true);
                       }}
+                      onFocus={() => setFocusedField(key)}
                       placeholder={key === 'confirmPassword' ? t('changePassword.confirmPasswordPlaceholder') : label}
                       placeholderTextColor={theme.placeholder}
                       returnKeyType={key === 'confirmPassword' ? 'done' : 'next'}
