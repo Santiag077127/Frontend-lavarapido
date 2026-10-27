@@ -76,7 +76,7 @@ export const ChangeEmailPage = () => {
       {error && <p className="change-password-error" role="alert">{error}</p>}
       <form onSubmit={validate} noValidate>
         <label htmlFor="new-email">{t("emailChange.new")}</label>
-        <input id="new-email" type="email" value={newEmail} onChange={(event) => handleEmailChange(event.target.value)} autoComplete="email" maxLength={100} disabled={saving} required />
+        <input id="new-email" type="email" value={newEmail} onChange={(event) => handleEmailChange(event.target.value)} onBlur={() => setNewEmail((current) => current.trim())} autoComplete="email" maxLength={100} disabled={saving} required />
         <PasswordVisibilityField id="email-current-password" label={t("profile.currentPassword")} value={currentPassword}
           onChange={setCurrentPassword} autoComplete="current-password" disabled={saving} required />
         <small>{t("emailChange.securityHint")}</small>

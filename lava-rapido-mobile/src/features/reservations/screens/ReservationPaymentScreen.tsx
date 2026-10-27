@@ -644,7 +644,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           )}
           {approved && (
             <>
-              <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Mis servicios', params: { initialStatus: 'PENDIENTE' } })}>
+              <Pressable accessibilityRole="button" style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => navigateToServices('PENDIENTE')}>
                 <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.myServices')}</Text>
               </Pressable>
               <Pressable accessibilityRole="button" style={[styles.secondaryButton, { borderColor: theme.primary }]} onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}>

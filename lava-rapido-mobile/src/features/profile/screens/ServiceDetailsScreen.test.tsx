@@ -38,6 +38,7 @@ jest.mock('react-i18next', () => ({
       'mobile.serviceDetail.back': 'Volver',
       'mobile.reservationDetail.title': 'Detalle',
       'mobile.reservationDetail.serviceInfo': 'Información del servicio',
+      'mobile.reservationDetail.description': 'Descripción',
       'mobile.reservationDetail.reservation': 'Reserva',
       'mobile.reservationDetail.date': 'Fecha',
       'mobile.reservationDetail.time': 'Hora',
@@ -114,6 +115,21 @@ const renderDetails = () => render(
     navigation={{ navigate: mockNavigate, goBack: mockGoBack } as any}
   />,
 );
+
+test('renders the service description in a theme-colored card at the bottom of the details', () => {
+  const view = renderDetails();
+  const descriptionCard = view.getByTestId('reservation-description-card');
+
+  expect(view.getByText('Descripción')).toBeTruthy();
+  expect(view.getByText('Servicio de prueba')).toBeTruthy();
+  expect(view.getByText('Servicio de prueba').props.numberOfLines).toBeUndefined();
+  expect(view.getByText('Servicio de prueba').props.style).toEqual(expect.arrayContaining([
+    expect.objectContaining({ color: '#4A5568' }),
+  ]));
+  expect(descriptionCard.props.style).toEqual(expect.arrayContaining([
+    expect.objectContaining({ backgroundColor: '#FFFFFF', borderColor: '#DDE4EF' }),
+  ]));
+});
 
 beforeEach(() => {
   jest.clearAllMocks();

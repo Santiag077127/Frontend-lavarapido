@@ -215,6 +215,19 @@
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
+.hero-download {
+  text-decoration: none;
+}
+
+.android-app-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  color: #6b7890;
+  font-size: 0.88rem;
+}
+
 .hero-primary {
   display: inline-flex;
   align-items: center;
@@ -479,43 +492,35 @@
   height: 1px;
 }
 
-:root[data-accent="cyan"] .landing-root,
-:root[data-accent="indigo"] .landing-root,
-:root[data-accent="emerald"] .landing-root {
-  background:
-    radial-gradient(circle at 74% 30%, color-mix(in srgb, var(--accent-soft) 22%, transparent), transparent 34%),
-    linear-gradient(180deg, var(--surface-soft) 0%, var(--page-bg) 58%, color-mix(in srgb, var(--accent) 9%, var(--page-bg)) 100%);
-}
-
-:root[data-accent] .hero-eyebrow,
-:root[data-accent] .section-intro p,
-:root[data-accent] .feature-card svg,
-:root[data-accent] .mockup-floating-card svg,
-:root[data-accent] .mockup-row small,
-:root[data-accent] .landing-nav-links a:hover,
-:root[data-accent] .nav-pill:hover,
-:root[data-accent] .admin-access:hover {
+:root .hero-eyebrow,
+:root .section-intro p,
+:root .feature-card svg,
+:root .mockup-floating-card svg,
+:root .mockup-row small,
+:root .landing-nav-links a:hover,
+:root .nav-pill:hover,
+:root .admin-access:hover {
   color: var(--accent);
 }
 
-:root[data-accent] .hero-primary {
+:root .hero-primary {
   background: linear-gradient(135deg, var(--accent-soft) 0%, var(--accent) 46%, var(--accent-strong) 100%);
 }
 
-:root[data-accent] .mockup-header {
+:root .mockup-header {
   background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
 }
 
-:root[data-accent] .hero-secondary {
+:root .hero-secondary {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
-:root[data-accent] .hero-secondary:hover {
+:root .hero-secondary:hover {
   border-color: var(--accent);
 }
 
-:root[data-accent] .landing-band {
+:root .landing-band {
   background: var(--accent-strong);
 }
 
@@ -544,6 +549,7 @@
 :root[data-theme="dark"] .admin-access,
 :root[data-theme="dark"] .hero-description,
 :root[data-theme="dark"] .hero-note,
+:root[data-theme="dark"] .android-app-note,
 :root[data-theme="dark"] .feature-card p,
 :root[data-theme="dark"] .mockup-stats span,
 :root[data-theme="dark"] .mockup-row span,
