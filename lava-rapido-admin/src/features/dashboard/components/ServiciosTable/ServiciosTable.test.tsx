@@ -18,12 +18,16 @@ const servicio = (id: string, estado: boolean): Servicio => ({
 describe("ServiciosTable", () => {
   it("solo permite activar servicios inactivos y mantiene la edición", () => {
     const onCambiarEstado = vi.fn();
-    render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} onCambiarEstado={onCambiarEstado} cambiandoId={null} />);
+    const onVerCalificaciones = vi.fn();
+    render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} onCambiarEstado={onCambiarEstado} onVerCalificaciones={onVerCalificaciones} cambiandoId={null} />);
 
+    fireEvent.click(screen.getAllByRole("button", { name: "Ver calificaciones" })[0]);
+    expect(onVerCalificaciones).toHaveBeenCalledWith(expect.objectContaining({ idServicio: "Activo" }));
     fireEvent.click(screen.getByRole("button", { name: "Desactivar" }));
     fireEvent.click(screen.getByRole("button", { name: "Activar" }));
     expect(onCambiarEstado).toHaveBeenCalledTimes(2);
     expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
     expect(screen.getByRole("columnheader", { name: "Estado" })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Ver calificaciones" })).toHaveLength(2);
   });
 });

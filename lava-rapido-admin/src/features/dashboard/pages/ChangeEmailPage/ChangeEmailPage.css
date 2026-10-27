@@ -1,5 +1,5 @@
 .change-email-page {
-  width: min(100%, 760px);
+  width: 100%;
 }
 
 .change-email-page > .settings-back-link {
@@ -147,10 +147,6 @@
 }
 
 @media (max-width: 600px) {
-  .change-email-page {
-    padding: 1rem;
-  }
-
   .change-email-page .change-password-card {
     padding: 1rem;
   }

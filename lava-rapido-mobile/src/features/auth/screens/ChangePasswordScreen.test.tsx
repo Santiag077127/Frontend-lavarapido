@@ -2,7 +2,8 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
 }));
 
-import { getConfirmationState } from './ChangePasswordScreen';
+import { getConfirmationBorderColor, getConfirmationState } from './ChangePasswordScreen';
+import { darkTheme, lightTheme } from '../../../theme/themeTokens';
 
 test('mantiene el estado neutral antes de interactuar o cuando la confirmación está vacía', () => {
   expect(getConfirmationState('', '', false)).toBe('neutral');
@@ -24,4 +25,10 @@ test('actualiza el estado cuando cambia la nueva contraseña o se corrige la con
 
 test('no muestra éxito si ambas contraseñas coinciden pero la nueva es inválida', () => {
   expect(getConfirmationState('short', 'short', true)).toBe('neutral');
+});
+
+test.each([lightTheme, darkTheme])('usa el token de error visible del tema para ambas contraseñas', (theme) => {
+  expect(getConfirmationBorderColor('invalid', theme)).toBe(theme.error);
+  expect(getConfirmationBorderColor('valid', theme)).toBe(theme.success);
+  expect(getConfirmationBorderColor('neutral', theme)).toBe(theme.border);
 });

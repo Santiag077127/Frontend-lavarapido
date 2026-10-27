@@ -57,6 +57,20 @@ describe("ChangeEmailPage", () => {
     expect(screen.getByText("Configuración")).toBeInTheDocument();
   });
 
+  it("keeps the current password masked after browser-style autofill", () => {
+    render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
+      <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />
+    </Routes></MemoryRouter>);
+    const password = screen.getByLabelText("Contraseña actual");
+
+    expect(password).toHaveAttribute("type", "password");
+    expect(password).toHaveAttribute("autocomplete", "current-password");
+    fireEvent.change(password, { target: { value: "BrowserFilledSecret1" } });
+
+    expect(password).toHaveAttribute("type", "password");
+    expect(password).toHaveValue("BrowserFilledSecret1");
+  });
+
   it("shows Spanish format validation, trims outer spaces on blur and allows correcting the address", async () => {
     render(<MemoryRouter initialEntries={["/dashboard/cambiar-correo"]}><Routes>
       <Route path="/dashboard/cambiar-correo" element={<ChangeEmailPage />} />

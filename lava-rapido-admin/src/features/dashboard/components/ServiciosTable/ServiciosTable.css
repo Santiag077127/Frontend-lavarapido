@@ -56,6 +56,7 @@
 }
 
 .btn-editar,
+.btn-calificaciones,
 .btn-activar,
 .btn-desactivar {
   border: none;
@@ -68,6 +69,22 @@
   transition: var(--transicion);
   white-space: nowrap;
 }
+
+.service-row-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.service-row-actions > button { margin: 0; }
+
+.btn-calificaciones {
+  border: 1px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 16px;
+  color: var(--accent);
+  background: var(--surface-soft);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-calificaciones:hover { background: var(--surface); }
+.btn-calificaciones:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .btn-editar {
   background: #e0f2fe;

@@ -9,6 +9,7 @@ interface ServiciosTableProps {
   onEditar: (servicio: Servicio) => void;
   onCambiarEstado: (servicio: Servicio) => void;
   cambiandoId: string | null;
+  onVerCalificaciones: (servicio: Servicio) => void;
 }
 
 export const ServiciosTable = ({
@@ -16,6 +17,7 @@ export const ServiciosTable = ({
   onEditar,
   onCambiarEstado,
   cambiandoId,
+  onVerCalificaciones,
 }: ServiciosTableProps) => {
   const theme = useContext(ThemeContext);
   const t = useTranslations();
@@ -44,12 +46,17 @@ export const ServiciosTable = ({
             <td>{servicio.duracionMinutos} min</td>
             <td><span className={`badge ${servicio.estado ? "badge--activo" : "badge--inactivo"}`}>{servicio.estado ? t("common.active") : t("common.inactive")}</span></td>
             <td>
+              <div className="service-row-actions">
+              <button className="btn-calificaciones" onClick={() => onVerCalificaciones(servicio)}>
+                {t("serviceRatings.action")}
+              </button>
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
                 {t("common.edit")}
               </button>
               <button className={servicio.estado ? "btn-desactivar" : "btn-activar"} onClick={() => onCambiarEstado(servicio)} disabled={cambiandoId === servicio.idServicio}>
                 {cambiandoId === servicio.idServicio ? t("profile.saving") : servicio.estado ? t("common.deactivate") : t("common.activate")}
               </button>
+              </div>
             </td>
           </tr>
         ))}
