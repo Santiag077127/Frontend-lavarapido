@@ -29,5 +29,12 @@ describe("ServiciosTable", () => {
     expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
     expect(screen.getByRole("columnheader", { name: "Estado" })).toBeTruthy();
     expect(screen.getAllByRole("button", { name: "Ver calificaciones" })).toHaveLength(2);
+    const ratingsButton = screen.getAllByRole("button", { name: "Ver calificaciones" })[0];
+    expect(ratingsButton.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    const actions = ratingsButton.parentElement;
+    expect(actions).toHaveClass("service-row-actions");
+    expect(actions?.querySelectorAll("button")).toHaveLength(3);
+    expect(actions?.querySelector(".btn-editar")).toBeInTheDocument();
+    expect(actions?.querySelector(".btn-desactivar")).toBeInTheDocument();
   });
 });

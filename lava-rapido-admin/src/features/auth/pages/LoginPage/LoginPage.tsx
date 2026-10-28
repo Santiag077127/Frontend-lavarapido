@@ -2,7 +2,7 @@
 import "./style.css";
 
 import logo from "../../../../assets/images/Logo.png";
-import { useTranslations } from "@/theme/theme";
+import { formatTranslation, useTranslations } from "@/theme/theme";
 import { useLocation } from "react-router-dom";
 
 import { HomeButton } from "../../components/HomeButton/HomeButton";
@@ -14,7 +14,8 @@ import { LoginForm } from "../../components/LoginForm/LoginForm";
 export const LoginPage = () => {
   const t = useTranslations();
   const location = useLocation();
-  const notice = (location.state as { notice?: string } | null)?.notice;
+  const loginState = location.state as { notice?: string; email?: string } | null;
+  const notice = loginState?.notice;
   return (
 
     <main className="lp-bg">
@@ -39,7 +40,9 @@ export const LoginPage = () => {
 
         {/* Panel derecho – formulario */}
         <div className="lp-right">
-          {notice && <p role="status" className="lp-notice">{notice === "emailChange.success" ? t(notice) : notice}</p>}
+          {notice && <p role="status" className="lp-notice">{notice === "emailChange.success"
+            ? formatTranslation(t(notice), { email: loginState?.email ?? "" })
+            : notice}</p>}
           <LoginForm />
         </div>
 

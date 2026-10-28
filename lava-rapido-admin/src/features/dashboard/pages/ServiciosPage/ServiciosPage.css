@@ -137,7 +137,7 @@
 
 @media (max-width: 768px) {
   .tabla-servicios {
-    min-width: 100%;
+    min-width: 680px;
   }
 
   .tabla-servicios th,
@@ -147,6 +147,10 @@
 }
 
 @media (max-width: 480px) {
+  .tabla-servicios {
+    min-width: 620px;
+  }
+
   .tabla-servicios th,
   .tabla-servicios td {
     padding: 0.65rem 0.75rem;
