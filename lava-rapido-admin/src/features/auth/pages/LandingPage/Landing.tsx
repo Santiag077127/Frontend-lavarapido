@@ -27,6 +27,9 @@ const languageOptions: Array<{ value: LanguageOption; labelKey: string }> = [
   { value: "pt", labelKey: "language.pt" },
 ];
 
+export const ANDROID_BUILD_PAGE_URL =
+  "https://expo.dev/accounts/sasjsi/projects/lava-rapido-vehicular/builds/0b304658-40d0-4899-a561-f0040e63b75b";
+
 const featureCards = [
   {
     icon: CalendarCheck,
@@ -121,8 +124,9 @@ const LandingPage = () => {
             </button>
             <a
               className="hero-primary hero-download"
-              href="https://expo.dev/artifacts/eas/kuA0DnLqABvS9iDJgxupUqvjiwnEJnt4OnR22NoIF9c.apk"
-              download
+              href={ANDROID_BUILD_PAGE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Download size={18} aria-hidden="true" />
               {t("landing.downloadAndroid")}

@@ -1,5 +1,6 @@
 /// <reference types="jest" />
 import React from 'react';
+import es from '../../../i18n/locales/es.json';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import ReservationScreen from './ReservationScreen';
 import { reservationService } from '../services/reservationService';
@@ -9,7 +10,15 @@ import { serviceService } from '../../../services/serviceService';
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 const mockNavigation = { navigate: mockNavigate, goBack: mockGoBack };
-const mockTranslate = (key: string) => key;
+const mockTranslate = (key: string) => {
+  if (key === 'language.close') return 'Cerrar';
+  if (key === 'legal.terms.title') return es.legal.terms.title;
+  if (key === 'legal.terms.intro') return es.legal.terms.intro;
+  if (key === 'legal.paymentInterruption.title') return es.legal.paymentInterruption.title;
+  if (key === 'legal.paymentInterruption.body') return es.legal.paymentInterruption.body;
+  const match = key.match(/^legal\.terms\.sections\.([^.]+)\.(title|body)$/);
+  return match ? es.legal.terms.sections[match[1] as keyof typeof es.legal.terms.sections][match[2] as 'title' | 'body'] : key;
+};
 const mockService = {
   idServicio: 'service-1',
   nombre: 'Lavado',

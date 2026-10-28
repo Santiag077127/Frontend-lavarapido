@@ -4,6 +4,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import ReservationPaymentScreen from './ReservationPaymentScreen';
 import { paymentService, type PaymentAttemptStatus, type ReservationPayment } from '../../../services/paymentService';
 import { reservationService } from '../services/reservationService';
+import es from '../../../i18n/locales/es.json';
 
 const mockNavigate = jest.fn();
 const mockDispatch = jest.fn();
@@ -16,6 +17,7 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.myServices': 'Ver mis servicios',
   'mobile.paymentFlow.goHome': 'Volver al inicio',
   'mobile.paymentFlow.pending': 'Pendiente de confirmación',
+  'mobile.paymentFlow.notConfirmed': 'Sin consultar',
   'mobile.paymentFlow.declined': 'Pago rechazado',
   'mobile.paymentFlow.retryPayment': 'Reintentar pago',
   'mobile.paymentFlow.payNow': 'Pagar ahora',
@@ -25,8 +27,16 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.acceptAndRetry': 'Pagar ahora',
   'mobile.paymentFlow.policySummary': 'Condiciones de cancelación antes de pagar.',
   'mobile.paymentFlow.policyVersion': 'Versión de la política: 2026-10-26',
+  'mobile.paymentFlow.termsReminderTitle': 'Antes de continuar con el pago',
+  'mobile.paymentFlow.termsReminderIntro': 'Lee y acepta los términos y condiciones antes de continuar.',
+  'mobile.paymentFlow.termsReminderWarning': 'Verifica el estado de tu reserva antes de intentar pagar nuevamente.',
+  'mobile.paymentFlow.termsConsent': 'He leído y acepto los términos y condiciones.',
+  'mobile.paymentFlow.termsCancel': 'Cancelar',
+  'mobile.paymentFlow.termsContinue': 'Continuar al pago',
+  'mobile.paymentFlow.termsRead': 'Leer términos y condiciones',
   'mobile.reservation.readCancellationPolicy': 'Leer política de cancelación y devoluciones',
   'mobile.paymentFlow.error': 'Error de pago',
+  'mobile.paymentFlow.retry': 'Reintentar',
   'mobile.paymentFlow.startError': 'Error al iniciar el pago',
   'mobile.paymentFlow.duplicateHint': 'Requiere revisión',
   'mobile.paymentFlow.duplicateApproval': 'Posible cobro duplicado',
@@ -53,9 +63,19 @@ const mockCopy: Record<string, string> = {
   'mobile.paymentFlow.notPendingCancellationTitle': 'Reserva no cancelable',
   'mobile.paymentFlow.notPendingCancellationMessage': 'La reserva ya no está pendiente y no puede cancelarse por esta opción.',
 };
+const mockLegalTranslate = (key: string) => {
+  if (key === 'legal.terms.title') return es.legal.terms.title;
+  if (key === 'legal.terms.intro') return es.legal.terms.intro;
+  if (key === 'legal.paymentInterruption.title') return es.legal.paymentInterruption.title;
+  if (key === 'legal.paymentInterruption.body') return es.legal.paymentInterruption.body;
+  const match = key.match(/^legal\.terms\.sections\.([^.]+)\.(title|body)$/);
+  if (match) return es.legal.terms.sections[match[1] as keyof typeof es.legal.terms.sections][match[2] as 'title' | 'body'];
+  return mockCopy[key] ?? key;
+};
 
 jest.mock('@react-navigation/native', () => ({
   CommonActions: {
+    goBack: () => ({ type: 'GO_BACK' }),
     navigate: (name: string, params: unknown) => ({
       type: 'NAVIGATE',
       payload: { name, params },
@@ -64,7 +84,7 @@ jest.mock('@react-navigation/native', () => ({
   useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]),
   UNSTABLE_usePreventRemove: (...args: unknown[]) => mockUsePreventRemove(...args),
 }));
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => mockCopy[key] ?? key }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => mockLegalTranslate(key) }) }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: (props: any) => require('react').createElement(require('react-native').Text, props) }));
 jest.mock('react-native-webview', () => ({ WebView: (props: any) => require('react').createElement(require('react-native').View, props) }));
 jest.mock('../../../components/common/BackButton', () => ({
@@ -156,7 +176,13 @@ const confirmCancellation = (view: ReturnType<typeof render>) => {
 const beginCheckout = async (view: ReturnType<typeof render>) => {
   await waitFor(() => expect(view.getByRole('button', { name: 'Pagar ahora' })).toBeTruthy());
   fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
+  await acceptPaymentTerms(view);
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(1));
+};
+const acceptPaymentTerms = async (view: ReturnType<typeof render>) => {
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' }));
+  fireEvent.press(view.getByRole('button', { name: 'Continuar al pago' }));
 };
 const navigationAction = (status: string) => expect.objectContaining({
   type: 'NAVIGATE',
@@ -173,24 +199,84 @@ beforeEach(() => {
   (paymentService.getByReservation as jest.Mock).mockResolvedValue(payment('pendiente'));
 });
 
-test('does not start Wompi until the user explicitly accepts the policy', async () => {
+test('requires an unchecked terms consent before starting Wompi', async () => {
   (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
   const view = renderPayment();
 
-  await waitFor(() => expect(view.getByText('Condiciones de cancelación antes de pagar.')).toBeTruthy());
-  expect(view.getByText('Versión de la política: 2026-10-26')).toBeTruthy();
+  await waitFor(() => expect(view.getByTestId('payment-status-card')).toBeTruthy());
+  expect(view.getByText('Sin consultar')).toBeTruthy();
+  expect(view.queryByText(mockCopy['mobile.paymentFlow.policySummary'])).toBeNull();
+  expect(view.queryByText(mockCopy['mobile.paymentFlow.policyVersion'])).toBeNull();
+  expect(view.queryByText(mockCopy['mobile.reservation.readCancellationPolicy'])).toBeNull();
   expect(paymentService.start).not.toHaveBeenCalled();
 
-  await beginCheckout(view);
+  fireEvent.press(view.getByRole('button', { name: 'Pagar ahora' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  const checkbox = view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' });
+  expect(checkbox.props.accessibilityState.checked).toBe(false);
+  expect(view.getByRole('button', { name: 'Continuar al pago' }).props.accessibilityState.disabled).toBe(true);
+  expect(paymentService.start).not.toHaveBeenCalled();
+  fireEvent.press(checkbox);
+  expect(view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' }).props.accessibilityState.checked).toBe(true);
+  fireEvent.press(view.getByRole('button', { name: 'Continuar al pago' }));
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
+});
+
+test('cancelling the terms reminder does not start a payment', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  const view = renderPayment();
+  fireEvent.press(await view.findByRole('button', { name: 'Pagar ahora' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  fireEvent.press(view.getByRole('button', { name: 'Cancelar' }));
+  await waitFor(() => expect(view.queryByText('Antes de continuar con el pago')).toBeNull());
+  await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith({ type: 'GO_BACK' }));
+  expect(paymentService.start).not.toHaveBeenCalled();
+});
+
+test('does not start checkout if the payment becomes approved while consent is open', async () => {
+  (paymentService.getByReservation as jest.Mock)
+    .mockResolvedValueOnce(payment('pendiente'))
+    .mockRejectedValueOnce({ response: { status: 404 } })
+    .mockResolvedValueOnce(payment('aprobado'));
+  const view = renderPayment();
+  fireEvent.press(await view.findByRole('button', { name: 'Pagar ahora' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' }));
+  fireEvent.press(view.getByRole('button', { name: 'Continuar al pago' }));
+
+  await waitFor(() => expect(view.getByText('Pago aprobado')).toBeTruthy());
+  expect(paymentService.start).not.toHaveBeenCalled();
+});
+
+test('rechecks a Wompi transaction that becomes pending while consent is open', async () => {
+  const pending = payment('pendiente');
+  pending.intentoActual!.wompiTransactionId = 'txn-1';
+  pending.intentoActual!.wompiStatus = 'PENDING';
+  (paymentService.getByReservation as jest.Mock)
+    .mockResolvedValueOnce(payment('pendiente'))
+    .mockResolvedValueOnce(payment('pendiente'))
+    .mockResolvedValueOnce(pending);
+  (paymentService.verify as jest.Mock).mockResolvedValue(pending);
+  const view = renderPayment();
+  fireEvent.press(await view.findByRole('button', { name: 'Pagar ahora' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' }));
+  fireEvent.press(view.getByRole('button', { name: 'Continuar al pago' }));
+
+  await waitFor(() => expect(paymentService.verify).toHaveBeenCalledTimes(1));
+  expect(paymentService.start).not.toHaveBeenCalled();
+  expect(view.queryByTestId('payment-webview')).toBeNull();
+  expect(view.getAllByText('Pendiente de confirmación').length).toBeGreaterThan(0);
 });
 
 test('Pagar ahora automatically starts the existing reservation when no payment exists', async () => {
   (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
   const view = renderPayment({ autoStart: true });
 
+  await acceptPaymentTerms(view);
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
   expect(view.getByTestId('payment-webview')).toBeTruthy();
-  expect(paymentService.getByReservation).toHaveBeenCalledTimes(1);
+  expect(paymentService.getByReservation).toHaveBeenCalledTimes(2);
 });
 
 test('Pagar ahora reuses a pending backend attempt without creating another attempt', async () => {
@@ -199,6 +285,7 @@ test('Pagar ahora reuses a pending backend attempt without creating another atte
   (paymentService.start as jest.Mock).mockResolvedValue({ idIntento: 'attempt-1', reutilizado: true });
   const view = renderPayment({ autoStart: true });
 
+  await acceptPaymentTerms(view);
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
   expect(view.getByTestId('payment-webview')).toBeTruthy();
   expect(paymentService.verify).not.toHaveBeenCalled();
@@ -210,6 +297,7 @@ test('does not open checkout if the backend does not confirm reuse of the pendin
   (paymentService.start as jest.Mock).mockResolvedValue({ idIntento: 'different-attempt', reutilizado: false });
   const view = renderPayment({ autoStart: true });
 
+  await acceptPaymentTerms(view);
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
   expect(view.queryByTestId('payment-webview')).toBeNull();
   expect(view.getByRole('alert').props.children).toBeTruthy();
@@ -235,9 +323,10 @@ test('starts another attempt only after automatic verification confirms the prev
   (paymentService.verify as jest.Mock).mockResolvedValue(payment('rechazado'));
   const view = renderPayment({ autoStart: true });
 
+  await acceptPaymentTerms(view);
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledWith('res-1'));
   expect(view.getByTestId('payment-webview')).toBeTruthy();
-  expect(paymentService.verify).toHaveBeenCalledTimes(1);
+  expect(paymentService.verify).toHaveBeenCalledTimes(2);
 });
 
 test('does not reopen Wompi after automatic verification confirms approval', async () => {
@@ -251,11 +340,28 @@ test('does not reopen Wompi after automatic verification confirms approval', asy
   expect(paymentService.start).not.toHaveBeenCalled();
 });
 
-test('opens the full cancellation terms before starting Wompi', async () => {
-  const view = renderPayment();
-  await waitFor(() => expect(view.getByRole('link', { name: 'Leer política de cancelación y devoluciones' })).toBeTruthy());
+test('requires consent and rechecks status before retrying a failed Wompi widget', async () => {
+  (paymentService.getByReservation as jest.Mock).mockRejectedValue({ response: { status: 404 } });
+  (paymentService.start as jest.Mock)
+    .mockResolvedValueOnce({ referencia: 'ref-1' })
+    .mockResolvedValueOnce({ referencia: 'ref-2' });
+  const view = renderPayment({ autoStart: true });
+  await acceptPaymentTerms(view);
+  await waitFor(() => expect(view.getByTestId('payment-webview')).toBeTruthy());
+  fireEvent(view.getByTestId('payment-webview'), 'onError');
+  fireEvent.press(await view.findByRole('button', { name: 'Reintentar' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  expect(paymentService.start).toHaveBeenCalledTimes(1);
+  await acceptPaymentTerms(view);
+  await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(2));
+  expect(view.getByTestId('payment-webview')).toBeTruthy();
+});
 
-  fireEvent.press(view.getByRole('link', { name: 'Leer política de cancelación y devoluciones' }));
+test('opens the shared full terms document from the payment reminder', async () => {
+  const view = renderPayment();
+  fireEvent.press(await view.findByRole('button', { name: 'Pagar ahora' }));
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  fireEvent.press(view.getByRole('link', { name: 'Leer términos y condiciones' }));
 
   expect(view.getByText('Términos y condiciones')).toBeTruthy();
   expect(view.getByText('6. Cancelación voluntaria')).toBeTruthy();
@@ -410,6 +516,10 @@ test('la doble pulsación al iniciar el pago genera una sola solicitud para la r
     fireEvent.press(button);
     fireEvent.press(button);
   });
+  await waitFor(() => expect(view.getByText('Antes de continuar con el pago')).toBeTruthy());
+  expect(paymentService.start).not.toHaveBeenCalled();
+  fireEvent.press(view.getByRole('checkbox', { name: 'He leído y acepto los términos y condiciones.' }));
+  fireEvent.press(view.getByRole('button', { name: 'Continuar al pago' }));
   await waitFor(() => expect(paymentService.start).toHaveBeenCalledTimes(1));
   expect(paymentService.start).toHaveBeenCalledWith('res-1');
 
