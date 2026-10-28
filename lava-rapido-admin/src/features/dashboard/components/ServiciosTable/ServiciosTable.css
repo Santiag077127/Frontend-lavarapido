@@ -1,0 +1,160 @@
+/* Define los estilos visuales de tabla de servicios. */
+.tabla-servicios {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.tabla-servicios thead {
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
+}
+
+.tabla-servicios th {
+  color: #fff;
+  text-align: left;
+  padding: 16px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tabla-servicios td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gris-borde);
+  color: var(--texto-oscuro);
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.tabla-servicios tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla-servicios tbody tr:hover {
+  background: #f8fafc;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge--activo {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge--inactivo {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.btn-editar,
+.btn-calificaciones,
+.btn-activar,
+.btn-desactivar {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: var(--transicion);
+  white-space: nowrap;
+}
+
+.service-row-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+}
+.service-row-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 36px;
+  margin: 0;
+}
+
+.service-row-actions > button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-calificaciones {
+  border: 1px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 16px;
+  color: var(--accent);
+  background: var(--surface-soft);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  gap: 0.35rem;
+}
+.btn-calificaciones:hover { background: var(--surface); }
+.btn-calificaciones:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn-editar {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-editar:hover {
+  background: #bae6fd;
+}
+
+.btn-activar {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.btn-activar:hover {
+  background: #bbf7d0;
+}
+
+.btn-desactivar { background: #fee2e2; color: #b91c1c; }
+.btn-desactivar:hover { background: #fecaca; }
+.btn-activar:disabled, .btn-desactivar:disabled { opacity: .6; cursor: wait; }
+
+.tabla-descripcion {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .tabla-servicios {
+    min-width: 680px;
+  }
+
+  .tabla-servicios th,
+  .tabla-servicios td {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-editar,
+  .btn-activar {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabla-servicios {
+    border-radius: 0.75rem;
+    min-width: 620px;
+  }
+}

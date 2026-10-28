@@ -1,0 +1,60 @@
+// Declara las rutas públicas y privadas y las pantallas asociadas.
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { LoginPage }          from "../features/auth/pages/LoginPage/LoginPage";
+import { RegisterPage }       from "../features/auth/pages/RegisterPage/RegisterPage"; // ← nuevo
+import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage/ForgotPasswordPage"; // ← nuevo
+import { ResetPasswordPage }  from "../features/auth/pages/ResetPasswordPage/ResetPasswordPage";   // ← nuevo
+import { DashboardPage }      from "../features/dashboard/pages/DashboardPage";
+import { ServiciosPage }      from "../features/dashboard/pages/ServiciosPage";
+import { PanelPrincipalPage } from "../features/dashboard/pages/PanelPrincipalPage";
+import LandingPage            from "../features/auth/pages/LandingPage/Landing";
+import { MapsPage } from "@/features/dashboard/pages/MapsPage/MapsPage";
+import { OperadoresPage } from "@/features/dashboard/pages/OperadoresPage/OperadoresPage";
+import { TurnosPage } from "@/features/dashboard/pages/TurnosPage/TurnosPage";
+import { VehiculosPage } from "@/features/dashboard/pages/VehiculosPage";
+import { MarcasPage } from "@/features/dashboard/pages/MarcasPage";
+import { PerfilPage } from "@/features/dashboard/pages/PerfilPage";
+import { ConfiguracionPage } from "@/features/dashboard/pages/ConfiguracionPage/ConfiguracionPage";
+import { PagoResultadoPage } from "@/features/dashboard/pages/PagoResultadoPage/PagoResultadoPage";
+import { ChangePasswordPage } from "@/features/dashboard/pages/ChangePasswordPage/ChangePasswordPage";
+import { ChangeEmailPage } from "@/features/dashboard/pages/ChangeEmailPage/ChangeEmailPage";
+import { RequireAdmin } from "./RequireAdmin";
+import { AuthNavigation } from "./AuthNavigation";
+import { AccessDeniedPage } from "./AccessDeniedPage";
+
+export const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <AuthNavigation />
+      <Routes>
+        <Route path="/"                element={<LandingPage />} />
+        <Route path="/login"           element={<LoginPage />} />
+        <Route path="/register"        element={<RegisterPage />} />        {/* ← nuevo */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />  {/* ← nuevo */}
+        <Route path="/reset-password"  element={<ResetPasswordPage />} />   {/* ← nuevo */}
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
+
+        {/* La comprobación de ADMIN se aplica a todas las rutas anidadas. */}
+        <Route element={<RequireAdmin />}>
+        <Route path="/pagos/resultado" element={<PagoResultadoPage />} />
+
+        <Route path="/dashboard" element={<DashboardPage />}>
+          <Route index          element={<Navigate to="panel" replace />} />
+          <Route path="panel"     element={<PanelPrincipalPage />} />
+          <Route path="servicios" element={<ServiciosPage />} />
+          <Route path="turnos" element={<TurnosPage />} />
+          <Route path="vehiculos" element={<VehiculosPage />} />
+          <Route path="marcas" element={<MarcasPage />} />
+          <Route path="maps" element={<MapsPage />} />
+          <Route path="operadores" element={<OperadoresPage />} />
+          <Route path="perfil" element={<PerfilPage />} />
+          <Route path="configuracion" element={<ConfiguracionPage />} />
+          <Route path="cambiar-contrasena" element={<ChangePasswordPage />} />
+          <Route path="cambiar-correo" element={<ChangeEmailPage />} />
+          <Route path="notificaciones" element={<Navigate to="/dashboard/panel" replace />} />
+        </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+};
