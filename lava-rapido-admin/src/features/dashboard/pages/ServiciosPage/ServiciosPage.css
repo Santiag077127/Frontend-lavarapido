@@ -1,0 +1,174 @@
+/* Define los estilos visuales de gestión de servicios. */
+.page-servicios {
+  padding: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--texto-oscuro);
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--texto-gris);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+.btn-nuevo {
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transicion);
+  white-space: nowrap;
+}
+
+.btn-nuevo:hover {
+  opacity: 0.92;
+}
+
+.page-error {
+  background: var(--error-bg);
+  color: var(--error-texto);
+  border: 1px solid var(--error-borde);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.page-success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.services-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 16px;
+  color: var(--texto-gris);
+  font-size: 0.9rem;
+}
+
+.service-status-filter {
+  padding: 10px 14px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--texto-oscuro);
+  font-size: 0.95rem;
+}
+
+.service-status-filter:focus {
+  outline: none;
+  border-color: var(--azul-claro);
+}
+
+.page-buscador {
+  margin-bottom: 16px;
+}
+
+.page-buscador input {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 14px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.page-servicios .tabla-wrapper {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn-nuevo,
+  .page-buscador input,
+  .service-status-filter {
+    width: 100%;
+    max-width: none;
+  }
+
+  .services-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-servicios {
+    padding: 0.75rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.45rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabla-servicios {
+    min-width: 680px;
+  }
+
+  .tabla-servicios th,
+  .tabla-servicios td {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabla-servicios {
+    min-width: 620px;
+  }
+
+  .tabla-servicios th,
+  .tabla-servicios td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .tabla-descripcion {
+    max-width: 140px;
+  }
+}
+
+.page-buscador input:focus {
+  outline: none;
+  border-color: var(--azul-claro);
+}
+
+.page-vacio {
+  color: var(--texto-gris);
+  text-align: center;
+  padding: 24px 0;
+}
