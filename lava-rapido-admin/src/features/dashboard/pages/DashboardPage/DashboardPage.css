@@ -1,0 +1,41 @@
+/* Define los estilos visuales de estructura del panel privado. */
+/* ============================================================
+   DashboardPage.css  –  Lava Rápido Vehicular
+   Layout principal del dashboard (sidebar + contenido)
+   ============================================================ */
+
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Contenido principal ─────────────────────────────────────── */
+.dashboard-content {
+  flex: 1;
+  min-width: 0;
+  background: var(--page-bg);
+  padding: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .dashboard-content {
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    padding: 0;
+  }
+}

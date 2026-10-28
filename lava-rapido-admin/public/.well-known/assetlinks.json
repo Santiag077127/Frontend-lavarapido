@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.lavarapido.vehicular",
+      "sha256_cert_fingerprints": [
+        "B5:34:D6:EB:A7:C3:3A:74:51:1D:72:7C:C3:E4:7D:72:6C:31:E6:1C:FD:BD:17:73:BA:01:26:CF:E2:E6:83:D9"
+      ]
+    }
+  }
+]

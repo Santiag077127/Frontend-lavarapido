@@ -1,0 +1,164 @@
+import React, { useContext } from 'react';
+
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+
+import TabNavigator from './TabNavigator';
+import OperatorNavigator from './OperatorNavigator';
+
+import ServiceDetailScreen from '../features/services/screens/ServiceDetailScreen';
+import ReservationScreen from '../features/reservations/screens/ReservationScreen';
+import ReservationPaymentScreen from '../features/reservations/screens/ReservationPaymentScreen';
+
+import LoginScreen from '../features/auth/screens/LoginScreen';
+import RegisterScreen from '../features/auth/screens/RegisterScreen';
+import ForgotPasswordScreen from '../features/auth/screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../features/auth/screens/ResetPasswordScreen';
+import EditProfileScreen from '../features/auth/screens/EditProfileScreen';
+import ChangePasswordScreen from '../features/auth/screens/ChangePasswordScreen';
+
+import ServiceDetailsScreen from '../features/profile/screens/ServiceDetailsScreen';
+
+import MapScreen from '../features/map/screens/MapScreen';
+
+import MyVehiclesScreen from '../features/vehicles/screens/MyVehiclesScreen';
+import AddVehicleScreen from '../features/vehicles/screens/AddVehicleScreen';
+
+import type { RootStackParamList } from './types';
+import type { UserRole } from '../services/authService';
+import { ThemeContext } from '../theme/ThemeContext';
+
+const Stack =
+  createNativeStackNavigator<RootStackParamList>();
+
+type Props = {
+  isLoggedIn: boolean;
+  setIsLoggedIn: (
+    value: boolean
+  ) => void;
+  role: UserRole | null;
+  setRole: (role: UserRole) => void;
+};
+
+export default function AppNavigator({
+  isLoggedIn,
+  setIsLoggedIn,
+  role,
+  setRole,
+}: Props) {
+  const isOperator = role === 'OPERATOR';
+  const { theme } = useContext(ThemeContext);
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: theme.background,
+        },
+      }}
+    >
+      {!isLoggedIn ? (
+        <>
+          <Stack.Screen name="Login">
+            {() => (
+              <LoginScreen
+                setIsLoggedIn={setIsLoggedIn}
+                setRole={setRole}
+              />
+            )}
+          </Stack.Screen>
+
+          <Stack.Screen name="Register">
+            {() => (
+              <RegisterScreen
+                setIsLoggedIn={setIsLoggedIn}
+              />
+            )}
+          </Stack.Screen>
+
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+          />
+
+
+          <Stack.Screen
+            name="ResetPassword"
+            component={ResetPasswordScreen}
+          />
+        </>
+      ) : (
+        <>
+          {isOperator ? (
+            <Stack.Screen name="OperatorTabs">
+              {() => (
+                <OperatorNavigator
+                  setIsLoggedIn={setIsLoggedIn}
+                />
+              )}
+            </Stack.Screen>
+          ) : (
+            <>
+              <Stack.Screen name="MainTabs">
+                {() => (
+                  <TabNavigator
+                    isLoggedIn={isLoggedIn}
+                    setIsLoggedIn={setIsLoggedIn}
+                  />
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen
+                name="ServiceDetail"
+                component={ServiceDetailScreen}
+              />
+
+              <Stack.Screen
+                name="Reservation"
+                component={ReservationScreen}
+              />
+
+              <Stack.Screen
+                name="ReservationPayment"
+                component={ReservationPaymentScreen}
+              />
+
+              <Stack.Screen
+                name="Map"
+                component={MapScreen}
+              />
+
+              <Stack.Screen
+                name="ServiceDetails"
+                component={ServiceDetailsScreen}
+              />
+
+              <Stack.Screen
+                name="EditProfile"
+                component={EditProfileScreen}
+              />
+
+              <Stack.Screen
+                name="ChangePassword"
+                component={ChangePasswordScreen}
+              />
+
+              {/* VEHÍCULOS */}
+              <Stack.Screen
+                name="MyVehicles"
+                component={MyVehiclesScreen}
+              />
+
+              <Stack.Screen
+                name="AddVehicle"
+                component={AddVehicleScreen}
+              />
+            </>
+          )}
+        </>
+      )}
+    </Stack.Navigator>
+  );
+}

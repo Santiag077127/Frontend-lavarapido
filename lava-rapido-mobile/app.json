@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Lava Rápido Vehicular",
+    "slug": "lava-rapido-vehicular",
+    "version": "1.0.0",
+    "icon": "./src/assets/app-icon.png",
+    "orientation": "portrait",
+    "platforms": [
+      "android"
+    ],
+    "android": {
+      "package": "com.lavarapido.vehicular",
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/app-icon.png",
+        "backgroundColor": "#0D1B3E"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-status-bar",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class * extends androidx.work.InputMerger { <init>(); }"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4aa9ab1e-7689-4dea-b13b-844460bacdf4"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+// Prueba el comportamiento de tabla de servicios.
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { Servicio } from "@/features/dashboard/types";
+import { ServiciosTable } from "./index";
+
+const servicio = (id: string, estado: boolean): Servicio => ({
+  idServicio: id,
+  nombre: id,
+  descripcion: "Lavado",
+  precio: 10000,
+  duracionMinutos: 30,
+  estado,
+  createdAt: "2026-01-01",
+  updatedAt: "2026-01-01",
+});
+
+describe("ServiciosTable", () => {
+  it("solo permite activar servicios inactivos y mantiene la edición", () => {
+    const onCambiarEstado = vi.fn();
+    const onVerCalificaciones = vi.fn();
+    render(<ServiciosTable servicios={[servicio("Activo", true), servicio("Inactivo", false)]} onEditar={vi.fn()} onCambiarEstado={onCambiarEstado} onVerCalificaciones={onVerCalificaciones} cambiandoId={null} />);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Ver calificaciones" })[0]);
+    expect(onVerCalificaciones).toHaveBeenCalledWith(expect.objectContaining({ idServicio: "Activo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Desactivar" }));
+    fireEvent.click(screen.getByRole("button", { name: "Activar" }));
+    expect(onCambiarEstado).toHaveBeenCalledTimes(2);
+    expect(screen.getAllByRole("button", { name: "Editar" })).toHaveLength(2);
+    expect(screen.getByRole("columnheader", { name: "Estado" })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: "Ver calificaciones" })).toHaveLength(2);
+    const ratingsButton = screen.getAllByRole("button", { name: "Ver calificaciones" })[0];
+    expect(ratingsButton.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    const actions = ratingsButton.parentElement;
+    expect(actions).toHaveClass("service-row-actions");
+    expect(actions?.querySelectorAll("button")).toHaveLength(3);
+    expect(actions?.querySelector(".btn-editar")).toBeInTheDocument();
+    expect(actions?.querySelector(".btn-desactivar")).toBeInTheDocument();
+  });
+});

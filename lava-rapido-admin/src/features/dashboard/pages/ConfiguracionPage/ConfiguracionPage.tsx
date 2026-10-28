@@ -1,0 +1,141 @@
+// Permite cambiar idioma, tema y acceder a acciones de cuenta.
+import { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Languages,
+  Mail,
+  LockKeyhole,
+  LogOut,
+  Moon,
+  Settings,
+  Sun,
+  UserRound,
+} from "lucide-react";
+import { ThemeContext, type LanguageOption } from "@/theme/theme";
+import { useAuthStore } from "@/store/authStore";
+import { LogoutModal } from "../../components/LogoutModal";
+import "./ConfiguracionPage.css";
+
+const languageOptions: Array<{ value: LanguageOption; labelKey: string }> = [
+  { value: "es", labelKey: "language.es" },
+  { value: "en", labelKey: "language.en" },
+  { value: "fr", labelKey: "language.fr" },
+  { value: "pt", labelKey: "language.pt" },
+];
+
+export const ConfiguracionPage = () => {
+  const theme = useContext(ThemeContext);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+  const [modalVisible, setModalVisible] = useState(false);
+
+  if (!theme) return null;
+  const { t } = theme;
+
+  const handleLogout = () => {
+    setModalVisible(false);
+    logout();
+    navigate("/", { replace: true });
+  };
+
+  return (
+    <div className="configuracion-page">
+      <header className="config-header">
+        <div>
+          <p className="config-eyebrow">
+            <Settings size={16} />
+            {t("settings.eyebrow")}
+          </p>
+          <h2>{t("settings.title")}</h2>
+          <p>{t("settings.subtitle")}</p>
+        </div>
+      </header>
+
+      <section className="config-grid">
+        <article className="config-card config-card--profile">
+          <UserRound size={24} />
+          <div>
+            <h3>{t("settings.profile.title")}</h3>
+            <p>{t("settings.profile.desc")}</p>
+          </div>
+          <Link to="/dashboard/perfil">{t("settings.profile.action")}</Link>
+        </article>
+
+        <article className="config-card">
+          <Mail size={24} />
+          <div><h3>{t("emailChange.title")}</h3><p>{t("emailChange.cardDescription")}</p></div>
+          <Link to="/dashboard/cambiar-correo">{t("emailChange.link")}</Link>
+        </article>
+
+        <article className="config-card config-card--password">
+          <LockKeyhole size={24} />
+          <div>
+            <h3>{t("settings.password.title")}</h3>
+            <p>{t("settings.password.desc")}</p>
+          </div>
+          <div className="config-card-actions">
+            <Link to="/dashboard/cambiar-contrasena">
+              <LockKeyhole size={16} />{t("ui.cambiar.contrasena")}</Link>
+            <Link to="/forgot-password" state={{ fromDashboard: true }}>
+              <ArrowLeft size={16} />{t("ui.recuperar.por.correo")}</Link>
+          </div>
+        </article>
+
+        <article className="config-card">
+          <Moon size={24} />
+          <div>
+            <h3>{t("settings.mode.title")}</h3>
+            <p>{t("settings.mode.desc")}</p>
+          </div>
+          <button
+            className="config-toggle"
+            type="button"
+            onClick={() => theme.setDarkMode(!theme.darkMode)}
+            aria-pressed={theme.darkMode}
+          >
+            {theme.darkMode ? <Moon size={18} /> : <Sun size={18} />}
+            {theme.darkMode ? t("settings.mode.dark") : t("settings.mode.light")}
+          </button>
+        </article>
+
+        <article className="config-card">
+          <Languages size={24} />
+          <div>
+            <h3>{t("settings.language.title")}</h3>
+            <p>{t("settings.language.desc")}</p>
+          </div>
+          <select
+            className="config-select"
+            value={theme.language}
+            onChange={(event) => theme.setLanguage(event.target.value as LanguageOption)}
+          >
+            {languageOptions.map((option) => (
+              <option value={option.value} key={option.value}>
+                {t(option.labelKey)}
+              </option>
+            ))}
+          </select>
+        </article>
+
+        <article className="config-card config-card--danger">
+          <LogOut size={24} />
+          <div>
+            <h3>{t("settings.logout.title")}</h3>
+            <p>{t("settings.logout.desc")}</p>
+          </div>
+          <button type="button" onClick={() => setModalVisible(true)}>
+            {t("settings.logout.action")}
+          </button>
+        </article>
+      </section>
+
+      {modalVisible && (
+        <LogoutModal
+          onConfirmar={handleLogout}
+          onCancelar={() => setModalVisible(false)}
+        />
+      )}
+    </div>
+  );
+};

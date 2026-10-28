@@ -1,0 +1,56 @@
+/* Define colores y medidas reutilizables en toda la web. */
+/* ============================================================
+   variables.css  –  Lava Rápido Vehicular
+   Variables globales del sistema (colores, radios, transiciones)
+   ============================================================ */
+
+:root {
+  --azul-oscuro:  #0d1b3e;
+  --azul-medio:   #1a3a6e;
+  --azul-claro:   #1e90ff;
+  --accent:        #1565c0;
+  --accent-strong: #1a3a8f;
+  --accent-soft:   #38afff;
+  --gris-fondo:   #f4f7fb;
+  --gris-borde:   #dde4ef;
+  --texto-oscuro: #0d1b3e;
+  --texto-gris:   #4a5568;
+  --page-bg:       #f4f7fb;
+  --page-title:    #0d1b3e;
+  --page-text:     #374151;
+  --page-muted:    #64748b;
+  --surface:       #ffffff;
+  --surface-soft:  #f8fafc;
+  --surface-border:#dde4ef;
+  --surface-shadow:0 12px 28px rgba(13, 27, 62, 0.06);
+  --error-bg:     #fff0f0;
+  --error-texto:  #c0392b;
+  --error-borde:  #f5c6cb;
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --success-border: #86efac;
+  --radio:        12px;
+  --transicion:   0.25s ease;
+}
+
+:root[data-theme="dark"] {
+  --azul-oscuro: #f8fafc;
+  --gris-fondo: #0f172a;
+  --gris-borde: #263244;
+  --texto-oscuro: #f8fafc;
+  --texto-gris: #cbd5e1;
+  --page-bg: #0f172a;
+  --page-title: #f8fafc;
+  --page-text: #dbe4f0;
+  --page-muted: #9aa8bd;
+  --surface: #151f32;
+  --surface-soft: #111827;
+  --surface-border: #263244;
+  --surface-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+  --error-bg: #3a1116;
+  --error-texto: #fecaca;
+  --error-borde: #7f1d1d;
+  --success-bg: #123728;
+  --success-text: #86efac;
+  --success-border: #28634b;
+}
