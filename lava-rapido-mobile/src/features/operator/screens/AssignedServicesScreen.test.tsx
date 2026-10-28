@@ -1,8 +1,8 @@
 import React from 'react';
-import { Alert, RefreshControl } from 'react-native';
+import { Alert, FlatList, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { ThemeContext } from '../../../theme/ThemeContext';
-import { lightTheme } from '../../../theme/themeTokens';
+import { darkTheme, lightTheme } from '../../../theme/themeTokens';
 import { assignmentService, type Assignment } from '../../../services/assignmentService';
 import AssignedServicesScreen from './AssignedServicesScreen';
 
@@ -44,9 +44,9 @@ const assignment: Assignment = {
   updatedAt: '2026-01-01T10:00:00',
 };
 
-function renderScreen() {
+function renderScreen(theme = lightTheme) {
   return render(
-    <ThemeContext.Provider value={{ theme: lightTheme }}>
+    <ThemeContext.Provider value={{ theme }}>
       <AssignedServicesScreen />
     </ThemeContext.Provider>,
   );
@@ -119,6 +119,62 @@ test('shows a clear empty state for a selected filter without results', async ()
   fireEvent.press(view.getByRole('button', { name: 'operator.filters.completed' }));
   expect(view.getByText('operator.filters.empty')).toBeTruthy();
   expect(view.getByText('operator.filters.emptyDescription')).toBeTruthy();
+});
+
+test('keeps filter controls compact, horizontal, and non-growing vertically', async () => {
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('Lavado exterior')).toBeTruthy());
+
+  const filterScroll = view.UNSAFE_getAllByType(ScrollView).find(node => node.props.horizontal);
+  expect(filterScroll).toBeTruthy();
+  if (!filterScroll) throw new Error('Horizontal filter scroll view was not rendered');
+  const scrollStyle = StyleSheet.flatten(filterScroll.props.style);
+  const contentStyle = StyleSheet.flatten(filterScroll.props.contentContainerStyle);
+  expect(filterScroll.props.horizontal).toBe(true);
+  expect(scrollStyle).toMatchObject({ flexGrow: 0, flexShrink: 0, alignSelf: 'stretch' });
+  expect(contentStyle).toMatchObject({ flexDirection: 'row', flexGrow: 0, alignItems: 'flex-start' });
+  expect(contentStyle).not.toHaveProperty('height');
+
+  const button = view.getByRole('button', { name: 'operator.filters.assigned' });
+  const buttonStyle = StyleSheet.flatten(button.props.style);
+  expect(buttonStyle).toMatchObject({
+    alignSelf: 'flex-start', flexGrow: 0, flexShrink: 0, minHeight: 42,
+    alignItems: 'center', justifyContent: 'center',
+  });
+  expect(buttonStyle).not.toHaveProperty('height');
+  expect(StyleSheet.flatten(view.getByText('operator.filters.assigned').props.style)).toMatchObject({
+    fontSize: 14, fontWeight: '700',
+  });
+});
+
+test('places the empty message just below the filters instead of centering it in the full screen', async () => {
+  (assignmentService.getMine as jest.Mock).mockResolvedValueOnce({ data: [] });
+  const view = renderScreen();
+  await waitFor(() => expect(view.getByText('operator.empty.title')).toBeTruthy());
+
+  const list = view.UNSAFE_getByType(FlatList);
+  expect(StyleSheet.flatten(list.props.contentContainerStyle)).toMatchObject({
+    flexGrow: 1, justifyContent: 'flex-start', paddingTop: 8,
+  });
+});
+
+test.each([
+  ['light', lightTheme],
+  ['dark', darkTheme],
+])('uses theme tokens for selected and unselected filters in %s mode', async (_mode, theme) => {
+  const view = renderScreen(theme);
+  await waitFor(() => expect(view.getByText('Lavado exterior')).toBeTruthy());
+
+  const selectedButton = view.getByRole('button', { name: 'operator.filters.all' });
+  const unselectedButton = view.getByRole('button', { name: 'operator.filters.assigned' });
+  expect(StyleSheet.flatten(selectedButton.props.style)).toMatchObject({
+    backgroundColor: theme.primary, borderColor: theme.primary,
+  });
+  expect(StyleSheet.flatten(unselectedButton.props.style)).toMatchObject({
+    backgroundColor: theme.card, borderColor: theme.border,
+  });
+  expect(StyleSheet.flatten(view.getByText('operator.filters.all').props.style).color).toBe(theme.onPrimary);
+  expect(StyleSheet.flatten(view.getByText('operator.filters.assigned').props.style).color).toBe(theme.text);
 });
 
 test('shows a load error and retries the same request', async () => {

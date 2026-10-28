@@ -29,9 +29,9 @@ export default function RegisterLegalDocumentModal({
       <View style={styles.overlay}>
         <View style={[styles.modal, { backgroundColor: surfaceColor }]}>
           {content ? <>
-            <Text accessibilityRole="header" style={[styles.title, { color: textColor }]}>{content.title}</Text>
+            <Text accessibilityRole="header" style={[styles.title, { color: textColor }]}>{content.titleKey ? t(content.titleKey) : content.title}</Text>
             <ScrollView style={styles.body}>
-              <Text style={[styles.intro, { color: textColor }]}>{content.intro}</Text>
+              <Text style={[styles.intro, { color: textColor }]}>{content.introKey ? t(content.introKey) : content.intro}</Text>
               {content.sections.map((section) => (
                 <View key={section.title} style={styles.paragraph}>
                   <Text style={[styles.heading, { color: textColor }]}>{section.titleKey ? t(section.titleKey) : section.title}</Text>
@@ -39,8 +39,8 @@ export default function RegisterLegalDocumentModal({
                 </View>
               ))}
             </ScrollView>
-            <Pressable accessibilityRole="button" accessibilityLabel="Cerrar" onPress={onClose} style={[styles.close, { backgroundColor: buttonColor }]}>
-              <Text style={[styles.buttonText, { color: onPrimaryColor }]}>Cerrar</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('language.close')} onPress={onClose} style={[styles.close, { backgroundColor: buttonColor }]}>
+              <Text style={[styles.buttonText, { color: onPrimaryColor }]}>{t('language.close')}</Text>
             </Pressable>
           </> : null}
         </View>

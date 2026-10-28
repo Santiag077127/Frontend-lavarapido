@@ -11,6 +11,7 @@ import ScreenHeader from '../../../components/common/ScreenHeader';
 import ConfirmationModal from '../../../components/notifications/ConfirmationModal';
 import { appAlert } from '../../../components/notifications/NotificationProvider';
 import RegisterLegalDocumentModal from '../../auth/components/RegisterLegalDocumentModal';
+import PaymentTermsConsentModal from '../components/PaymentTermsConsentModal';
 import { ThemeContext } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/types';
 import { paymentService, type ReservationPayment, type WompiCheckoutData } from '../../../services/paymentService';
@@ -123,6 +124,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
   const [cancellingReservation, setCancellingReservation] = useState(false);
   const [allowRemoval, setAllowRemoval] = useState(false);
   const [termsVisible, setTermsVisible] = useState(false);
+  const [paymentTermsVisible, setPaymentTermsVisible] = useState(false);
   const requestLock = useRef(false);
   const cancellationLock = useRef(false);
   const initialCheckDone = useRef(false);
@@ -295,17 +297,21 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
 
   }, [reservation.idReserva]);
 
+  const requestPaymentTermsConsent = useCallback(() => {
+    setPaymentTermsVisible(true);
+  }, []);
+
   const startFromPaymentState = useCallback(async (existing: ReservationPayment | null) => {
     if (!existing) {
       setPayment(null);
-      await requestCheckout();
+      requestPaymentTermsConsent();
       return;
     }
 
     setPayment(existing);
     if (existing.estado === 'aprobado') return;
     if (existing.estado === 'rechazado') {
-      await requestCheckout();
+      requestPaymentTermsConsent();
       return;
     }
 
@@ -317,7 +323,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         attempt.wompiTransactionId,
       );
       setPayment(verified);
-      if (verified.estado === 'rechazado') await requestCheckout();
+      if (verified.estado === 'rechazado') requestPaymentTermsConsent();
       // An approved or still-pending Wompi transaction must not start another charge.
       return;
     }
@@ -327,8 +333,8 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       showRequestError(new Error('pending-payment-attempt-unavailable'));
       return;
     }
-    await requestCheckout(attempt.idIntento);
-  }, [requestCheckout, reservation.idReserva, showRequestError]);
+    requestPaymentTermsConsent();
+  }, [requestPaymentTermsConsent, reservation.idReserva, showRequestError]);
 
   // Read and verify the existing server state before reusing or creating an attempt.
   const preparePayment = useCallback(async () => {
@@ -338,9 +344,6 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     setError(false);
     setStartError(null);
     try {
-      // Persist before the first request so an Android process death during
-      // checkout can be recovered from the server state on next launch.
-      await pendingCheckoutRecovery.mark(reservation.idReserva, reservation.idUsuario).catch(() => {});
       let existing: ReservationPayment | null = null;
       try {
         existing = await paymentService.getByReservation(reservation.idReserva);
@@ -358,6 +361,74 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       requestLock.current = false;
     }
   }, [reservation.idReserva, reservation.idUsuario, showRequestError, startFromPaymentState]);
+
+  const cancelPaymentTerms = useCallback(() => {
+    setPaymentTermsVisible(false);
+    pendingRemovalAction.current = CommonActions.goBack();
+    setAllowRemoval(true);
+  }, []);
+
+  const acceptPaymentTerms = useCallback(async () => {
+    if (requestLock.current) return;
+    setPaymentTermsVisible(false);
+
+    requestLock.current = true;
+    setLoading(true);
+    setError(false);
+    setStartError(null);
+    try {
+      // Re-read the payment after consent so an approval or a newly pending
+      // Wompi transaction cannot turn a stale prompt into a duplicate charge.
+      let currentPayment: ReservationPayment | null = null;
+      try {
+        currentPayment = await paymentService.getByReservation(reservation.idReserva);
+        setPayment(currentPayment);
+      } catch (readError) {
+        if ((readError as HttpFailure).response?.status !== 404) throw readError;
+      }
+
+      if (currentPayment?.estado === 'aprobado') {
+        setCheckout(null);
+        setWidgetOpened(false);
+        setWidgetError(false);
+        return;
+      }
+      if (currentPayment?.estado === 'pendiente'
+          && currentPayment.intentoActual?.wompiTransactionId
+          && currentPayment.intentoActual.referencia) {
+        currentPayment = await paymentService.verify(
+          reservation.idReserva,
+          currentPayment.intentoActual.referencia,
+          currentPayment.intentoActual.wompiTransactionId,
+        );
+        setPayment(currentPayment);
+        if (currentPayment.estado !== 'rechazado') {
+          setCheckout(null);
+          setWidgetOpened(false);
+          setWidgetError(false);
+          return;
+        }
+      }
+
+      const expectedAttemptId = currentPayment?.estado === 'pendiente'
+        ? currentPayment.intentoActual?.idIntento
+        : undefined;
+      if (currentPayment?.estado === 'pendiente' && !expectedAttemptId) {
+        throw new Error('pending-payment-attempt-unavailable');
+      }
+
+      // Set the recovery marker only after consent, immediately before starting
+      // or reopening the backend checkout for this existing reservation.
+      await pendingCheckoutRecovery.mark(reservation.idReserva, reservation.idUsuario).catch(() => {});
+      await requestCheckout(expectedAttemptId);
+      setWidgetReloadKey(value => value + 1);
+    } catch (requestError) {
+      showRequestError(requestError);
+    } finally {
+      setLoading(false);
+      requestLock.current = false;
+    }
+  }, [requestCheckout, reservation.idReserva, reservation.idUsuario, showRequestError]);
 
   React.useEffect(() => {
     if (payment?.estado !== 'aprobado') return;
@@ -377,7 +448,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       if ((requestError as HttpFailure).response?.status === 404) {
         setPayment(null);
         setCheckout(null);
-        await requestCheckout().catch(showRequestError);
+        requestPaymentTermsConsent();
       } else {
         showRequestError(requestError);
       }
@@ -385,7 +456,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, reservation.idReserva, showRequestError, startFromPaymentState]);
+  }, [requestPaymentTermsConsent, reservation.idReserva, showRequestError, startFromPaymentState]);
 
   const refreshStatus = useCallback(async () => {
     if (requestLock.current) return;
@@ -431,7 +502,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
     } catch (requestError) {
       if ((requestError as HttpFailure).response?.status === 404) {
         setPayment(null);
-        await requestCheckout().catch(showRequestError);
+        requestPaymentTermsConsent();
       } else {
         showRequestError(requestError);
       }
@@ -439,7 +510,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
       setLoading(false);
       requestLock.current = false;
     }
-  }, [requestCheckout, reservation.idReserva, showRequestError, startFromPaymentState]);
+  }, [requestPaymentTermsConsent, reservation.idReserva, showRequestError, startFromPaymentState]);
 
   const verifyAfterCheckout = useCallback(async (diagnostic?: TransactionDiagnostic) => {
     if (verificationLock.current || requestLock.current) return;
@@ -565,25 +636,6 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           title={t('mobile.paymentFlow.title')}
         />
 
-        {!checkout && !approved && (
-          <View style={[styles.paymentIntro, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text accessibilityLiveRegion="polite" style={[styles.paymentStatus, { color: theme.textSecondary }]} numberOfLines={2}>{stateLabel}</Text>
-            <Text style={[styles.policyText, { color: theme.textSecondary }]}>{t('mobile.paymentFlow.policySummary')}</Text>
-            <Text style={[styles.policyVersion, { color: theme.textSecondary }]}>
-              {t('mobile.paymentFlow.policyVersion', { version: CANCELLATION_POLICY_VERSION })}
-            </Text>
-            <Pressable
-              accessibilityRole="link"
-              onPress={() => setTermsVisible(true)}
-              style={styles.policyLink}
-            >
-              <Text style={[styles.policyLinkText, { color: theme.primary }]}>
-                {t('mobile.reservation.readCancellationPolicy')}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
         {checkout && !isFinal ? (
           <View
             style={[
@@ -611,6 +663,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
           </View>
         ) : (
           <View
+            testID="payment-status-card"
             style={[
               styles.checkoutPlaceholder,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -653,8 +706,7 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
               accessibilityRole="button"
               style={[styles.button, { backgroundColor: theme.primary }]}
               onPress={() => {
-                setWidgetError(false);
-                setWidgetReloadKey((value) => value + 1);
+                setPaymentTermsVisible(true);
               }}
             >
               <Text style={[styles.buttonText, { color: theme.onPrimary }]}>{t('mobile.paymentFlow.retry')}</Text>
@@ -713,6 +765,18 @@ export default function ReservationPaymentScreen({ route, navigation }: Props) {
         busy={cancellingReservation}
         busyLabel={t('mobile.paymentFlow.cancellingReservation')}
       />
+      <PaymentTermsConsentModal
+        visible={paymentTermsVisible}
+        surfaceColor={theme.card}
+        textColor={theme.text}
+        secondaryTextColor={theme.textSecondary}
+        borderColor={theme.border}
+        buttonColor={theme.primary}
+        onPrimaryColor={theme.onPrimary}
+        onCancel={cancelPaymentTerms}
+        onContinue={() => void acceptPaymentTerms()}
+        onReadTerms={() => setTermsVisible(true)}
+      />
       <RegisterLegalDocumentModal
         document={termsVisible ? 'terms' : null}
         onClose={() => setTermsVisible(false)}
@@ -730,13 +794,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: { flex: 1 },
   header: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, marginHorizontal: 18, marginTop: 8, marginBottom: 14, borderWidth: 1, borderRadius: 18 },
-  paymentIntro: { borderWidth: 1, borderRadius: 20, padding: 16, marginHorizontal: 16, marginBottom: 14, elevation: 1, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
   title: { flex: 1, minWidth: 0, fontSize: 22, lineHeight: 28, fontWeight: '800' },
-  paymentStatus: { fontSize: 13, lineHeight: 19, marginTop: 4 },
-  policyText: { fontSize: 13, lineHeight: 19, marginTop: 10 },
-  policyVersion: { fontSize: 12, lineHeight: 18, marginTop: 4, fontWeight: '600' },
-  policyLink: { alignSelf: 'flex-start', paddingVertical: 6, marginTop: 2 },
-  policyLinkText: { fontSize: 13, lineHeight: 18, fontWeight: '700', textDecorationLine: 'underline' },
   webViewContainer: { flex: 1, minHeight: 0, marginHorizontal: 16, marginBottom: 16, borderWidth: 1, borderRadius: 20, overflow: 'hidden', elevation: 2 },
   webViewContainerCheckout: { marginHorizontal: 0, marginBottom: 0, borderWidth: 0, borderRadius: 0, elevation: 0 },
   webview: { flex: 1 },

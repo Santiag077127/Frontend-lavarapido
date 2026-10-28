@@ -206,6 +206,7 @@ export default function AssignedServicesScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
         contentContainerStyle={styles.filters}
         accessibilityLabel={t('operator.filters.label')}
       >
@@ -222,7 +223,7 @@ export default function AssignedServicesScreen() {
                 borderColor: selected ? theme.primary : theme.border,
               }]}
             >
-              <Text style={{ color: selected ? theme.onPrimary : theme.text, fontWeight: '700' }}>
+              <Text style={[styles.filterText, { color: selected ? theme.onPrimary : theme.text }]}>
                 {t(`operator.filters.${item}`)}
               </Text>
             </TouchableOpacity>
@@ -322,8 +323,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  filters: { gap: 8, paddingBottom: 14 },
-  filterButton: { minHeight: 42, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
+  filterScroll: { alignSelf: 'stretch', flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+  filters: { flexDirection: 'row', flexGrow: 0, alignItems: 'flex-start', gap: 8, paddingBottom: 10 },
+  filterButton: { alignSelf: 'flex-start', flexGrow: 0, flexShrink: 0, flexBasis: 'auto', minHeight: 42, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
+  filterText: { fontSize: 14, fontWeight: '700' },
 
   title: {
     fontSize: 28,
@@ -341,7 +344,8 @@ const styles = StyleSheet.create({
 
   emptyList: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 8,
   },
 
   emptyContainer: {

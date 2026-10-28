@@ -1,19 +1,21 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
-import LandingPage from "./Landing";
+import LandingPage, { ANDROID_BUILD_PAGE_URL } from "./Landing";
 import { ThemeProvider, translations } from "../../../../theme/theme";
 
 describe("LandingPage Android download", () => {
-  it("shows the Android download action with the official APK URL", () => {
+  it("shows the Android download action for the latest EAS build page", () => {
     render(<MemoryRouter><LandingPage /></MemoryRouter>);
 
     const downloadLink = screen.getByRole("link", { name: "Descargar app para Android" });
     expect(downloadLink).toHaveAttribute(
       "href",
-      "https://expo.dev/artifacts/eas/kuA0DnLqABvS9iDJgxupUqvjiwnEJnt4OnR22NoIF9c.apk",
+      ANDROID_BUILD_PAGE_URL,
     );
-    expect(downloadLink).toHaveAttribute("download");
+    expect(ANDROID_BUILD_PAGE_URL).toContain("0b304658-40d0-4899-a561-f0040e63b75b");
+    expect(downloadLink).toHaveAttribute("target", "_blank");
+    expect(downloadLink).toHaveAttribute("rel", "noopener noreferrer");
     expect(screen.getByText("Aplicación disponible para dispositivos Android · APK · versión 1.0.0.")).toBeInTheDocument();
   });
 
