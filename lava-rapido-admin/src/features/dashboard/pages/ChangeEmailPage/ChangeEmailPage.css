@@ -1,0 +1,113 @@
+.change-email-page {
+  width: min(100%, 1160px);
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.change-email-page > .settings-back-link {
+  justify-self: start;
+}
+
+.change-email-page .change-password-card {
+  width: min(100%, 620px);
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.change-email-page .change-password-card > p {
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.change-email-page .change-email-current {
+  margin: 0 0 1.25rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  color: var(--page-muted);
+  background: var(--surface-soft);
+  overflow-wrap: anywhere;
+}
+
+.change-email-page .change-email-current strong {
+  color: var(--page-title);
+  overflow-wrap: anywhere;
+}
+
+.change-email-page .change-password-card form {
+  gap: 0.75rem;
+}
+
+.change-email-page .change-password-card form > label {
+  margin-top: 0.35rem;
+  color: var(--page-title);
+  font-weight: 700;
+}
+
+.change-email-page .change-password-card form > input[type="email"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  color: var(--page-title);
+  background: var(--surface);
+  font: inherit;
+}
+
+.change-email-page .change-password-card form > input[type="email"]:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  outline-offset: 1px;
+}
+
+.change-email-page .change-password-card form > small {
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.change-email-page .change-password-error {
+  margin: 0 0 1rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.change-email-page .change-password-card form > button[type="submit"] {
+  justify-self: start;
+  min-width: min(100%, 190px);
+  padding: 0.65rem 1rem;
+}
+
+.change-email-page .change-password-card form > button[aria-busy="true"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.change-email-spinner {
+  animation: change-email-spin 0.9s linear infinite;
+}
+
+@keyframes change-email-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .change-email-spinner { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .change-email-page .change-password-card {
+    padding: 1rem;
+  }
+
+  .change-email-page .change-password-card form > button[type="submit"] {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+}

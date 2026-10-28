@@ -1,0 +1,591 @@
+import React, { useContext, useState } from 'react';
+
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Keyboard,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
+import { ThemeContext } from '../../../theme/ThemeContext';
+import { images } from '../../../assets/images';
+
+import { authService, UserRole } from '../../../services/authService';
+import { classifyApiError, setToken } from '../../../services/api';
+import { saveAuthSession } from '../../../services/authSession';
+import { isValidEmail } from '../../../services/validators';
+import { useTranslation } from 'react-i18next';
+
+type Props = {
+  setIsLoggedIn: (value: boolean) => void;
+  setRole?: (role: UserRole) => void;
+};
+
+export default function LoginScreen({
+  setIsLoggedIn,
+  setRole,
+}: Props) {
+  const navigation = useNavigation<any>();
+
+  const { theme, darkMode } = useContext(ThemeContext);
+  const { t } = useTranslation();
+
+  const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [password, setPassword] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Estado para controlar el mensaje de error estético
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+  };
+
+  const clearError = () => {
+    if (errorMessage) setErrorMessage(null);
+  };
+
+  const emailFormatError = emailTouched && email.trim().length > 0 && !isValidEmail(email);
+
+  const handleLogin = async () => {
+    Keyboard.dismiss();
+    clearError();
+    setEmailTouched(true);
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password;
+
+    if (!cleanEmail || !cleanPassword) {
+      showError(t('login.required'));
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      showError(t('login.invalidEmail'));
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await authService.login(
+        cleanEmail,
+        cleanPassword
+      );
+
+      const data = response.data;
+
+      if (!data || !data.token) {
+        throw new Error(t('login.invalidToken'));
+      }
+
+      const role = data.user?.role ?? 'USER';
+      await saveAuthSession(data.token, role);
+      setToken(data.token);
+      setRole?.(role);
+      setIsLoggedIn(true);
+
+    } catch (error: any) {
+
+
+      const status = error?.response?.status;
+      const kind = classifyApiError(error);
+      const message = ['network', 'server_unavailable', 'timeout', 'server'].includes(kind)
+        ? t(`apiErrors.${kind}`)
+        : status === 401
+          ? t('login.unauthorized')
+          : status === 400 || status === 422
+            ? t('login.badRequest')
+            : status === 403
+              ? t('apiErrors.forbidden')
+              : status === 404
+                ? t('login.notFound')
+                : t('login.genericError');
+
+      showError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backgroundColor = theme.background;
+
+  return (
+    <>
+      <StatusBar
+        style={darkMode ? 'light' : 'dark'}
+      />
+
+      <KeyboardAvoidingView
+        style={[
+          styles.keyboardContainer,
+          {
+            backgroundColor,
+          },
+        ]}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : 'height'
+        }
+      >
+        <ScrollView
+          style={[
+            styles.scrollView,
+            {
+              backgroundColor,
+            },
+          ]}
+          contentContainerStyle={[
+            styles.scrollContent,
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === 'ios'
+              ? 'interactive'
+              : 'none'
+          }
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          automaticallyAdjustContentInsets={false}
+          automaticallyAdjustKeyboardInsets={false}
+        >
+          <View
+            style={[
+              styles.container,
+              {
+                backgroundColor,
+              },
+            ]}
+          >
+            {/* LOGO */}
+            <Image
+              source={images.logo}
+              style={styles.logo}
+              resizeMode="contain"
+              accessible={false}
+            />
+
+            {/* TITULO */}
+            <Text
+              accessibilityRole="header"
+              style={[
+                styles.title,
+                {
+                  color: theme.text,
+                },
+              ]}
+            >
+              {t('login.title')}
+            </Text>
+
+            <Text
+              style={[
+                styles.subtitle,
+                {
+                  color: theme.textSecondary,
+                },
+              ]}
+            >
+              {t('login.subtitle')}
+            </Text>
+
+            {/* BANNER DE ERROR */}
+            {errorMessage && (
+              <View
+                style={[
+                  styles.errorContainer,
+                  {
+                    backgroundColor: theme.errorBackground,
+                    borderColor: theme.errorBorder,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="alert-circle"
+                  size={20}
+                  color={theme.errorText}
+                  style={styles.errorIcon}
+                />
+                <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.errorText, { color: theme.errorText }]}>
+                  {errorMessage}
+                </Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t('accessibility.dismissError')}
+                  onPress={clearError}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={18} color={theme.errorText} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* EMAIL */}
+            <View style={styles.fieldWrapper}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {t('login.email')}
+              </Text>
+
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: emailFormatError ? theme.errorBorder : theme.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={22}
+                  color={theme.textSecondary}
+                />
+
+                <TextInput
+                  accessibilityLabel={t('login.email')}
+                  style={[
+                    styles.input,
+                    {
+                      color: theme.text,
+                    },
+                  ]}
+                  placeholder={t('login.emailPlaceholder')}
+                  placeholderTextColor={theme.placeholder}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    clearError();
+                  }}
+                  onBlur={() => setEmailTouched(true)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  returnKeyType="next"
+                  editable={!loading}
+                />
+              </View>
+              {emailFormatError ? <Text accessibilityRole="alert" style={[styles.fieldError, { color: theme.errorText }]}>{t('login.invalidEmail')}</Text> : null}
+            </View>
+
+            {/* CONTRASEÑA */}
+            <View style={styles.fieldWrapper}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: theme.text,
+                  },
+                ]}
+              >
+                {t('login.password')}
+              </Text>
+
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: errorMessage ? theme.errorBorder : theme.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={22}
+                  color={theme.textSecondary}
+                />
+
+                <TextInput
+                  accessibilityLabel={t('login.password')}
+                  style={[
+                    styles.input,
+                    {
+                      color: theme.text,
+                    },
+                  ]}
+                  placeholder={t('login.passwordPlaceholder')}
+                  placeholderTextColor={theme.placeholder}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    clearError();
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="password"
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                  editable={!loading}
+                />
+
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() =>
+                    setShowPassword(!showPassword)
+                  }
+                  disabled={loading}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(showPassword ? 'accessibility.hidePassword' : 'accessibility.showPassword')}
+                  accessibilityState={{ expanded: showPassword, disabled: loading }}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={22}
+                    color={theme.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* RECUPERAR CONTRASEÑA */}
+            <TouchableOpacity
+              style={styles.forgotButton}
+              onPress={() => {
+                Keyboard.dismiss();
+                navigation.navigate(
+                  'ForgotPassword'
+                );
+              }}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.forgotText, { color: theme.primary }]}>
+                {t('login.forgot')}
+              </Text>
+            </TouchableOpacity>
+
+            {/* BOTÓN LOGIN */}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                {
+                  backgroundColor: theme.primaryDark,
+                  opacity: loading ? 0.7 : 1,
+                },
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: loading, busy: loading }}
+              accessibilityLiveRegion="polite"
+            >
+              {loading ? (
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>
+                  {t('login.loading')}
+                </Text>
+              ) : (
+                <Text style={[styles.buttonText, { color: theme.onPrimary }]}>
+                  {t('login.button')}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* REGISTRO */}
+            <View style={styles.footer}>
+              <Text
+                style={[
+                  styles.footerText,
+                  {
+                    color: theme.textSecondary,
+                  },
+                ]}
+              >
+                {t('login.noAccount')}
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => {
+                  Keyboard.dismiss();
+                  navigation.navigate('Register');
+                }}
+                disabled={loading}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.registerText, { color: theme.primary }]}>
+                  {t('login.register')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.bottomSpacer} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  container: {
+    flexGrow: 1,
+    width: '100%',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
+  logo: {
+    width: '100%',
+    maxWidth: 420,
+    height: 210,
+    alignSelf: 'center',
+    marginBottom: 0,
+  },
+  title: {
+    fontSize: 27,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginTop: 0,
+    marginBottom: 7,
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  errorIcon: {
+    marginRight: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  fieldError: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  fieldWrapper: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 7,
+    marginLeft: 3,
+  },
+  inputContainer: {
+    width: '100%',
+    minHeight: 62,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 17,
+    elevation: 1,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+  },
+  input: {
+    flex: 1,
+    minHeight: 58,
+    marginLeft: 12,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
+  eyeButton: {
+    width: 42,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: -8,
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginTop: -2,
+    marginBottom: 21,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  forgotText: {
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  button: {
+    width: '100%',
+    minHeight: 58,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 25,
+  },
+  footerText: {
+    fontSize: 14,
+  },
+  registerText: {
+    fontWeight: '800',
+    fontSize: 14,
+    marginLeft: 5,
+  },
+  bottomSpacer: {
+    height: 10,
+  },
+});

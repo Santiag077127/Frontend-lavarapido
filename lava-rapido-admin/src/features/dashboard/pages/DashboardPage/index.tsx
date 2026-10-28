@@ -1,0 +1,17 @@
+// Muestra el menú lateral y la sección privada seleccionada.
+import "./DashboardPage.css";
+
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "../../components/Sidebar";
+
+export const DashboardPage = () => {
+  return (
+    <div className="dashboard-layout">
+      <Sidebar />
+      {/* Outlet renderiza ServiciosPage u otras páginas según la ruta activa */}
+      <main className="dashboard-content">
+        <Outlet />
+      </main>
+    </div>
+  );
+};

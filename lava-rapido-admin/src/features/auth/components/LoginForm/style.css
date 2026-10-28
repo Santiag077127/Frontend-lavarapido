@@ -1,0 +1,114 @@
+/* Define los estilos visuales de formulario de acceso. */
+/* ============================================================
+   LoginForm.css  –  Lava Rápido Vehicular
+   Estilos exclusivos del formulario de login
+   Namespace: lf-  →  LoginForm
+   ============================================================ */
+
+.lf-wrapper {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+}
+
+.lf-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--texto-oscuro);
+  margin-bottom: 6px;
+}
+
+.lf-subtitle {
+  font-size: 13px;
+  color: var(--texto-gris);
+  margin-bottom: 28px;
+}
+
+/* ── Error ───────────────────────────────────────────────────── */
+.lf-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--error-bg);
+  color: var(--error-texto);
+  border: 1px solid var(--error-borde);
+  border-radius: var(--radio);
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+/* ── Campo ───────────────────────────────────────────────────── */
+.lf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+
+.lf-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-gris);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lf-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: var(--radio);
+  border: 1.5px solid var(--gris-borde);
+  background: var(--gris-fondo);
+  font-size: 14px;
+  color: var(--texto-oscuro);
+  outline: none;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+.lf-input::placeholder { color: #aab3c5; }
+.lf-input:focus {
+  border-color: var(--azul-claro);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+}
+
+.lf-input--error,
+.lf-input--error:focus { border-color: var(--error-texto); }
+.lf-input--valid,
+.lf-input--valid:focus { border-color: #16a34a; }
+.lf-field-error { color: var(--error-texto); font-size: 0.78rem; line-height: 1.35; }
+
+/* ── Botón ───────────────────────────────────────────────────── */
+.lf-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radio);
+  background: linear-gradient(160deg, var(--accent-soft) 0%, var(--accent-strong) 60%, var(--accent) 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transicion), opacity var(--transicion);
+  box-shadow: 0 4px 14px rgba(13, 27, 62, 0.3);
+}
+.lf-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+/* ── Spinner ─────────────────────────────────────────────────── */
+.lf-spinner {
+  width: 17px;
+  height: 17px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .lf-wrapper {
+    max-width: 100%;
+  }
+}
