@@ -78,6 +78,8 @@ describe("ChangePasswordPage", () => {
     </Routes></MemoryRouter>);
     const backLink = screen.getByRole("link", { name: "Volver a configuración" });
     expect(container.querySelector("main > a.settings-back-link")).toBe(backLink);
+    expect(backLink).toHaveClass("settings-back-link");
+    expect(container.querySelector(".change-password-card")).toBeInTheDocument();
     fireEvent.click(backLink);
     expect(screen.getByText("Configuración")).toBeInTheDocument();
   });

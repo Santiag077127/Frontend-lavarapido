@@ -1,5 +1,6 @@
 // Presenta servicios y sus acciones en una tabla.
 import { useContext } from "react";
+import { Star } from "lucide-react";
 import type { Servicio } from "@/features/dashboard/types";
 import { ThemeContext, useLocale, useTranslations } from "@/theme/theme";
 import "./ServiciosTable.css";
@@ -48,6 +49,7 @@ export const ServiciosTable = ({
             <td>
               <div className="service-row-actions">
               <button className="btn-calificaciones" onClick={() => onVerCalificaciones(servicio)}>
+                <Star size={15} aria-hidden="true" />
                 {t("serviceRatings.action")}
               </button>
               <button className="btn-editar" onClick={() => onEditar(servicio)}>
